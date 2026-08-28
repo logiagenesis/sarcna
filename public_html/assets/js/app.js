@@ -362,3 +362,32 @@
     });
   });
 })();
+
+/* ------------------------------------------------- venue videos (facade) */
+/* Nothing is fetched from YouTube until the visitor presses play; the click
+   swaps the poster for a privacy-enhanced youtube-nocookie.com iframe. */
+(function () {
+  document.querySelectorAll('.video-card').forEach(function (card) {
+    var poster = card.querySelector('.video-card__poster');
+    if (!poster) return;
+
+    poster.addEventListener('click', function () {
+      var id    = card.getAttribute('data-video-id');
+      var title = card.getAttribute('data-video-title') || 'Video';
+      if (!id || !/^[A-Za-z0-9_-]{11}$/.test(id)) return;
+
+      var frame = document.createElement('div');
+      frame.className = 'video-card__frame';
+
+      var iframe = document.createElement('iframe');
+      iframe.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&rel=0';
+      iframe.title = title;
+      iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+      iframe.allowFullscreen = true;
+
+      frame.appendChild(iframe);
+      poster.replaceWith(frame);
+      iframe.focus();
+    });
+  });
+})();

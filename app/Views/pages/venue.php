@@ -167,6 +167,8 @@ $event = config('event');
 </section>
 <?php endif; ?>
 
+<?php View::include('partials.venue-videos'); ?>
+
 <section class="section section--dark">
   <div class="container text-center">
     <div class="rule" style="margin-inline:auto"></div>

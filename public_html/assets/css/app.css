@@ -1011,3 +1011,30 @@ td.numeric, th.numeric { text-align: right; font-variant-numeric: tabular-nums; 
 .travel-btn span { display: flex; flex-direction: column; min-width: 0; }
 .travel-btn strong { font-weight: 700; }
 .travel-btn small { color: var(--ink-muted); font-size: 0.72rem; }
+
+/* --------------------------------------------------- venue videos (facade) */
+
+.video-grid { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.video-card { margin: 0; background: var(--surface-raised); border: 1px solid var(--line);
+              border-radius: var(--radius-l); overflow: hidden; box-shadow: var(--shadow-s); }
+.video-card__poster {
+  position: relative; display: block; width: 100%; aspect-ratio: 16 / 9;
+  padding: 0; border: 0; cursor: pointer; background: var(--vineyard); overflow: hidden;
+}
+.video-card__poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.video-card__thumb { position: absolute; inset: 0; }
+.video-card__play {
+  position: absolute; inset: 0; margin: auto; width: 64px; height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(23, 61, 47, 0.88); color: var(--cream); border-radius: 50%;
+  transition: transform .18s ease, background .18s ease;
+}
+.video-card__play svg { margin-left: 4px; }
+.video-card__poster:hover .video-card__play,
+.video-card__poster:focus-visible .video-card__play { transform: scale(1.08); background: var(--gold); }
+.video-card__frame { position: relative; aspect-ratio: 16 / 9; }
+.video-card__frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.video-card figcaption { padding: 1rem 1.15rem 1.15rem; }
+.video-card figcaption strong { font-family: var(--font-display); font-size: var(--step-0); }
+.video-card figcaption p { margin: .35rem 0 .6rem; font-size: var(--step--1); color: var(--ink-muted); }
+.video-card__external { font-size: var(--step--1); }
