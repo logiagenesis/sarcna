@@ -83,7 +83,10 @@ if (!function_exists('money')) {
     function money(int|float|string|null $cents, bool $withSymbol = true): string
     {
         $amount = ((int) $cents) / 100;
-        $value  = number_format($amount, 2, '.', ' ');
+
+        // A non-breaking space as the thousands separator so amounts never
+        // wrap mid-number in a card or a table cell.
+        $value = number_format($amount, 2, '.', "\u{00A0}");
 
         return $withSymbol ? 'R' . $value : $value;
     }
