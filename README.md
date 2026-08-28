@@ -168,6 +168,7 @@ repository · error pages that leak nothing.
 | Document | What it covers |
 |---|---|
 | [`docs/handover.md`](docs/handover.md) | What was delivered, decisions taken, what the committee must supply |
+| [`docs/DEVELOPER-HANDOVER.md`](docs/DEVELOPER-HANDOVER.md) | The technical handover for next year's developer — how the system works inside |
 | [`docs/cpanel-deployment-guide.md`](docs/cpanel-deployment-guide.md) | Uploading, installing, going live |
 | [`docs/payfast-setup.md`](docs/payfast-setup.md) | Sandbox to live, the ITN URL, troubleshooting |
 | [`docs/smtp-setup.md`](docs/smtp-setup.md) | cPanel mailbox email, SPF and DKIM |

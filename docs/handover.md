@@ -3,6 +3,9 @@
 Everything the committee needs to know about what was built, why, what is still
 placeholder, and what has to happen before the site goes public.
 
+> Handing this to a developer? Give them **`docs/DEVELOPER-HANDOVER.md`** —
+> the technical companion that explains how the system works inside.
+
 ---
 
 ## What was delivered
@@ -15,10 +18,10 @@ nothing installed on the server.
 | | |
 |---|---|
 | **Public pages** | 30+, including 8 policy pages |
-| **Admin screens** | 25+, across 7 roles |
-| **Database tables** | 38 |
-| **CSV exports** | 12 |
-| **Accommodation inventory seeded** | 5 room types, 87 units, 262 beds |
+| **Admin screens** | 34, across 7 roles — including a six-screen finance suite and the booking chair's rooming console |
+| **Database tables** | 44 |
+| **CSV exports** | 16, including a one-sheet finance pack for committee meetings |
+| **Accommodation inventory seeded** | The real Retreat structure: 18 cottages × 2 en-suite rooms × 2 beds (72 beds) plus accessible rooms and partner guest house overflow — 112 beds over 3 nights |
 | **Transactional emails** | 9 to customers, 6 to the committee |
 | **Third-party runtime dependencies** | None. No Composer, no npm, no CDN |
 
