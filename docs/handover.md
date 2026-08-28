@@ -253,4 +253,9 @@ Run the lint over everything before you commit:
 find app public_html tools -name '*.php' -exec php -l {} \; | grep -v 'No syntax errors'
 ```
 
-Silence means everything parses.
+Silence means everything parses. Then run the smoke test, which proves the
+booking and payment invariants still hold:
+
+```bash
+php tools/smoke-test.php
+```

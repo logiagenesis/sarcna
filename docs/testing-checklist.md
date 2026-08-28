@@ -3,6 +3,20 @@
 Work through this before the site goes public, and again after any significant
 change. Test on a real phone as well as a desktop browser.
 
+## Start with the automated check
+
+```bash
+php tools/smoke-test.php
+```
+
+It proves the invariants that matter most — that booking one bed leaves its
+sibling on sale, that a hold cannot be taken twice, that the database refuses a
+double booking, that cancelling frees a bed, and that a forged signature or an
+under-payment is rejected. It creates its own test data and cleans up after
+itself. **Run it on a staging copy, never on a live site with real bookings.**
+
+If it fails, stop and fix that before working through anything below.
+
 ---
 
 ## 1. Installation

@@ -98,6 +98,16 @@ Build a cPanel upload package:
 php tools/package.php
 ```
 
+Prove the critical paths still work after a change — bed inventory, holds,
+fulfilment and PayFast verification:
+
+```bash
+php tools/smoke-test.php
+```
+
+It creates its own test data and cleans up after itself. Run it on a staging
+copy, not on a live site with real bookings.
+
 ---
 
 ## How accommodation works

@@ -132,6 +132,9 @@ final class PayFastService
 
         self::logEvent($orderId, 'itn_received', 'Notification received from ' . $sourceIp, $data);
 
+        // The checks run cheapest-first, so a forged or tampered notification is
+        // rejected without any network work at all.
+
         // 1. Signature.
         $expected  = self::signature($data);
         $signature = (string) ($data['signature'] ?? '');
@@ -148,15 +151,7 @@ final class PayFastService
             return ['ok' => false, 'reason' => 'invalid_signature'];
         }
 
-        // 2. Source address.
-        if (!self::isValidSource($sourceIp)) {
-            self::logEvent($orderId, 'itn_bad_source', 'Notification came from an unexpected address: ' . $sourceIp);
-
-            self::recordPayment($order, $data, 'failed', true, $sourceIp);
-
-            return ['ok' => false, 'reason' => 'invalid_source'];
-        }
-
+        // 2. The order must exist.
         if ($order === null) {
             self::logEvent(null, 'itn_unknown_order', 'No order matches reference ' . $reference, $data);
 
@@ -180,7 +175,16 @@ final class PayFastService
             return ['ok' => false, 'reason' => 'amount_mismatch'];
         }
 
-        // 4. Ask PayFast to confirm the payload.
+        // 4. Source address.
+        if (!self::isValidSource($sourceIp)) {
+            self::logEvent($orderId, 'itn_bad_source', 'Notification came from an unexpected address: ' . $sourceIp);
+
+            self::recordPayment($order, $data, 'failed', true, $sourceIp);
+
+            return ['ok' => false, 'reason' => 'invalid_source'];
+        }
+
+        // 5. Ask PayFast to confirm the payload.
         if (!self::confirmWithPayFast($data)) {
             self::logEvent($orderId, 'itn_not_confirmed', 'PayFast did not validate the notification payload.');
 
@@ -218,30 +222,98 @@ final class PayFastService
     public static function isValidSource(string $ip): bool
     {
         // Sandbox testing sometimes runs from a fixed office address; the
-        // signature check above is still enforced there.
+        // signature and amount checks above are still enforced there.
         if (SettingsService::bool('payfast_skip_ip_check', false)) {
             return true;
         }
 
-        $allowed = [];
+        $cached = self::cachedAddresses();
+
+        if ($cached !== null) {
+            return $cached === [] ? self::failOpen($ip) : in_array($ip, $cached, true);
+        }
+
+        // Resolve one host at a time and stop the moment the address matches.
+        // PayFast notifications come from w1w/w2w in practice, and a single
+        // slow hostname should never hold up a real payment.
+        $resolved = [];
 
         foreach (self::VALID_HOSTS as $host) {
             $records = @gethostbynamel($host);
 
-            if (is_array($records)) {
-                $allowed = array_merge($allowed, $records);
+            if (!is_array($records)) {
+                continue;
+            }
+
+            $resolved = array_merge($resolved, $records);
+
+            if (in_array($ip, $records, true)) {
+                self::cacheAddresses(array_values(array_unique($resolved)), 300);
+
+                return true;
             }
         }
 
-        if ($allowed === []) {
-            // DNS is unavailable — do not fail an otherwise valid payment, but
-            // make the gap visible in the payment log.
-            Logger::payment('Could not resolve PayFast hosts for the source-IP check.', ['ip' => $ip]);
+        $resolved = array_values(array_unique($resolved));
+        self::cacheAddresses($resolved, $resolved === [] ? 300 : 3600);
 
-            return true;
+        return $resolved === [] ? self::failOpen($ip) : false;
+    }
+
+    /**
+     * DNS is unavailable. Do not fail an otherwise valid payment over it, but
+     * make the gap visible in the payment log.
+     */
+    private static function failOpen(string $ip): bool
+    {
+        Logger::payment('Could not resolve PayFast hosts for the source-IP check.', ['ip' => $ip]);
+
+        return true;
+    }
+
+    /** @return string[]|null null when there is no usable cache entry */
+    private static function cachedAddresses(): ?array
+    {
+        static $memo = null;
+
+        if (is_array($memo)) {
+            return $memo;
         }
 
-        return in_array($ip, array_unique($allowed), true);
+        $file = self::addressCacheFile();
+
+        if (!is_readable($file)) {
+            return null;
+        }
+
+        $cached = json_decode((string) file_get_contents($file), true);
+
+        if (!is_array($cached) || !isset($cached['expires_at'], $cached['addresses']) || $cached['expires_at'] <= time()) {
+            return null;
+        }
+
+        return $memo = array_values(array_filter((array) $cached['addresses'], 'is_string'));
+    }
+
+    /** @param string[] $addresses */
+    private static function cacheAddresses(array $addresses, int $ttl): void
+    {
+        $file      = self::addressCacheFile();
+        $directory = dirname($file);
+
+        if (!is_dir($directory) && !@mkdir($directory, 0750, true) && !is_dir($directory)) {
+            return;
+        }
+
+        @file_put_contents($file, json_encode([
+            'addresses'  => $addresses,
+            'expires_at' => time() + $ttl,
+        ]), LOCK_EX);
+    }
+
+    private static function addressCacheFile(): string
+    {
+        return rtrim((string) Config::get('paths.cache'), '/') . '/payfast-hosts.json';
     }
 
     private static function confirmWithPayFast(array $data): bool
