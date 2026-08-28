@@ -88,7 +88,7 @@ final class AccommodationController extends Controller
     public function book(string $slug): never
     {
         if (!SettingsService::bool('accommodation_enabled', true)) {
-            $this->error('Accommodation booking is closed at the moment.');
+            $this->flashError('Accommodation booking is closed at the moment.');
             $this->back(url('/accommodation'));
         }
 
@@ -110,7 +110,7 @@ final class AccommodationController extends Controller
         ], ['nights' => 'Nights']);
 
         if ($validator->fails() || $selectedNights === []) {
-            $this->error('Choose at least one night before adding accommodation to your cart.');
+            $this->flashError('Choose at least one night before adding accommodation to your cart.');
             $this->back(url('/accommodation/' . $roomType['slug']));
         }
 
@@ -125,7 +125,7 @@ final class AccommodationController extends Controller
         ];
 
         if ($mode === 'unit' && (int) $roomType['allows_private_buyout'] !== 1) {
-            $this->error('Private unit booking is not available for this room type.');
+            $this->flashError('Private unit booking is not available for this room type.');
             $this->back(url('/accommodation/' . $roomType['slug']));
         }
 
@@ -134,16 +134,16 @@ final class AccommodationController extends Controller
                 ? $this->bookPrivateUnit($roomType, $selectedNights, $token, $guestMeta)
                 : $this->bookBeds($roomType, $selectedNights, $bedCount, $token, $guestMeta);
         } catch (\RuntimeException $e) {
-            $this->error($e->getMessage());
+            $this->flashError($e->getMessage());
             $this->back(url('/accommodation/' . $roomType['slug']));
         }
 
         if ($added === 0) {
-            $this->error('Those nights are no longer available. Please choose different nights or another room type.');
+            $this->flashError('Those nights are no longer available. Please choose different nights or another room type.');
             $this->back(url('/accommodation/' . $roomType['slug']));
         }
 
-        $this->success(sprintf(
+        $this->flashSuccess(sprintf(
             '%d night%s added to your cart and held for %d minutes.',
             $added,
             $added === 1 ? '' : 's',

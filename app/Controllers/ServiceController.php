@@ -33,7 +33,7 @@ final class ServiceController extends Controller
     {
         // Honeypot: real people never fill this in.
         if (trim((string) $this->request->input('website', '')) !== '') {
-            $this->success('Thank you — your application has been received.');
+            $this->flashSuccess('Thank you — your application has been received.');
             $this->redirect(url('/service'));
         }
 
@@ -80,7 +80,7 @@ final class ServiceController extends Controller
 
         MailService::serviceApplicationReceived(array_merge($application, ['id' => $id]));
 
-        $this->success('Thank you. Your application reference is ' . $application['reference'] . ' — the service co-ordinator will be in touch.');
+        $this->flashSuccess('Thank you. Your application reference is ' . $application['reference'] . ' — the service co-ordinator will be in touch.');
         $this->redirect(url('/service'));
     }
 }

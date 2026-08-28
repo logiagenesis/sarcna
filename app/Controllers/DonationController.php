@@ -31,14 +31,14 @@ final class DonationController extends Controller
     public function add(): never
     {
         if (!SettingsService::bool('donations_enabled', true)) {
-            $this->error('Donations are closed at the moment.');
+            $this->flashError('Donations are closed at the moment.');
             $this->back(url('/donations'));
         }
 
         $product = ProductService::find((int) $this->request->int('product_id'));
 
         if ($product === null || $product['type'] !== 'donation' || (int) $product['is_active'] !== 1) {
-            $this->error('Please choose a donation type.');
+            $this->flashError('Please choose a donation type.');
             $this->back(url('/donations'));
         }
 
@@ -49,7 +49,7 @@ final class DonationController extends Controller
         $minimum = max(2000, (int) $product['min_amount_cents']);
 
         if ($amount < $minimum) {
-            $this->error('Please enter an amount of at least ' . money($minimum) . '.');
+            $this->flashError('Please enter an amount of at least ' . money($minimum) . '.');
             $this->back(url('/donations'));
         }
 
@@ -67,7 +67,7 @@ final class DonationController extends Controller
             ],
         ]);
 
-        $this->success('Thank you. Your donation has been added to the cart.');
+        $this->flashSuccess('Thank you. Your donation has been added to the cart.');
         $this->redirect(url('/cart'));
     }
 }

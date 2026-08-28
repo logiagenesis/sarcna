@@ -33,7 +33,7 @@ final class ContactController extends Controller
     public function store(): never
     {
         if (trim((string) $this->request->input('website', '')) !== '') {
-            $this->success('Thank you — your message has been sent.');
+            $this->flashSuccess('Thank you — your message has been sent.');
             $this->redirect(url('/contact'));
         }
 
@@ -63,7 +63,7 @@ final class ContactController extends Controller
 
         MailService::contactReceived(array_merge($message, ['id' => $id]));
 
-        $this->success('Thank you — your message is with the committee and someone will reply soon.');
+        $this->flashSuccess('Thank you — your message is with the committee and someone will reply soon.');
         $this->redirect(url('/contact'));
     }
 }

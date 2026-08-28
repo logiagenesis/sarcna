@@ -93,7 +93,7 @@ final class ShopController extends Controller
         }
 
         if (!SettingsService::bool('shop_enabled', true)) {
-            $this->error('The shop is closed at the moment.');
+            $this->flashError('The shop is closed at the moment.');
             $this->back(url('/shop'));
         }
 
@@ -110,23 +110,23 @@ final class ShopController extends Controller
             }
 
             if ($variant === null) {
-                $this->error('Please choose an available size and colour.');
+                $this->flashError('Please choose an available size and colour.');
                 $this->back(url('/shop/' . $product['slug']));
             }
         } elseif (ProductService::variants((int) $product['id']) !== []) {
-            $this->error('Please choose a size and colour.');
+            $this->flashError('Please choose a size and colour.');
             $this->back(url('/shop/' . $product['slug']));
         }
 
         if (!ProductService::inStock($product, $variant)) {
-            $this->error('That option has just sold out.');
+            $this->flashError('That option has just sold out.');
             $this->back(url('/shop/' . $product['slug']));
         }
 
         $available = ProductService::stockFor($product, $variant);
 
         if ($available < $quantity) {
-            $this->error(sprintf('Only %d left of that option.', $available));
+            $this->flashError(sprintf('Only %d left of that option.', $available));
             $this->back(url('/shop/' . $product['slug']));
         }
 
@@ -137,7 +137,7 @@ final class ShopController extends Controller
             $price = rands($this->request->input('amount', 0));
 
             if ($price < (int) $product['min_amount_cents']) {
-                $this->error('Please enter an amount of at least ' . money((int) $product['min_amount_cents']) . '.');
+                $this->flashError('Please enter an amount of at least ' . money((int) $product['min_amount_cents']) . '.');
                 $this->back(url('/shop/' . $product['slug']));
             }
 
@@ -189,7 +189,7 @@ final class ShopController extends Controller
             'meta'             => $meta,
         ]);
 
-        $this->success($description . ' added to your cart.');
+        $this->flashSuccess($description . ' added to your cart.');
         $this->redirect(url('/cart'));
     }
 }

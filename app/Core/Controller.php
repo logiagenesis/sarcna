@@ -52,12 +52,12 @@ abstract class Controller
         $this->back();
     }
 
-    protected function success(string $message): void
+    protected function flashSuccess(string $message): void
     {
         Session::flash('success', $message);
     }
 
-    protected function error(string $message): void
+    protected function flashError(string $message): void
     {
         Session::flash('error', $message);
     }

@@ -64,7 +64,7 @@ final class TransportController extends Controller
     public function book(string $slug): never
     {
         if (!SettingsService::bool('transport_enabled', true)) {
-            $this->error('Transport booking is closed at the moment.');
+            $this->flashError('Transport booking is closed at the moment.');
             $this->back(url('/transport'));
         }
 
@@ -93,7 +93,7 @@ final class TransportController extends Controller
         $slot = TransportService::findSlot($this->request->int('slot_id'));
 
         if ($slot === null || (int) $slot['route_id'] !== (int) $route['id'] || (int) $slot['is_active'] !== 1) {
-            $this->error('That departure is no longer available.');
+            $this->flashError('That departure is no longer available.');
             $this->back(url('/transport/' . $route['slug']));
         }
 
@@ -101,14 +101,14 @@ final class TransportController extends Controller
         $left  = TransportService::seatsLeft((int) $slot['id']);
 
         if ($left < $seats) {
-            $this->error($left === 0
+            $this->flashError($left === 0
                 ? 'That departure is full. Please choose another time.'
                 : sprintf('Only %d seat%s left on that departure.', $left, $left === 1 ? '' : 's'));
             $this->back(url('/transport/' . $route['slug']));
         }
 
         if ((int) $route['requires_flight_number'] === 1 && trim((string) $this->request->input('flight_number', '')) === '') {
-            $this->error('Please give us your flight number so we can match you to the right shuttle.');
+            $this->flashError('Please give us your flight number so we can match you to the right shuttle.');
             $this->back(url('/transport/' . $route['slug']));
         }
 
@@ -134,7 +134,7 @@ final class TransportController extends Controller
             ],
         ]);
 
-        $this->success(sprintf('%d seat%s on the %s added to your cart.', $seats, $seats === 1 ? '' : 's', $route['name']));
+        $this->flashSuccess(sprintf('%d seat%s on the %s added to your cart.', $seats, $seats === 1 ? '' : 's', $route['name']));
         $this->redirect(url('/cart'));
     }
 }
