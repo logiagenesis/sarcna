@@ -154,6 +154,11 @@ img, svg, video { max-width: 100%; height: auto; display: block; }
 
 hr { border: 0; border-top: 1px solid var(--line); margin: var(--space-l) 0; }
 
+/* Browsers give <figure> a 40px side margin by default, which quietly shrinks
+   every image in a grid cell. */
+figure { margin: 0; }
+blockquote { margin: var(--space-m) 0; }
+
 ul, ol { padding-left: 1.25rem; }
 li { margin-bottom: 0.35rem; }
 
@@ -168,11 +173,13 @@ small { font-size: var(--step--1); }
 }
 
 .skip-link {
-  position: absolute; left: -9999px; top: 0; z-index: 200;
+  position: absolute; left: 0; top: 0; z-index: 200;
   background: var(--vineyard); color: var(--cream);
   padding: 0.85rem 1.35rem; border-radius: 0 0 var(--radius-s) 0;
+  transform: translateY(-110%);
+  transition: transform 0.15s ease;
 }
-.skip-link:focus { left: 0; }
+.skip-link:focus { transform: translateY(0); }
 
 .visually-hidden {
   position: absolute !important; width: 1px; height: 1px;
@@ -204,6 +211,9 @@ small { font-size: var(--step--1); }
 .stack-l > * + * { margin-top: var(--space-l); }
 
 .grid { display: grid; gap: var(--space-m); }
+/* Grid items default to min-width:auto, which lets a wide table push the whole
+   page sideways. Zero lets the overflow container do its job instead. */
+.grid > * { min-width: 0; }
 .grid--2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 .grid--3 { grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); }
 .grid--4 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
@@ -313,6 +323,19 @@ small { font-size: var(--step--1); }
 
 .site-logo { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; flex-shrink: 0; }
 .site-logo img { height: 46px; width: auto; }
+
+/* On narrow screens the wordmark is dropped for the badge, so the header
+   never has to compete with the cart and the menu button for space. */
+.site-logo__full { display: none; }
+.site-logo__mark { display: block; height: 42px; }
+@media (min-width: 30rem) {
+  .site-logo__full { display: block; }
+  .site-logo__mark { display: none; }
+}
+@media (max-width: 26rem) {
+  .header-actions__account { display: none; }
+  .header-actions__register { padding-inline: 0.85rem; }
+}
 
 .nav { display: none; }
 .nav__list { display: flex; align-items: center; gap: 0.2rem; list-style: none; margin: 0; padding: 0; }
@@ -776,6 +799,21 @@ td.numeric, th.numeric { text-align: right; font-variant-numeric: tabular-nums; 
   position: absolute; inset: auto 0 0 0; padding: 0.6rem 0.8rem;
   background: linear-gradient(transparent, rgba(14,36,28,0.85));
   color: var(--cream); font-size: var(--step--1);
+}
+
+/* Room detail: with three or more images the first one leads at full width;
+   with one or two they simply sit side by side. */
+.room-gallery {
+  display: grid; gap: var(--space-xs); margin-bottom: var(--space-l);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.room-gallery--lead { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.room-gallery--lead .room-gallery__lead { grid-column: 1 / -1; aspect-ratio: 16 / 9; }
+.room-gallery--single { grid-template-columns: minmax(0, 1fr); }
+.room-gallery--single .gallery-item { aspect-ratio: 16 / 9; }
+@media (max-width: 40rem) {
+  .room-gallery, .room-gallery--lead { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .room-gallery--lead .room-gallery__lead { grid-column: 1 / -1; }
 }
 
 .lightbox {

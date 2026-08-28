@@ -16,11 +16,12 @@ $totalFree = array_sum($availability);
   <div class="container grid grid--sidebar">
     <div>
       <?php if ($images !== []): ?>
-        <div class="gallery-grid" style="margin-bottom:2rem">
-          <?php foreach ($images as $image): ?>
-            <figure class="gallery-item" data-lightbox="<?= e(uploaded($image['file_path'])) ?>"
+        <div class="room-gallery <?= count($images) > 2 ? 'room-gallery--lead' : (count($images) === 1 ? 'room-gallery--single' : '') ?>">
+          <?php foreach ($images as $index => $image): ?>
+            <figure class="gallery-item<?= $index === 0 ? ' room-gallery__lead' : '' ?>"
+                    data-lightbox="<?= e(uploaded($image['file_path'])) ?>"
                     data-lightbox-alt="<?= e($image['alt_text']) ?>" data-lightbox-caption="<?= e($roomType['name']) ?>">
-              <?= picture($image['file_path'], $image['alt_text']) ?>
+              <?= picture($image['file_path'], $image['alt_text'], ['loading' => $index === 0 ? 'eager' : 'lazy']) ?>
             </figure>
           <?php endforeach; ?>
         </div>

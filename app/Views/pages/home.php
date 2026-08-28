@@ -13,7 +13,21 @@ View::start('content');
 <!-- ============================================================ hero -->
 <section class="hero">
   <div class="hero__media">
-    <?= picture($hero['image'] ?? 'img/backgrounds/hero-winelands.jpg', $hero['image_alt'] ?? 'Sunrise over the Cape Winelands', ['loading' => 'eager']) ?>
+    <?php
+    // Art-directed hero: a portrait crop on phones, the wide scene above that.
+    $heroImage = $hero['image'] ?? 'img/backgrounds/hero-winelands.jpg';
+    $heroAlt   = $hero['image_alt'] ?? 'Illustration of a Cape Winelands sunrise over vineyards and mountains';
+    $heroWide  = str_starts_with($heroImage, '/') ? uploaded($heroImage) : asset($heroImage);
+    $usesDefault = !isset($hero['image']) || $hero['image'] === '' || str_contains((string) $heroImage, 'hero-winelands');
+    ?>
+    <picture>
+      <?php if ($usesDefault): ?>
+        <source media="(max-width: 40rem)" type="image/webp" srcset="<?= e(asset('img/backgrounds/hero-mobile.webp')) ?>">
+        <source media="(max-width: 40rem)" srcset="<?= e(asset('img/backgrounds/hero-mobile.jpg')) ?>">
+      <?php endif; ?>
+      <source type="image/webp" srcset="<?= e(preg_replace('/\.(jpe?g|png)(\?.*)?$/i', '.webp$2', $heroWide)) ?>">
+      <img src="<?= e($heroWide) ?>" alt="<?= e($heroAlt) ?>" loading="eager" fetchpriority="high" decoding="async">
+    </picture>
   </div>
   <div class="container hero__inner">
     <span class="eyebrow hero__eyebrow"><?= e($event['dates_label']) ?> &middot; Cape Winelands, South Africa</span>

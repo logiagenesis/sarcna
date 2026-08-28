@@ -29,7 +29,8 @@ $navigation = [
 <header class="site-header">
   <div class="container site-header__inner">
     <a class="site-logo" href="<?= e(url('/')) ?>" aria-label="<?= e(SettingsService::get('site_name', config('app.name'))) ?> home">
-      <img src="<?= e(asset('brand/logo.svg')) ?>" alt="<?= e(SettingsService::get('site_name', config('app.name'))) ?>" width="258" height="66">
+      <img class="site-logo__full" src="<?= e(asset('brand/logo.svg')) ?>" alt="<?= e(SettingsService::get('site_name', config('app.name'))) ?>" width="258" height="66">
+      <img class="site-logo__mark" src="<?= e(asset('brand/badge.svg')) ?>" alt="" aria-hidden="true" width="46" height="46">
     </a>
 
     <nav class="nav" aria-label="Main">
@@ -50,7 +51,7 @@ $navigation = [
     </nav>
 
     <div class="header-actions">
-      <a class="btn btn--gold btn--sm" href="<?= e(url('/shop/registration')) ?>"
+      <a class="btn btn--gold btn--sm header-actions__register" href="<?= e(url('/shop/registration')) ?>"
          data-track="select_promotion" data-track-params='{"promotion_name":"header_register"}'>Register</a>
 
       <a class="cart-button" href="<?= e(url('/cart')) ?>" aria-label="Cart, <?= (int) $cartCount ?> item(s)">
@@ -62,11 +63,11 @@ $navigation = [
       </a>
 
       <?php if (AuthService::check()): ?>
-        <a class="btn btn--ghost btn--sm" href="<?= e(url(AuthService::isAdmin() ? '/admin' : '/account')) ?>">
+        <a class="btn btn--ghost btn--sm header-actions__account" href="<?= e(url(AuthService::isAdmin() ? '/admin' : '/account')) ?>">
           <?= AuthService::isAdmin() ? 'Admin' : 'My account' ?>
         </a>
       <?php else: ?>
-        <a class="btn btn--ghost btn--sm" href="<?= e(url('/login')) ?>">Sign in</a>
+        <a class="btn btn--ghost btn--sm header-actions__account" href="<?= e(url('/login')) ?>">Sign in</a>
       <?php endif; ?>
 
       <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="Open menu">

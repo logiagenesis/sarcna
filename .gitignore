@@ -26,3 +26,6 @@ Thumbs.db
 
 # Build tooling (compiled CSS is committed on purpose)
 node_modules/
+
+# Build output
+dist/
