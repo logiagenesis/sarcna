@@ -186,6 +186,14 @@ $router->group('/admin', ['admin'], static function (Router $router): void {
     $router->post('/bookings/{id}/status', [Admin\BookingController::class, 'updateStatus'], ['admin:bookings']);
     $router->get('/bookings/holds', [Admin\BookingController::class, 'holds'], ['admin:bookings']);
 
+    // The booking chair's console. These literal paths are registered before
+    // any /bookings/{id} route so "operations" is never read as an id.
+    $router->get('/bookings/operations', [Admin\RoomingController::class, 'operations'], ['admin:bookings']);
+    $router->get('/bookings/run-sheet', [Admin\RoomingController::class, 'runSheet'], ['admin:bookings']);
+    $router->get('/bookings/{id}/move', [Admin\RoomingController::class, 'move'], ['admin:bookings']);
+    $router->post('/bookings/{id}/move', [Admin\RoomingController::class, 'applyMove'], ['admin:bookings']);
+    $router->post('/bookings/{id}/guest', [Admin\RoomingController::class, 'saveGuest'], ['admin:bookings']);
+
     // Transport
     $router->get('/transport', [Admin\TransportController::class, 'index'], ['admin:transport']);
     $router->post('/transport/routes', [Admin\TransportController::class, 'saveRoute'], ['admin:transport']);

@@ -183,6 +183,33 @@ for ($i = 0; $i < $target; $i++) {
     $bedsHeld = 0;
 
     if ($roomTypes !== [] && $nights !== [] && random_int(1, 3) > 1) {
+        // The things the booking chair actually has to act on. Roughly one
+        // booking in five carries a request, which is about what a real
+        // convention gets.
+        $roommate = random_int(1, 4) === 1
+            ? $firstNames[array_rand($firstNames)] . ' ' . $lastNames[array_rand($lastNames)]
+            : '';
+
+        $accessibility = random_int(1, 9) === 1
+            ? [
+                'Uses a walking frame — ground floor only please',
+                'Wheelchair user, needs a roll-in shower',
+                'Cannot manage stairs',
+                'Hard of hearing — please knock loudly',
+                'Needs space for a CPAP machine next to the bed',
+              ][array_rand([0, 1, 2, 3, 4])]
+            : '';
+
+        $roomNote = random_int(1, 7) === 1
+            ? [
+                'Arriving late on the Friday, after 21:00',
+                'Please put me near the meeting hall if possible',
+                'Travelling with my sponsor, would like to be close by',
+                'Early riser — happy to take the bed by the window',
+                'First convention, feeling nervous, any help appreciated',
+              ][array_rand([0, 1, 2, 3, 4])]
+            : '';
+
         $roomType   = weighted($roomTypes);
         $stay       = random_int(1, min(3, count($nights)));
         $startIndex = random_int(0, max(0, count($nights) - $stay));
@@ -217,11 +244,15 @@ for ($i = 0; $i < $target; $i++) {
                 'description'      => sprintf('%s — 1 bed, %s', $roomType['name'], za_date($night, 'D j M Y')),
                 'unit_price_cents' => $rate,
                 'meta'             => [
-                    'bed_ids'    => [(int) $bedId],
-                    'bed_count'  => 1,
-                    'room_type'  => $roomType['name'],
-                    'guest_name' => $first . ' ' . $last,
-                    'guest_email' => $email,
+                    'bed_ids'             => [(int) $bedId],
+                    'bed_count'           => 1,
+                    'room_type'           => $roomType['name'],
+                    'guest_name'          => $first . ' ' . $last,
+                    'guest_email'         => $email,
+                    'guest_phone'         => '08' . random_int(20000000, 39999999),
+                    'roommate_request'    => $roommate,
+                    'accessibility_needs' => $accessibility,
+                    'notes'               => $roomNote,
                 ],
             ]);
 

@@ -24,9 +24,12 @@ $navigation = [
         ['/admin/coupons', 'Coupons', 'coupons'],
     ],
     'Accommodation' => [
-        ['/admin/rooms', 'Room types & beds', 'rooms'],
+        ['/admin/bookings/operations', 'Rooming operations', 'bookings'],
         ['/admin/bookings', 'Bookings', 'bookings'],
         ['/admin/bookings/board', 'Bed board', 'bookings'],
+        ['/admin/bookings/run-sheet', 'Run sheet', 'bookings'],
+        ['/admin/bookings/holds', 'Live holds', 'bookings'],
+        ['/admin/rooms', 'Room types & beds', 'rooms'],
     ],
     'Transport' => [
         ['/admin/transport', 'Routes & departures', 'transport'],
