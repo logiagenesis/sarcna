@@ -319,7 +319,13 @@ final class PayFastService
     private static function confirmWithPayFast(array $data): bool
     {
         $payload = http_build_query(array_diff_key($data, ['signature' => true]));
-        $url     = 'https://' . self::host() . '/eng/query/validate';
+        $url     = (string) Config::get('payfast.validate_url', '');
+
+        if ($url === '') {
+            $url = 'https://' . self::host() . '/eng/query/validate';
+        } else {
+            Logger::payment('ITN validation is pointed at an override URL — testing configuration, never production.');
+        }
 
         $response = self::post($url, $payload);
 
@@ -341,6 +347,7 @@ final class PayFastService
                 CURLOPT_POST           => true,
                 CURLOPT_POSTFIELDS     => $payload,
                 CURLOPT_TIMEOUT        => 20,
+                CURLOPT_CONNECTTIMEOUT => 10,
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_SSL_VERIFYHOST => 2,
                 CURLOPT_USERAGENT      => 'SARCNA-2027/1.0',

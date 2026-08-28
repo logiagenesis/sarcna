@@ -65,6 +65,10 @@ return [
         'return_url'   => (string) Env::get('PAYFAST_RETURN_URL', ''),
         'cancel_url'   => (string) Env::get('PAYFAST_CANCEL_URL', ''),
         'notify_url'   => (string) Env::get('PAYFAST_NOTIFY_URL', ''),
+        // Testing only: point the server-side ITN validation at a local stub
+        // (e.g. http://127.0.0.1:8099/validate) so the full payment pipeline
+        // can be exercised without reaching PayFast. NEVER set in production.
+        'validate_url' => (string) Env::get('PAYFAST_VALIDATE_URL', ''),
     ],
 
     'mail' => [
