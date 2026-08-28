@@ -191,6 +191,99 @@ View::start('content');
       </form>
     </div>
 
+    <?php $refundable = (int) $order['total_cents'] - (int) $refundedTotal; ?>
+    <?php if (($canRefund && $order['status'] === 'paid') || $refunds !== []): ?>
+      <div class="admin-panel">
+        <h2>Refunds</h2>
+
+        <?php if ($refunds !== []): ?>
+          <div class="ledger-scroll">
+          <table class="ledger" style="margin-bottom:1rem">
+            <tbody>
+              <?php foreach ($refunds as $refund): ?>
+                <tr>
+                  <td>
+                    <strong><?= e(za_date((string) ($refund['refunded_on'] ?: $refund['created_at']), 'j M Y')) ?></strong><br>
+                    <span class="muted"><?= e((string) $refund['reason']) ?></span>
+                    <?php if ($refund['provider_reference']): ?><br><span class="muted">ref <?= e((string) $refund['provider_reference']) ?></span><?php endif; ?>
+                    <?php if ($refund['recorded_by']): ?><br><span class="muted">by <?= e((string) $refund['recorded_by']) ?></span><?php endif; ?>
+                  </td>
+                  <td class="numeric money">− <?= e(money((int) $refund['amount_cents'])) ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th>Refunded so far</th>
+                <td class="numeric money">− <?= e(money((int) $refundedTotal)) ?></td>
+              </tr>
+              <tr>
+                <th>Still refundable</th>
+                <td class="numeric money"><?= e(money(max(0, $refundable))) ?></td>
+              </tr>
+            </tfoot>
+          </table>
+          </div>
+        <?php endif; ?>
+
+        <?php if ($canRefund && $order['status'] === 'paid' && $refundable > 0): ?>
+          <div class="admin-note">
+            Refund the money in PayFast first, then record it here. This form writes the ledger entry and adjusts every
+            finance report; it does not move any money.
+          </div>
+          <form method="post" action="<?= e(url('/admin/orders/' . $order['id'] . '/refund')) ?>"
+                data-confirm="Record this refund against the order?">
+            <?= csrf_field() ?>
+            <div class="field">
+              <label class="field__label" for="refund-amount">Amount (R)</label>
+              <input id="refund-amount" type="number" step="0.01" min="0.01"
+                     max="<?= number_format($refundable / 100, 2, '.', '') ?>"
+                     value="<?= number_format($refundable / 100, 2, '.', '') ?>" name="amount" required>
+              <p class="field__hint">At most <?= e(money($refundable)) ?>.</p>
+            </div>
+            <div class="field">
+              <label class="field__label" for="refund-reason">Reason</label>
+              <input id="refund-reason" type="text" name="reason" required placeholder="Cancelled — could not travel">
+            </div>
+            <div class="field">
+              <label class="field__label" for="refund-category">Category</label>
+              <select id="refund-category" name="category">
+                <option value="mixed">Mixed / whole order</option>
+                <option value="registration">Registration</option>
+                <option value="accommodation">Accommodation</option>
+                <option value="transport">Transport</option>
+                <option value="merchandise">Merchandise</option>
+                <option value="donation">Donation</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field__label" for="refund-method">Method</label>
+              <select id="refund-method" name="method">
+                <option value="payfast">PayFast reversal</option>
+                <option value="eft">EFT</option>
+                <option value="cash">Cash</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field__label" for="refund-provider">Provider / bank reference</label>
+              <input id="refund-provider" type="text" name="provider_reference">
+            </div>
+            <div class="field">
+              <label class="field__label" for="refund-date">Refunded on</label>
+              <input id="refund-date" type="date" name="refunded_on" value="<?= e(date('Y-m-d')) ?>">
+            </div>
+            <label class="checkbox">
+              <input type="checkbox" name="release_inventory" value="1">
+              On a full refund, release the beds and seats back on sale
+            </label>
+            <button class="btn btn--block btn--sm" type="submit" style="margin-top:.75rem">Record refund</button>
+          </form>
+        <?php elseif ($canRefund && $refundable <= 0): ?>
+          <p class="muted">This order has been refunded in full. Nothing further can be refunded against it.</p>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
+
     <div class="admin-panel">
       <h2>Internal note</h2>
       <form method="post" action="<?= e(url('/admin/orders/' . $order['id'] . '/note')) ?>">

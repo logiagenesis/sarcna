@@ -224,3 +224,28 @@ INSERT INTO `pages` (`slug`, `title`, `subtitle`, `hero_image`, `meta_descriptio
 <p>Unworn, unused items may be returned during the weekend. Personalised items cannot be returned.</p>
 <h2>Delivery</h2>
 <p>Delivery is not offered by default. If the committee enables delivery, courier charges and timelines are shown at checkout.</p>');
+
+-- --------------------------------------------------------- expense categories --
+-- The buckets a convention treasurer actually reports against.
+
+INSERT INTO `expense_categories` (`name`, `slug`, `sort_order`) VALUES
+('Venue & accommodation','venue-accommodation',1),
+('Catering','catering',2),
+('Transport & shuttles','transport',3),
+('Merchandise stock','merchandise',4),
+('Programme & speakers','programme',5),
+('Equipment & AV','equipment-av',6),
+('Printing & signage','printing-signage',7),
+('Website & software','website-software',8),
+('Banking & payment fees','banking-fees',9),
+('Scholarships & sponsorships','scholarships',10),
+('Admin & sundries','admin-sundries',11);
+
+-- Finance settings.
+INSERT INTO `settings` (`group_name`, `key_name`, `value`, `type`, `label`, `description`, `options`, `sort_order`) VALUES
+('finance','vat_registered','0','boolean','The convention is VAT registered','Turn on only if the committee is registered for VAT. It adds a VAT view to the finance reports.',NULL,1),
+('finance','vat_rate','15','number','VAT rate (%)','South African standard rate. Used only when VAT registered is on.',NULL,2),
+('finance','financial_year_start','2026-09-01','text','Financial year starts','YYYY-MM-DD. Used as the default reporting period.',NULL,3),
+('finance','payfast_fee_percent','3.5','text','PayFast fee (%)','Used to estimate fees on orders where PayFast has not reported the actual fee.',NULL,4),
+('finance','payfast_fee_fixed','2.00','text','PayFast fee, fixed portion (R)','Added to the percentage when estimating fees.',NULL,5),
+('finance','treasurer_email','','email','Treasurer email','Where the finance pack is addressed.',NULL,6);

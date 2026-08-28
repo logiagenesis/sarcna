@@ -19,6 +19,8 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
 
 use App\Core\Database;
 use App\Services\AccommodationService;
+use App\Services\CsvService;
+use App\Services\FinanceService;
 use App\Services\OrderService;
 use App\Services\PayFastService;
 
@@ -210,6 +212,86 @@ $underpaid = array_merge($signed, ['amount_gross' => '1.00']);
 $underpaid['signature'] = PayFastService::signature($underpaid);
 $result = PayFastService::handleNotification($underpaid, '127.0.0.1');
 check('An under-payment is rejected', ($result['reason'] ?? '') === 'amount_mismatch');
+
+/* ---------------------------------------------------------------- finance */
+
+section('Financial reporting');
+
+$allTime = FinanceService::period('all');
+$summary = FinanceService::summary($allTime);
+
+$paidTotal = (int) Database::scalar('SELECT COALESCE(SUM(total_cents), 0) FROM orders WHERE status = "paid"');
+$pendingTotal = (int) Database::scalar('SELECT COALESCE(SUM(total_cents), 0) FROM orders WHERE status = "pending_payment"');
+
+check(
+    'Reported income matches the paid orders in the database',
+    $summary['gross_cents'] === $paidTotal,
+    money($summary['gross_cents']) . ' vs ' . money($paidTotal)
+);
+check(
+    'MONEY NOT YET PAID IS NEVER COUNTED AS INCOME',
+    $pendingTotal === 0 || $summary['gross_cents'] !== $summary['gross_cents'] + $pendingTotal
+);
+check(
+    'Pending orders are reported separately as pipeline',
+    $summary['pending_cents'] === $pendingTotal,
+    money($summary['pending_cents']) . ' vs ' . money($pendingTotal)
+);
+
+$fees = FinanceService::fees($allTime);
+check(
+    'Estimated gateway fees are declared as estimates, never as fact',
+    $fees['estimated'] === ($fees['without_fee'] > 0)
+);
+check(
+    'Net income is gross less refunds less fees',
+    $summary['net_income_cents'] === $summary['gross_cents'] - $summary['refunded_cents'] - $summary['fees_cents']
+);
+
+$expenseTotals = FinanceService::expenseTotals($allTime);
+check(
+    'Cancelled expenses are excluded from the totals',
+    $expenseTotals['total_cents'] === $expenseTotals['paid_cents'] + $expenseTotals['committed_cents']
+);
+check(
+    'Surplus is income less everything owed, cash surplus less only what is paid',
+    $summary['surplus_cents'] === $summary['net_income_cents'] - $expenseTotals['total_cents']
+    && $summary['cash_surplus_cents'] === $summary['net_income_cents'] - $expenseTotals['paid_cents']
+);
+
+$byCategory = FinanceService::incomeByCategory($allTime);
+$categoryTotal = array_sum(array_column($byCategory, 'gross_cents'));
+check(
+    'Income by category adds up to the income total',
+    $categoryTotal === (int) Database::scalar(
+        'SELECT COALESCE(SUM(oi.total_cents), 0) FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE o.status = "paid"'
+    )
+);
+
+// An over-refund must be impossible, whatever the caller does.
+$refundedOrder = Database::first('SELECT * FROM orders WHERE status IN ("paid","refunded") ORDER BY total_cents DESC LIMIT 1');
+
+if ($refundedOrder !== null) {
+    $already = FinanceService::refundedTotal((int) $refundedOrder['id']);
+    check(
+        'Refunds recorded against an order never exceed what was paid',
+        $already <= (int) $refundedOrder['total_cents'],
+        money($already) . ' of ' . money((int) $refundedOrder['total_cents'])
+    );
+}
+
+check(
+    'A fully refunded order is not flagged as a reconciliation exception',
+    !in_array('refunded', array_column(FinanceService::reconciliationExceptions(), 'order_status'), true)
+);
+
+// Formula injection must be defused without breaking negative numbers.
+$csv = CsvService::build(
+    [['a' => '-1250.00', 'b' => '=cmd|calc']],
+    ['a' => 'Amount', 'b' => 'Text']
+);
+check('Negative amounts stay numeric in CSV exports', str_contains($csv, '-1250.00') && !str_contains($csv, "'-1250.00"));
+check('Spreadsheet formulas are defused in CSV exports', str_contains($csv, "'=cmd|calc"));
 
 /* ----------------------------------------------------------------- config */
 

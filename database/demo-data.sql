@@ -224,3 +224,35 @@ INSERT INTO `service_applications` (`reference`,`name`,`email`,`phone`,`region`,
 INSERT INTO `contact_messages` (`name`,`email`,`phone`,`subject`,`message`,`status`) VALUES
 ('Sarah Adams','sarah.demo@example.com','+27 83 000 0004','Accommodation question','Hi there, can I book one bed in a shared cottage and have my friend book the other one? We would like to be in the same room.','new'),
 ('Johan Botha','johan.demo@example.com',NULL,'Transport from the airport','What time is the last shuttle from the airport on Friday? My flight lands at 15:20.','read');
+
+-- ------------------------------------------------------------ finance demo --
+-- Indicative budget and a few committed costs, so the finance screens are not
+-- empty for the committee preview. All figures are MOCK.
+
+INSERT INTO `budget_lines` (`kind`,`category`,`description`,`budgeted_cents`,`sort_order`,`notes`) VALUES
+('income','Registration','Full weekend and day passes',38000000,1,'Assumes roughly 400 registrations at the blended rate'),
+('income','Accommodation','Beds sold at the Retreat and the partner guest house',26000000,2,'72 beds on the estate over three nights plus overflow'),
+('income','Transport','Shuttle seats',4500000,3,NULL),
+('income','Merchandise','Clothing and keepsakes',6000000,4,NULL),
+('income','Donations','Seventh Tradition and sponsorships',5000000,5,'Historically the least predictable line'),
+
+('expense','Venue & accommodation','Retreat hire and cottage allocation',30000000,1,'Deposit due on signature'),
+('expense','Catering','Meals across the weekend',12000000,2,NULL),
+('expense','Transport & shuttles','Vehicle hire and drivers',3800000,3,NULL),
+('expense','Merchandise stock','Garments, printing and packaging',3600000,4,NULL),
+('expense','Programme & speakers','Travel and accommodation for speakers',2500000,5,NULL),
+('expense','Equipment & AV','Sound, staging and screening room hire',1800000,6,NULL),
+('expense','Printing & signage','Badges, lanyards, programmes and signage',900000,7,NULL),
+('expense','Website & software','Hosting, domain and payment gateway',450000,8,NULL),
+('expense','Banking & payment fees','PayFast and bank charges',1400000,9,'Roughly 3.5% of card and EFT income'),
+('expense','Scholarships & sponsorships','Sponsored registrations and beds',3000000,10,'Funded from donations'),
+('expense','Admin & sundries','Stationery, first aid, contingency',1200000,11,NULL);
+
+INSERT INTO `expenses` (`reference`,`category_id`,`supplier`,`description`,`amount_cents`,`incurred_on`,`due_on`,`paid_on`,`status`,`payment_method`,`invoice_number`,`notes`) VALUES
+('EXP-DEMO-0001',(SELECT id FROM expense_categories WHERE slug='venue-accommodation'),'Boschendal Retreat','Venue deposit — 25% on signature',7500000,'2026-08-01','2026-08-15','2026-08-14','paid','EFT','BOS-2027-001','Refundable until 45 days before arrival'),
+('EXP-DEMO-0002',(SELECT id FROM expense_categories WHERE slug='website-software'),'Domain & hosting','Annual hosting and domain renewal',420000,'2026-08-10','2026-08-31','2026-08-12','paid','Card','HOST-88213',NULL),
+('EXP-DEMO-0003',(SELECT id FROM expense_categories WHERE slug='printing-signage'),'Cape Print Co','Convention badges and lanyards — quote',780000,'2026-08-20','2027-07-01',NULL,'committed',NULL,NULL,'Quote valid to March 2027'),
+('EXP-DEMO-0004',(SELECT id FROM expense_categories WHERE slug='equipment-av'),'Winelands AV','Sound and staging for the auditorium',1650000,'2026-08-22','2027-08-01',NULL,'committed',NULL,NULL,'50% deposit due July 2027'),
+('EXP-DEMO-0005',(SELECT id FROM expense_categories WHERE slug='merchandise-stock' ),NULL,'Merchandise first run',0,'2026-08-25',NULL,NULL,'planned',NULL,NULL,'Awaiting final designs');
+
+UPDATE `expenses` SET `category_id` = (SELECT id FROM expense_categories WHERE slug='merchandise'), `amount_cents` = 2400000 WHERE `reference` = 'EXP-DEMO-0005';

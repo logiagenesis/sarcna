@@ -6,6 +6,7 @@ namespace App\Controllers\Admin;
 use App\Core\Database;
 use App\Core\Response;
 use App\Services\CsvService;
+use App\Services\FinanceService;
 
 /** CSV exports of everything the committee needs off-site. */
 final class ExportController extends AdminController
@@ -25,6 +26,10 @@ final class ExportController extends AdminController
             'customers'    => $this->customers(),
             'stock'        => $this->stock(),
             'payments'     => $this->payments(),
+            'expenses'     => $this->expenses(),
+            'refunds'      => $this->refunds(),
+            'budget'       => $this->budget(),
+            'finance-pack' => $this->financePack(),
             default        => [[], []],
         };
 
@@ -259,6 +264,179 @@ final class ExportController extends AdminController
                 'provider_reference' => 'PayFast ID', 'amount' => 'Amount (R)', 'fee' => 'Fee (R)',
                 'status' => 'Status', 'signature_valid' => 'Signature valid', 'source_ip' => 'Source IP',
             ],
+        ];
+    }
+
+    /* --------------------------------------------------------------- finance */
+
+    /** The reporting period the finance screens are currently showing. */
+    private function financePeriod(): array
+    {
+        return FinanceService::period(
+            (string) $this->request->input('period', 'all'),
+            (string) $this->request->input('from', ''),
+            (string) $this->request->input('to', '')
+        );
+    }
+
+    private function expenses(): array
+    {
+        $period = $this->financePeriod();
+
+        return [
+            Database::select(
+                'SELECT e.reference, e.incurred_on, e.due_on, e.paid_on, e.status, c.name AS category,
+                        e.supplier, e.description, e.invoice_number, e.payment_method,
+                        e.amount_cents / 100 AS amount, e.vat_cents / 100 AS vat, e.notes,
+                        u.email AS captured_by
+                   FROM expenses e
+              LEFT JOIN expense_categories c ON c.id = e.category_id
+              LEFT JOIN users u ON u.id = e.created_by
+                  WHERE e.incurred_on BETWEEN ? AND ?
+               ORDER BY e.incurred_on DESC, e.id DESC',
+                [$period['from'], $period['to']]
+            ),
+            [
+                'reference' => 'Reference', 'incurred_on' => 'Date incurred', 'due_on' => 'Due',
+                'paid_on' => 'Paid on', 'status' => 'Status', 'category' => 'Category',
+                'supplier' => 'Supplier', 'description' => 'Description', 'invoice_number' => 'Invoice',
+                'payment_method' => 'Method', 'amount' => 'Amount (R)', 'vat' => 'VAT (R)',
+                'notes' => 'Notes', 'captured_by' => 'Captured by',
+            ],
+        ];
+    }
+
+    private function refunds(): array
+    {
+        $period = $this->financePeriod();
+
+        return [
+            Database::select(
+                'SELECT r.reference, COALESCE(r.refunded_on, DATE(r.created_at)) AS refunded_on,
+                        o.reference AS order_reference, o.email, r.amount_cents / 100 AS amount,
+                        r.category, r.method, r.provider_reference, r.status, r.reason,
+                        u.email AS recorded_by
+                   FROM refunds r
+                   JOIN orders o ON o.id = r.order_id
+              LEFT JOIN users u ON u.id = r.created_by
+                  WHERE COALESCE(r.refunded_on, DATE(r.created_at)) BETWEEN ? AND ?
+               ORDER BY r.created_at DESC',
+                [$period['from'], $period['to']]
+            ),
+            [
+                'reference' => 'Refund reference', 'refunded_on' => 'Refunded on',
+                'order_reference' => 'Order', 'email' => 'Delegate', 'amount' => 'Amount (R)',
+                'category' => 'Category', 'method' => 'Method', 'provider_reference' => 'Provider reference',
+                'status' => 'Status', 'reason' => 'Reason', 'recorded_by' => 'Recorded by',
+            ],
+        ];
+    }
+
+    private function budget(): array
+    {
+        $period = $this->financePeriod();
+        $budget = FinanceService::budgetVsActual($period);
+        $rows   = [];
+
+        foreach (['income', 'expense'] as $kind) {
+            foreach ($budget[$kind] as $line) {
+                $rows[] = [
+                    'kind'     => $kind,
+                    'category' => $line['category'],
+                    'description' => $line['description'],
+                    'budgeted' => number_format(((int) $line['budgeted_cents']) / 100, 2, '.', ''),
+                    'actual'   => number_format(((int) $line['actual_cents']) / 100, 2, '.', ''),
+                    'variance' => number_format(((int) $line['variance_cents']) / 100, 2, '.', ''),
+                    'percent'  => $line['percent'] === null ? '' : $line['percent'] . '%',
+                    'notes'    => $line['notes'],
+                ];
+            }
+        }
+
+        return [
+            $rows,
+            [
+                'kind' => 'Side', 'category' => 'Category', 'description' => 'Description',
+                'budgeted' => 'Budgeted (R)', 'actual' => 'Actual (R)', 'variance' => 'Variance (R)',
+                'percent' => 'Used', 'notes' => 'Notes',
+            ],
+        ];
+    }
+
+    /**
+     * The whole financial position on one sheet: the thing the finance chair
+     * takes to a committee meeting or hands to an auditor.
+     */
+    private function financePack(): array
+    {
+        $period  = $this->financePeriod();
+        $summary = FinanceService::summary($period);
+        $fees    = FinanceService::fees($period);
+        $budget  = FinanceService::budgetVsActual($period);
+        $vat     = FinanceService::vat($period);
+        $stock   = FinanceService::stockOnHand();
+
+        $rows = [];
+
+        $line = static function (string $section, string $label, $amount, string $note = '') use (&$rows): void {
+            $rows[] = [
+                'section' => $section,
+                'line'    => $label,
+                'amount'  => is_int($amount) ? number_format($amount / 100, 2, '.', '') : (string) $amount,
+                'note'    => $note,
+            ];
+        };
+
+        $line('Period', 'Reporting period', $period['label'], $period['from'] . ' to ' . $period['to']);
+        $line('Period', 'Generated', date('Y-m-d H:i'), 'Africa/Johannesburg');
+
+        $line('Income', 'Gross confirmed income', $summary['gross_cents'], $summary['orders_paid'] . ' paid orders');
+        $line('Income', 'Discounts given', $summary['discount_cents'], 'Coupons and concessions');
+        $line('Income', 'Refunds', -$summary['refunded_cents']);
+        $line('Income', 'Gateway fees', -$summary['fees_cents'], $fees['estimated']
+            ? 'Includes an estimate on ' . $fees['without_fee'] . ' payments PayFast has not reported a fee for'
+            : 'All fees reported by PayFast');
+        $line('Income', 'Net income', $summary['net_income_cents']);
+        $line('Income', 'Average order value', $summary['average_order_cents']);
+
+        foreach (FinanceService::incomeByCategory($period) as $row) {
+            $line('Income by category', ucfirst((string) $row['category']), (int) $row['gross_cents'], $row['units'] . ' items');
+        }
+
+        $line('Pipeline', 'Awaiting payment', $summary['pending_cents'], $summary['pending_orders'] . ' orders — not income yet');
+        $line('Pipeline', 'Failed or cancelled', $summary['lost_cents'], $summary['lost_orders'] . ' orders');
+
+        $line('Expenditure', 'Paid', $summary['expenses_paid_cents']);
+        $line('Expenditure', 'Committed, not yet paid', $summary['expenses_committed_cents']);
+        $line('Expenditure', 'Total on the hook for', $summary['expenses_total_cents']);
+
+        foreach (FinanceService::expensesByCategory($period) as $row) {
+            $line('Expenditure by category', (string) $row['category'], (int) $row['paid_cents'] + (int) $row['committed_cents']);
+        }
+
+        $line('Position', 'Surplus after all commitments', $summary['surplus_cents']);
+        $line('Position', 'Cash surplus (paid expenses only)', $summary['cash_surplus_cents']);
+        $line('Position', 'Merchandise stock on hand', $stock['value_cents'], 'At cost, not yet sold');
+
+        $line('Budget', 'Budgeted income', (int) $budget['totals']['income_budget']);
+        $line('Budget', 'Actual income', (int) $budget['totals']['income_actual']);
+        $line('Budget', 'Budgeted expenditure', (int) $budget['totals']['expense_budget']);
+        $line('Budget', 'Actual expenditure', (int) $budget['totals']['expense_actual']);
+        $line('Budget', 'Budgeted surplus', (int) $budget['totals']['budget_surplus']);
+        $line('Budget', 'Actual surplus', (int) $budget['totals']['actual_surplus']);
+
+        if ($vat !== null) {
+            $line('VAT', 'VAT-inclusive turnover', $vat['gross_cents']);
+            $line('VAT', 'Excluding VAT', $vat['exclusive_cents']);
+            $line('VAT', 'VAT at ' . $vat['rate'] . '%', $vat['vat_cents']);
+        }
+
+        $exceptions = FinanceService::reconciliationExceptions();
+        $line('Control', 'Reconciliation exceptions', (string) count($exceptions), $exceptions === [] ? 'Nothing outstanding' : 'Needs a human');
+
+        return [
+            $rows,
+            ['section' => 'Section', 'line' => 'Line', 'amount' => 'Amount (R)', 'note' => 'Note'],
         ];
     }
 }

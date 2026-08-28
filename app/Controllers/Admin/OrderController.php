@@ -5,6 +5,8 @@ namespace App\Controllers\Admin;
 
 use App\Core\Database;
 use App\Services\AccommodationService;
+use App\Services\AuthService;
+use App\Services\FinanceService;
 use App\Services\MailService;
 use App\Services\OrderService;
 use App\Services\TransportService;
@@ -65,6 +67,14 @@ final class OrderController extends AdminController
             'payments'          => Database::select('SELECT * FROM payments WHERE order_id = ? ORDER BY created_at DESC', [(int) $order['id']]),
             'logs'              => Database::select('SELECT * FROM payment_logs WHERE order_id = ? ORDER BY created_at DESC', [(int) $order['id']]),
             'customer'          => $order['user_id'] === null ? null : Database::first('SELECT * FROM users WHERE id = ?', [(int) $order['user_id']]),
+            'refunds'           => Database::select(
+                'SELECT r.*, u.email AS recorded_by FROM refunds r
+              LEFT JOIN users u ON u.id = r.created_by
+                  WHERE r.order_id = ? ORDER BY r.created_at DESC',
+                [(int) $order['id']]
+            ),
+            'refundedTotal'     => FinanceService::refundedTotal((int) $order['id']),
+            'canRefund'         => AuthService::can('finance'),
         ]);
     }
 

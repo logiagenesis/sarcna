@@ -142,6 +142,21 @@ $router->group('/admin', ['admin'], static function (Router $router): void {
     $router->post('/customers/{id}/roles', [Admin\CustomerController::class, 'updateRoles'], ['admin:*']);
     $router->post('/customers/{id}/status', [Admin\CustomerController::class, 'updateStatus'], ['admin:customers']);
 
+    // Finance — the treasurer's section
+    $router->get('/finance', [Admin\FinanceController::class, 'overview'], ['admin:finance']);
+    $router->get('/finance/income', [Admin\FinanceController::class, 'income'], ['admin:finance']);
+    $router->get('/finance/expenses', [Admin\FinanceController::class, 'expenses'], ['admin:finance']);
+    $router->post('/finance/expenses', [Admin\FinanceController::class, 'saveExpense'], ['admin:finance']);
+    $router->post('/finance/expenses/{id}/delete', [Admin\FinanceController::class, 'deleteExpense'], ['admin:finance']);
+    $router->get('/finance/budget', [Admin\FinanceController::class, 'budget'], ['admin:finance']);
+    $router->post('/finance/budget', [Admin\FinanceController::class, 'saveBudgetLine'], ['admin:finance']);
+    $router->post('/finance/budget/{id}/delete', [Admin\FinanceController::class, 'deleteBudgetLine'], ['admin:finance']);
+    $router->get('/finance/refunds', [Admin\FinanceController::class, 'refunds'], ['admin:finance']);
+    $router->get('/finance/reconciliation', [Admin\FinanceController::class, 'reconciliation'], ['admin:finance']);
+    $router->post('/finance/reconciliation', [Admin\FinanceController::class, 'saveReconciliation'], ['admin:finance']);
+    $router->post('/finance/reconciliation/{id}/delete', [Admin\FinanceController::class, 'deleteReconciliation'], ['admin:finance']);
+    $router->post('/orders/{id}/refund', [Admin\FinanceController::class, 'recordRefund'], ['admin:finance']);
+
     // Shop
     $router->get('/products', [Admin\ProductController::class, 'index'], ['admin:products']);
     $router->get('/products/create', [Admin\ProductController::class, 'create'], ['admin:products']);

@@ -9,7 +9,8 @@ body.admin {
 }
 
 .admin-shell { display: grid; grid-template-columns: 1fr; min-height: 100vh; }
-@media (min-width: 60rem) { .admin-shell { grid-template-columns: 260px 1fr; } }
+@media (min-width: 60rem) { .admin-shell { grid-template-columns: 260px minmax(0, 1fr); } }
+.admin-shell > * { min-width: 0; }
 
 /* ------------------------------------------------------------- sidebar */
 
@@ -55,14 +56,38 @@ body.admin {
 }
 .admin-panel > h2 { font-size: var(--step-1); margin-bottom: .75rem; }
 .admin-panel > h3 { font-size: var(--step-0); margin-bottom: .5rem; }
+.admin-panel__head { border-bottom: 1px solid var(--line); }
+.admin-panel__head h2 { font-size: var(--step-1); margin: 0; }
+.admin-panel__head p { margin: .25rem 0 0; font-size: var(--step--1); }
 
 .admin-grid { display: grid; gap: 1.25rem; }
 @media (min-width: 48rem) { .admin-grid--2 { grid-template-columns: 1fr 1fr; } }
 @media (min-width: 70rem) { .admin-grid--3 { grid-template-columns: repeat(3, 1fr); } .admin-grid--sidebar { grid-template-columns: minmax(0,1fr) 340px; } }
 
+/* A grid item's default min-width is its content, so one wide table drags the
+   whole admin sideways on a phone. Let items shrink and scroll their own
+   overflow instead. */
+.admin-grid > *, .admin-main > * { min-width: 0; }
+.admin-panel { min-width: 0; max-width: 100%; }
+.admin-panel details > form { min-width: 0; width: 100%; }
+.admin-panel details > form input, .admin-panel details > form select, .admin-panel details > form textarea { max-width: 100%; }
+.ledger-scroll { overflow-x: auto; max-width: 100%; }
+
+.budget-line { border-bottom: 1px solid var(--line); padding: .55rem 0; }
+.budget-line:last-of-type { border-bottom: 0; }
+.budget-line > summary {
+  cursor: pointer; list-style: none; display: flex; flex-wrap: wrap;
+  align-items: baseline; gap: .4rem; font-size: var(--step--1);
+}
+.budget-line > summary::-webkit-details-marker { display: none; }
+.budget-line__name { font-weight: 700; }
+.budget-line__amount { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.budget-line[open] > summary { margin-bottom: .6rem; }
+.budget-line form { max-width: 100%; }
+
 /* --------------------------------------------------------------- tiles */
 
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: .9rem; margin-bottom: 1.75rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: .9rem; margin-bottom: 1.75rem; }
 .tile {
   background: var(--white); border: 1px solid var(--line);
   border-left: 4px solid var(--vineyard);
@@ -72,6 +97,9 @@ body.admin {
 .tile:hover { box-shadow: var(--shadow-m); }
 .tile__label { font-size: .7rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-muted); }
 .tile__value { font-family: var(--font-display); font-size: var(--step-2); font-weight: 700; line-height: 1.15; color: var(--vineyard); }
+/* A rand figure uses a non-breaking space between thousands, so it cannot wrap.
+   Step it down inside a tile rather than let it run past the card edge. */
+.tile__value.money { font-size: var(--step-1); font-variant-numeric: tabular-nums; }
 .tile__meta { font-size: var(--step--1); color: var(--ink-muted); margin-top: .2rem; }
 .tile--gold { border-left-color: var(--gold); }
 .tile--clay { border-left-color: var(--clay); }
@@ -146,3 +174,55 @@ body.admin {
 
 .inline-form { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
 .inline-form input, .inline-form select { padding: .4rem .6rem; font-size: var(--step--1); }
+
+/* ------------------------------------------------------------- finance */
+
+.money { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.money--in { color: var(--success); }
+.money--out { color: var(--error); }
+
+.ledger { width: 100%; border-collapse: collapse; font-size: var(--step--1); }
+.ledger th, .ledger td { padding: .55rem .7rem; border-bottom: 1px solid var(--line); }
+.ledger th { text-align: left; background: var(--surface-sunk); font-weight: 700; color: var(--vineyard); }
+.ledger td.numeric, .ledger th.numeric { text-align: right; font-variant-numeric: tabular-nums; }
+.ledger tfoot td, .ledger tfoot th { border-top: 2px solid var(--line-strong); border-bottom: 0; font-weight: 700; }
+.ledger tr.is-total td { background: var(--surface-sunk); font-weight: 700; }
+
+/* A column chart drawn with nothing but flexbox — no chart library. */
+.spark { display: flex; align-items: flex-end; gap: 3px; height: 90px; margin: .75rem 0; }
+.spark__bar {
+  flex: 1; min-width: 4px; border-radius: 3px 3px 0 0;
+  background: linear-gradient(180deg, var(--sage), var(--vineyard));
+  position: relative;
+}
+.spark__bar[data-zero="1"] { background: var(--surface-sunk); }
+.spark__bar:hover::after {
+  content: attr(data-label); position: absolute; bottom: 100%; left: 50%;
+  transform: translateX(-50%); white-space: nowrap;
+  background: var(--charcoal); color: var(--cream);
+  font-size: .7rem; padding: .25rem .5rem; border-radius: 4px; margin-bottom: 4px; z-index: 2;
+}
+.spark-axis { display: flex; justify-content: space-between; font-size: .68rem; color: var(--ink-muted); }
+
+.variance { font-weight: 700; font-variant-numeric: tabular-nums; }
+.variance--good { color: var(--success); }
+.variance--bad { color: var(--error); }
+
+.progress-cell { min-width: 120px; }
+.progress-cell .bar { margin-top: .25rem; }
+
+.checklist { margin: 0; padding-left: 1.15rem; font-size: var(--step--1); }
+.checklist li + li { margin-top: .5rem; }
+
+.finance-note {
+  font-size: var(--step--1); color: var(--ink-soft);
+  border-left: 3px solid var(--gold); padding: .5rem .8rem;
+  background: rgba(217,164,65,.08); border-radius: 0 var(--radius-s) var(--radius-s) 0;
+  margin-bottom: 1rem;
+}
+
+@media print {
+  .admin-side, .admin-toolbar, .btn, .admin-tabs { display: none !important; }
+  .admin-shell { grid-template-columns: 1fr; }
+  .admin-panel { break-inside: avoid; box-shadow: none; border: 1px solid #999; }
+}

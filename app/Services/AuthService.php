@@ -19,8 +19,8 @@ final class AuthService
     /** Admin capabilities per role. */
     public const ROLE_PERMISSIONS = [
         'super_admin' => ['*'],
-        'finance_admin' => ['dashboard', 'orders', 'payments', 'donations', 'coupons', 'exports', 'customers'],
-        'accommodation_admin' => ['dashboard', 'rooms', 'bookings', 'exports'],
+        'finance_admin' => ['dashboard', 'finance', 'orders', 'payments', 'donations', 'coupons', 'exports', 'customers'],
+        'accommodation_admin' => ['dashboard', 'rooms', 'bookings', 'checkin', 'exports'],
         'transport_admin' => ['dashboard', 'transport', 'exports', 'checkin'],
         'merch_admin' => ['dashboard', 'products', 'orders', 'exports'],
         'content_editor' => ['dashboard', 'content', 'gallery', 'pages', 'programme', 'faqs', 'events', 'banners'],

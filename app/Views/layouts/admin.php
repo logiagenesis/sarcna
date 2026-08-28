@@ -9,6 +9,14 @@ $navigation = [
         ['/admin', 'Dashboard', 'dashboard'],
         ['/admin/checkin', 'Check-in desk', 'checkin'],
     ],
+    'Finance' => [
+        ['/admin/finance', 'Overview', 'finance'],
+        ['/admin/finance/income', 'Income', 'finance'],
+        ['/admin/finance/expenses', 'Expenses', 'finance'],
+        ['/admin/finance/budget', 'Budget vs actual', 'finance'],
+        ['/admin/finance/reconciliation', 'Bank reconciliation', 'finance'],
+        ['/admin/finance/refunds', 'Refunds', 'finance'],
+    ],
     'Money' => [
         ['/admin/orders', 'Orders', 'orders'],
         ['/admin/payments', 'Payments', 'payments'],

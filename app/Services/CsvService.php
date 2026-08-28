@@ -48,12 +48,24 @@ final class CsvService
         return $csv;
     }
 
-    /** Neutralise spreadsheet formula injection from user-supplied text. */
+    /**
+     * Neutralise spreadsheet formula injection from user-supplied text.
+     *
+     * A plain negative number is not a formula, and prefixing it would turn it
+     * into text that the treasurer's spreadsheet refuses to add up — so
+     * "-1250.00" is left alone while "-1+cmd|..." is still defused.
+     */
     private static function sanitise(string $value): string
     {
-        return $value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)
-            ? "'" . $value
-            : $value;
+        if ($value === '' || !in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+            return $value;
+        }
+
+        if (preg_match('/^-?\d{1,15}(\.\d{1,4})?$/', $value) === 1) {
+            return $value;
+        }
+
+        return "'" . $value;
     }
 
     public static function filename(string $name): string
