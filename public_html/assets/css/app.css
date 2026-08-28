@@ -986,3 +986,28 @@ td.numeric, th.numeric { text-align: right; font-variant-numeric: tabular-nums; 
   .receipt, .card { box-shadow: none; border: 1px solid #999; }
   a[href]::after { content: ' (' attr(href) ')'; font-size: 9pt; color: #555; }
 }
+
+/* ------------------------------------------------- travel nudge (checkout) */
+
+.travel-nudge { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--line); }
+.travel-nudge__label {
+  font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-muted); margin: 0 0 0.6rem;
+}
+.travel-nudge__buttons { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.travel-btn {
+  display: inline-flex; align-items: center; gap: 0.6rem;
+  padding: 0.6rem 0.9rem; flex: 1 1 10rem; min-width: 0;
+  border: 1px solid var(--line); border-radius: 999px;
+  background: var(--surface-raised); color: var(--vineyard);
+  text-decoration: none; font-size: var(--step--1); line-height: 1.2;
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.travel-btn:hover, .travel-btn:focus-visible {
+  border-color: var(--gold); box-shadow: var(--shadow-m);
+  transform: translateY(-1px); color: var(--vineyard);
+}
+.travel-btn svg { flex-shrink: 0; color: var(--gold); }
+.travel-btn span { display: flex; flex-direction: column; min-width: 0; }
+.travel-btn strong { font-weight: 700; }
+.travel-btn small { color: var(--ink-muted); font-size: 0.72rem; }

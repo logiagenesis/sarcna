@@ -201,6 +201,8 @@ $items = $totals['items'];
             You will be taken to PayFast to pay by card, Instant EFT, SnapScan or Mobicred. We never see your card details.
           </p>
           <a class="link-arrow" href="<?= e(url('/cart')) ?>" style="margin-top:.75rem;display:inline-flex">&larr; Back to cart</a>
+
+          <?php View::include('partials.travel-buttons'); ?>
         </aside>
       </div>
     </form>

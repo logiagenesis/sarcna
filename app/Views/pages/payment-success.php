@@ -122,6 +122,8 @@ $paid = $order !== null && $order['status'] === 'paid';
         <a class="btn btn--ghost" href="<?= e(url('/programme')) ?>">See the programme</a>
         <a class="btn btn--ghost" href="<?= e(url('/venue')) ?>">Plan your trip</a>
       </div>
+
+      <?php View::include('partials.travel-buttons'); ?>
     <?php endif; ?>
   </div>
 </section>
