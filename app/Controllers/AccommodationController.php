@@ -29,7 +29,7 @@ final class AccommodationController extends Controller
         return $this->page('pages.accommodation-index', [
             'title'       => 'Accommodation & Bed Booking',
             'description' => 'Book accommodation for the SARCNA 2027 Convention one bed at a time, from R700 per bed per night. Shared cottages, private units and accessible rooms at Boschendal in the Cape Winelands.',
-            'image'       => '/assets/img/rooms/retreat-twin-cottage.jpg',
+            'image'       => '/assets/img/rooms/retreat-twin-room.jpg',
         ], [
             'roomTypes'   => $roomTypes,
             'nightLabels' => AccommodationService::nightLabels(),

@@ -7,7 +7,7 @@ View::start('content');
   'eyebrow' => 'Service',
   'title'   => 'Do service at the convention',
   'lede'    => 'Every convention runs on service, and there is a place for you whether you have three weeks clean or thirty years.',
-  'image'   => 'img/conference/fellowship-lawn.jpg',
+  'image'   => 'img/venue/natural-pool.jpg',
   'crumbs'  => ['Service' => null],
 ]); ?>
 

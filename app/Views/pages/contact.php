@@ -8,7 +8,7 @@ $event = config('event');
   'eyebrow' => 'Contact',
   'title'   => 'Talk to the committee',
   'lede'    => 'WhatsApp is usually fastest. Email and the form below both reach the same people.',
-  'image'   => 'img/venue/farm-kitchen.jpg',
+  'image'   => 'img/venue/dining-lounge.jpg',
   'crumbs'  => ['Contact' => null],
 ]); ?>
 

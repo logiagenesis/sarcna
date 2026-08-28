@@ -7,7 +7,7 @@ View::start('content');
   'eyebrow' => 'Donations',
   'title'   => 'Keep the doors open',
   'lede'    => 'Every convention is self-supporting through the contributions of the fellowship. Your donation keeps registration affordable and puts newcomers in the room.',
-  'image'   => 'img/venue/fellowship-lawn.jpg',
+  'image'   => 'img/venue/boma-firepit.jpg',
   'crumbs'  => ['Donations' => null],
 ]); ?>
 

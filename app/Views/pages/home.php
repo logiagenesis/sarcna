@@ -78,8 +78,8 @@ View::start('content');
       <?php
       $features = [
           ['The Convention', 'Three days of meetings, workshops, speakers and fellowship.', '/convention', 'M4 6h16M4 12h16M4 18h10'],
-          ['The Venue', 'A working Cape farm estate with mountains on every side.', '/venue', 'M3 21h18M5 21V9l7-5 7 5v12M10 21v-6h4v6'],
-          ['Accommodation', 'Beds from R700 a night, on the estate and nearby.', '/accommodation', 'M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M6 10V7h12v3'],
+          ['The Venue', 'The Retreat at Boschendal — eighteen cottages, an auditorium and a boma.', '/venue', 'M3 21h18M5 21V9l7-5 7 5v12M10 21v-6h4v6'],
+          ['Accommodation', 'En-suite twin rooms, sold one bed at a time.', '/accommodation', 'M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 18h18M6 10V7h12v3'],
           ['Transport', 'Airport, city and local shuttles, seat by seat.', '/transport', 'M4 17h16M6 17V8h12v9M8 8V6h8v2M7 20v-3M17 20v-3'],
           ['Merchandise', 'Tees, hoodies and keepsakes from the weekend.', '/shop/merchandise', 'M6 7h12l1 13H5L6 7ZM9 7V5a3 3 0 0 1 6 0v2'],
           ['Service', 'Put your hand up — every convention runs on service.', '/service', 'M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10Z'],
@@ -110,12 +110,12 @@ View::start('content');
         <div class="rule"></div>
         <span class="eyebrow">The venue</span>
         <h2>Boschendal Retreat Cottages &amp; Conference Venue</h2>
-        <p>A historic Cape farm estate an hour from Cape Town, between Franschhoek and Stellenbosch. Oak-lined drives, orchards, farm roads to walk before breakfast, and the Simonsberg and Groot Drakenstein mountains on every horizon.</p>
-        <p>Our weekend is entirely substance-free. What the estate gives us is space: quiet cottages, a barn big enough to hold us all, gardens to sit in, and a fire pit that runs late.</p>
+        <p>An 1&nbsp;800-hectare farm in the Dwars River valley, an hour from Cape Town, between the Simonsberg and the Groot Drakenstein. Title deeds from 1685; vineyards, orchards and mountains on every horizon.</p>
+        <p>We are at <strong>the Retreat</strong> — eighteen cottages in a secluded corner of the estate with their own auditorium, screening room, dining lounge, boma, natural swimming pool and fynbos gardens. Everything the weekend needs, in one quiet place, with nowhere else to be.</p>
         <div class="stat-row" style="margin:1.5rem 0">
           <div class="stat"><div class="stat__value">1&nbsp;hr</div><div class="stat__label">From Cape Town</div></div>
-          <div class="stat"><div class="stat__value"><?= (int) ($occupancy['total_beds'] ?? 0) ?></div><div class="stat__label">Beds on and off the estate</div></div>
-          <div class="stat"><div class="stat__value">3</div><div class="stat__label">Nights available</div></div>
+          <div class="stat"><div class="stat__value">18</div><div class="stat__label">Cottages, 72 beds</div></div>
+          <div class="stat"><div class="stat__value">1685</div><div class="stat__label">Title deeds date from</div></div>
         </div>
         <div class="cluster">
           <a class="btn" href="<?= e(url('/venue')) ?>">Explore the venue</a>

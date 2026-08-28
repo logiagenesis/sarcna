@@ -20,12 +20,13 @@ $event = config('event');
         <div class="rule"></div>
         <span class="eyebrow">Where you will be</span>
         <h2>An hour from the city, and a world away from it</h2>
-        <p>The estate sits in the Dwars River valley in the Cape Winelands, roughly an hour from Cape Town International Airport and forty minutes from Stellenbosch. The drive in runs between oaks and orchards, and the last stretch is gravel.</p>
-        <p>Everything the convention uses is on one property: the conference barn, the dining terrace, the gardens, the fire pit lawn and most of the accommodation. Once you arrive you can leave the car parked until Sunday.</p>
+        <p>Boschendal is an 1&nbsp;800-hectare farm in the Dwars River valley, between Franschhoek and Stellenbosch, with the Simonsberg on one side and the Groot Drakenstein on the other. The name is <em>Bos-en-dal</em> — wood and valley — and once you are in it, that is exactly what it is.</p>
+        <p>We are not using the whole farm. The convention takes place at <strong>the Retreat</strong>, a self-contained cluster of eighteen cottages tucked into a secluded corner of the estate, with its own auditorium, dining lounge, boma and natural swimming pool. Once you arrive you can leave the car parked until Sunday.</p>
         <div class="stat-row" style="margin-top:1.5rem">
-          <div class="stat"><div class="stat__value">1 hr</div><div class="stat__label">From Cape Town International</div></div>
-          <div class="stat"><div class="stat__value">40 min</div><div class="stat__label">From Stellenbosch</div></div>
-          <div class="stat"><div class="stat__value">15 min</div><div class="stat__label">From Franschhoek village</div></div>
+          <div class="stat"><div class="stat__value">1 hr</div><div class="stat__label">From Cape Town</div></div>
+          <div class="stat"><div class="stat__value">18</div><div class="stat__label">Cottages at the Retreat</div></div>
+          <div class="stat"><div class="stat__value">72</div><div class="stat__label">Beds on the estate</div></div>
+          <div class="stat"><div class="stat__value">1685</div><div class="stat__label">Title deeds date from</div></div>
         </div>
       </div>
       <div class="media-split__media reveal">
@@ -47,20 +48,26 @@ $event = config('event');
     <div class="grid grid--3">
       <?php
       $spaces = [
-        ['Retreat cottages', 'img/venue/retreat-cottages.jpg', 'Illustration of the retreat cottages among the orchards',
-         'Small cottages set among the orchards, each with a stoep and a view. Two, four and eight-bed layouts, all with heating — August nights in the valley are cold.'],
-        ['The conference barn', 'img/venue/conference-barn.jpg', 'Illustration of the conference barn',
-         'A restored barn that seats the whole convention for the main meetings, with a stage, a good sound system and doors that open onto the lawn.'],
-        ['Workshop rooms', 'img/conference/workshop-room.jpg', 'Illustration of a workshop room',
-         'Three smaller rooms off the barn for concurrent workshops, sharing sessions and the service forum.'],
-        ['The dining terrace', 'img/venue/farm-kitchen.jpg', 'Illustration of the dining terrace at dusk',
-         'Farm-style tables under cover, where meals are served and where most of the weekend&rsquo;s real conversations happen.'],
-        ['Gardens and lawns', 'img/venue/gardens.jpg', 'Illustration of the estate gardens in morning mist',
-         'Lawns, herb gardens and shaded benches, with enough corners to find one to yourself between sessions.'],
-        ['The fire pit', 'img/venue/fireside.jpg', 'Illustration of the fire pit lawn after sunset',
-         'A fire that is lit at sunset and runs as late as people keep talking. Bring a jacket.'],
+        ['The cottages', 'img/venue/retreat-cottages.jpg', 'Illustration of the Retreat cottages across the lawns',
+         'Eighteen self-catering cottages across manicured lawns. Each holds two twin bedrooms, and <strong>every bedroom has its own front door and its own en-suite bathroom</strong> — you never walk through anyone else&rsquo;s room to reach yours.'],
+        ['Inside a cottage', 'img/venue/cottage-interior.jpg', 'Illustration standing in for a cottage living room and fireplace',
+         'The two bedrooms share a living room with a kitchen and an indoor fireplace, and a private patio with a braai. WiFi and satellite TV throughout. August nights in the valley are cold; the fireplaces are not decorative.'],
+        ['The auditorium', 'img/venue/auditorium.jpg', 'Illustration standing in for the Retreat auditorium',
+         'The Retreat&rsquo;s own auditorium holds the whole convention for the main meetings, with proper sound and staging. Everything else is a few minutes&rsquo; walk from its door.'],
+        ['The screening room', 'img/venue/screening-room.jpg', 'Illustration standing in for the private screening room',
+         'A private screening room — unusual for a conference venue, and ours for the weekend. We are running a recovery film and discussion track in it on Saturday afternoon.'],
+        ['Break-off rooms', 'img/venue/dining-lounge.jpg', 'Illustration standing in for the lounge and dining area',
+         'Boardroom-style break-off rooms for the concurrent workshops and the service forum, plus a lounge and dining area where most of the weekend&rsquo;s real conversations will happen.'],
+        ['The boma', 'img/venue/boma-firepit.jpg', 'Illustration of the communal boma after sunset',
+         'A communal fire that is lit at sunset and runs as late as people keep talking. Bring a jacket.'],
+        ['The natural pool', 'img/venue/natural-pool.jpg', 'Illustration standing in for the natural swimming pool',
+         'A natural swimming pool in the gardens. In late August it is bracing. People swim in it anyway.'],
+        ['Trails and horses', 'img/venue/walking-trails.jpg', 'Illustration of the walking trails behind the Retreat',
+         'Mountainside walking trails start at the Retreat gate, and the farm runs scenic horse rides. The Saturday sunrise walk is on the programme.'],
+        ['Fynbos gardens', 'img/venue/fynbos-gardens.jpg', 'Illustration of the fynbos gardens in morning mist',
+         'Indigenous fynbos gardens with enough quiet corners to find one to yourself between sessions. Sunday morning meditation happens here.'],
       ];
-      foreach ($spaces as [$title, $image, $alt, $text]): ?>
+            foreach ($spaces as [$title, $image, $alt, $text]): ?>
         <div class="card reveal">
           <div class="card__media"><?= picture($image, $alt) ?></div>
           <div class="card__body">
@@ -77,25 +84,27 @@ $event = config('event');
   <div class="container">
     <div class="media-split media-split--reverse">
       <div class="media-split__media reveal">
-        <?= picture('img/venue/mountain-walk.jpg', 'Illustration of the mountain path behind the estate') ?>
+        <?= picture('img/venue/walking-trails.jpg', 'Illustration of the mountain path behind the estate') ?>
       </div>
       <div class="reveal">
         <div class="rule"></div>
         <span class="eyebrow">Between sessions</span>
         <h2>Sober-friendly things to do</h2>
         <ul>
-          <li><strong>The sunrise walk.</strong> A guided walk up the farm road on Saturday at 07:00, back in time for breakfast.</li>
-          <li><strong>Farm roads and mountain paths.</strong> Marked routes from 20 minutes to two hours, all starting at the main gate.</li>
-          <li><strong>Morning meditation</strong> in the gardens on Sunday.</li>
-          <li><strong>The fellowship lounge</strong> in the farmhouse — quieter than the barn, open late.</li>
-          <li><strong>Coffee.</strong> The dining terrace runs coffee and tea from early until late.</li>
-          <li><strong>Card and board games</strong> in the workshop rooms on Saturday afternoon.</li>
-          <li><strong>Stargazing</strong> from the fire pit lawn — there is very little light pollution in the valley.</li>
+          <li><strong>The sunrise trail walk.</strong> Guided, Saturday at 07:00, on the mountainside trails that start at the Retreat gate. Back in time for breakfast.</li>
+          <li><strong>Horse riding.</strong> The farm runs scenic rides across the estate. Book at reception — spaces are limited and go quickly.</li>
+          <li><strong>The natural swimming pool.</strong> Bracing in August. That has never stopped anyone.</li>
+          <li><strong>The screening room.</strong> A recovery film and discussion track runs on Saturday afternoon, and the room is open at other times.</li>
+          <li><strong>The boma.</strong> A fire from sunset until people stop talking, which on a Saturday is late.</li>
+          <li><strong>Fynbos gardens.</strong> Indigenous planting, benches, and quiet. Sunday meditation is here.</li>
+          <li><strong>Coffee.</strong> The lounge and dining area runs coffee and tea from early until late.</li>
+          <li><strong>Stargazing.</strong> There is very little light pollution in the valley.</li>
         </ul>
         <div class="alert alert--warning" style="margin-top:1.25rem">
           <div>
             <div class="alert__title">A note on the estate&rsquo;s wine history</div>
-            <p>Boschendal is a historic Cape farm with a long wine-making history. That history is part of the place, but it is not part of our weekend: no alcohol is served at any convention event, and wine tasting is not offered as a convention activity in any form.</p>
+            <p>Boschendal is a historic Cape wine farm — its title deeds date from 1685 and its vineyards run six kilometres along the mountain slopes. That history is part of the place, and we would rather say so than have anyone find out on arrival.</p>
+            <p>It is not part of our weekend. The Retreat is a self-contained venue in its own corner of the farm, with its own auditorium, dining and grounds. No alcohol is served at any convention event, wine tasting is not offered as a convention activity in any form, and the estate&rsquo;s tasting facilities are elsewhere on the property. If it would help you to know the layout before you commit, ask us and we will walk you through it.</p>
           </div>
         </div>
       </div>
@@ -110,11 +119,12 @@ $event = config('event');
         <div class="rule"></div>
         <h2>Arrival and parking</h2>
         <ul>
-          <li><strong>Registration desk</strong> opens at 14:00 on Friday 27 August, in the old barn beside the main parking field.</li>
-          <li><strong>Accommodation check-in</strong> from 16:00. Early-arrival guests on Thursday can check in from 15:00.</li>
-          <li><strong>Parking</strong> is free and on the estate. Cottage guests can park at their cottage; day visitors use the parking field and should book the free parking pass so the venue can plan.</li>
-          <li><strong>The last stretch of road is gravel</strong> and well maintained — any car will manage it, but take it slowly.</li>
-          <li><strong>Checkout</strong> is 10:00 on Sunday. Luggage can be left at the registration desk until the afternoon shuttles.</li>
+          <li><strong>Registration</strong> opens at 14:00 on Friday 27 August at the Retreat reception.</li>
+          <li><strong>Cottage check-in</strong> from 16:00. Early-arrival guests on Thursday can check in from 15:00.</li>
+          <li><strong>Parking is free</strong> and at the cottages themselves — you can unload at your own front door. Day visitors use the visitor field and should book the free parking pass so the venue can plan.</li>
+          <li><strong>The Retreat is signposted from the main farm entrance</strong> and sits away from the public areas of the estate. Follow the Retreat signs, not the wine-tasting ones.</li>
+          <li><strong>Checkout</strong> is 10:00 on Sunday. Luggage can be left at reception until the afternoon shuttles.</li>
+          <li><strong>About an hour from Cape Town</strong>, forty minutes from Stellenbosch, fifteen from Franschhoek village.</li>
         </ul>
         <a class="btn btn--ghost" href="https://www.google.com/maps/search/?api=1&amp;query=Boschendal+Franschhoek" target="_blank" rel="noopener">Open directions in Google Maps</a>
       </div>
@@ -123,12 +133,12 @@ $event = config('event');
         <div class="rule"></div>
         <h2>Accessibility</h2>
         <ul>
-          <li><strong>Step-free cottages.</strong> Our Accessible Twin Cottages have step-free access, widened doorways, grab rails and a roll-in shower, and sit closest to the barn on level paved paths.</li>
-          <li><strong>The conference barn</strong> is step-free with an accessible bathroom, and there is reserved seating at the front and at the back.</li>
-          <li><strong>Paths</strong> between the barn, the terrace and the nearest cottages are paved; paths to the outlying cottages and the walks are gravel and uneven.</li>
-          <li><strong>Accessible parking bays</strong> are next to the barn.</li>
-          <li><strong>Hearing.</strong> The main meetings run through a PA system. Tell us if you need a seat near the front.</li>
-          <li><strong>Tell us what you need</strong> in the notes when you book, and the accommodation team will be in touch before the weekend.</li>
+          <li><strong>Step-free rooms.</strong> The Accessible Retreat Rooms are in the cottages closest to the auditorium and the dining lounge, on level paved paths, with a widened doorway, a roll-in shower and grab rails.</li>
+          <li><strong>Every bedroom is entered from outside</strong> — no stairs or corridors between the parking bay and your bed in those cottages.</li>
+          <li><strong>The auditorium</strong> has reserved seating at the front and at the back, and runs through a PA system. Tell us if you need to be near the front.</li>
+          <li><strong>Paths</strong> between the cottages, the auditorium and the dining lounge are paved and level; the mountainside trails and parts of the gardens are gravel and uneven.</li>
+          <li><strong>Accessible parking bays</strong> are next to the auditorium.</li>
+          <li><strong>Tell us what you need</strong> in the notes when you book. The accommodation team confirms the detail with the venue before you arrive rather than leaving you to discover it.</li>
         </ul>
         <a class="btn btn--ghost" href="<?= e(url('/contact')) ?>">Ask about access</a>
       </div>
@@ -161,7 +171,7 @@ $event = config('event');
   <div class="container text-center">
     <div class="rule" style="margin-inline:auto"></div>
     <h2>Stay on the estate</h2>
-    <p style="margin-inline:auto">Beds from <?= e(money(70000)) ?> a night, sold one at a time. Book a single bed or take a whole cottage.</p>
+    <p style="margin-inline:auto">Seventy-two beds on the estate, sold one at a time. Take a single bed, or book the whole room privately.</p>
     <div class="cluster cluster--center" style="margin-top:1.5rem">
       <a class="btn btn--gold btn--lg" href="<?= e(url('/accommodation')) ?>">See room types</a>
       <a class="btn btn--outline-light btn--lg" href="<?= e(url('/venue/history')) ?>">Venue history</a>

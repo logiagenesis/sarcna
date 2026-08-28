@@ -8,7 +8,7 @@ $event = config('event');
   'eyebrow' => 'About',
   'title'   => 'Rooted in Recovery. Rising Together.',
   'lede'    => 'What this convention is, who it is for, and why we are holding it in the Cape Winelands.',
-  'image'   => 'img/venue/fellowship-lawn.jpg',
+  'image'   => 'img/venue/boma-firepit.jpg',
   'crumbs'  => ['About' => null],
 ]); ?>
 
@@ -31,11 +31,11 @@ $event = config('event');
       </ul>
 
       <h2>What is different about 2027</h2>
-      <p>We have moved the convention to a retreat setting. Instead of a hotel and a conference room, the weekend happens across a working Cape farm estate: cottages among the orchards, a barn big enough for all of us, gardens, farm roads and mountains in every direction.</p>
-      <p>Everything is on one site, so registration, accommodation and transport are booked in one place, in one cart, with one payment. Beds are sold individually, so a single person does not have to pay for a whole room, and a group can keep a cottage to themselves.</p>
+      <p>We have moved the convention to a retreat. Instead of a hotel and a hired conference room, the whole weekend happens at <strong>the Boschendal Retreat</strong> — eighteen self-catering cottages in a secluded corner of an 1&nbsp;800-hectare farm in the Cape Winelands, with their own auditorium, screening room, break-off rooms, dining lounge, boma and natural swimming pool.</p>
+      <p>Everything is on one site, so registration, accommodation and transport are booked in one place, in one cart, with one payment. And beds are sold <strong>individually</strong>: a single person does not have to pay for a whole room, and anyone who would rather not share can book the room privately. Every bedroom has its own front door and its own bathroom, so sharing a cottage is not the same as sharing a room.</p>
 
       <h2>A substance-free weekend</h2>
-      <p>Boschendal is a historic Cape farm estate with a wine-making history. Our convention weekend is entirely substance-free: no alcohol is served at any convention event, and wine tasting is not part of the programme or offered by us in any form. What we are there for is the land, the quiet and each other.</p>
+      <p>Boschendal is a historic Cape farm with a wine-making history going back to 1685. We would rather tell you that than have you find out on arrival. It plays no part in our weekend: the Retreat is a self-contained venue away from the estate&rsquo;s public areas, no alcohol is served at any convention event, and wine tasting is not offered as a convention activity in any form. What we are there for is the land, the quiet and each other.</p>
 
       <h2>Anonymity</h2>
       <p>Who you see here and what you hear here stays here. No photography inside meetings, no posting pictures of other attendees, and a wristband at registration if you would rather not be photographed at all. Our <a href="<?= e(url('/photo-anonymity-notice')) ?>">photo and anonymity notice</a> sets out the detail.</p>

@@ -7,7 +7,7 @@ View::start('content');
   'eyebrow' => 'Gallery',
   'title'   => 'The estate and its spaces',
   'lede'    => 'Every image below is original illustration created for this preview build. They will be replaced with licensed venue photography before launch.',
-  'image'   => 'img/venue/gardens.jpg',
+  'image'   => 'img/venue/fynbos-gardens.jpg',
   'crumbs'  => ['Gallery' => null],
 ]); ?>
 

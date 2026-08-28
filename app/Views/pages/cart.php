@@ -45,9 +45,9 @@ $items = $totals['items'];
               <div class="cart-line">
                 <div class="cart-line__thumb">
                   <?= picture($meta['image'] ?? ($item['product_image'] ?? match ($item['item_type']) {
-                        'accommodation' => 'img/rooms/retreat-twin-cottage.jpg',
+                        'accommodation' => 'img/rooms/retreat-twin-room.jpg',
                         'transport'     => 'img/transport/airport-shuttle.jpg',
-                        'donation'      => 'img/venue/fellowship-lawn.jpg',
+                        'donation'      => 'img/venue/boma-firepit.jpg',
                         default         => 'img/backgrounds/placeholder.jpg',
                       }), $item['description']) ?>
                 </div>

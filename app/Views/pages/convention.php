@@ -11,7 +11,7 @@ foreach ($programme as $item) { $byDay[$item['day_date']][] = $item; }
   'eyebrow' => 'The convention',
   'title'   => 'Three days in the Cape Winelands',
   'lede'    => $event['supporting'],
-  'image'   => 'img/conference/main-hall.jpg',
+  'image'   => 'img/venue/auditorium.jpg',
   'crumbs'  => ['The Convention' => null],
   'actions' => '<a class="btn btn--gold" href="' . e(url('/shop/registration')) . '">Register now</a><a class="btn btn--outline-light" href="' . e(url('/programme')) . '">Full programme</a>',
 ]); ?>

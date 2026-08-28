@@ -23,9 +23,9 @@ INSERT INTO `product_categories` (`id`, `name`, `slug`, `description`, `sort_ord
 INSERT INTO `products` (`id`,`category_id`,`type`,`name`,`slug`,`sku`,`short_description`,`description`,`price_cents`,`sale_price_cents`,`sale_ends_at`,`track_stock`,`stock`,`low_stock_threshold`,`max_per_order`,`requires_attendee`,`pickup_only`,`image`,`meta_description`,`is_featured`,`is_mock`,`sort_order`) VALUES
 (1,1,'registration','Full Weekend Registration — Early Bird','full-weekend-early-bird','REG-EB','Everything from Friday afternoon to Sunday lunch, at the early-bird rate.','<p>Your early-bird registration covers the full convention weekend: all meetings, workshops, speaker sessions, the Saturday night celebration and the Sunday closing meeting.</p><p>Early-bird pricing is limited and closes once the allocation is taken. Registration does not include accommodation, transport or meals other than those listed in the programme.</p>',85000,NULL,NULL,1,300,25,6,1,1,'/assets/img/backgrounds/cta-sunset.jpg','Early-bird registration for the SARCNA 2027 Convention, 27–29 August 2027 at Boschendal.',1,1,1),
 (2,1,'registration','Full Weekend Registration — Standard','full-weekend-standard','REG-STD','The full convention weekend at the standard rate.','<p>Standard registration for the whole weekend — every meeting, workshop, speaker session and the Saturday night celebration.</p><p>Accommodation and transport are booked separately so you can choose what suits you.</p>',95000,NULL,NULL,1,500,25,6,1,1,'/assets/img/backgrounds/cta-sunset.jpg','Standard full weekend registration for the SARCNA 2027 Convention.',1,1,2),
-(3,1,'day_pass','Friday Day Pass','friday-day-pass','REG-FRI','Friday afternoon and evening, including the opening meeting.','<p>Covers Friday from registration at 14:00 through the welcome fellowship and the opening meeting.</p>',25000,NULL,NULL,1,150,15,6,1,1,'/assets/img/venue/fireside.jpg','Friday day pass for the SARCNA 2027 Convention.',0,1,3),
-(4,1,'day_pass','Saturday Day Pass','saturday-day-pass','REG-SAT','The full Saturday programme, including the evening celebration.','<p>The busiest day of the weekend: the main meeting, workshops, speaker sessions, the service forum and the Saturday night celebration.</p>',45000,NULL,NULL,1,200,15,6,1,1,'/assets/img/conference/main-hall.jpg','Saturday day pass for the SARCNA 2027 Convention.',1,1,4),
-(5,1,'day_pass','Sunday Day Pass','sunday-day-pass','REG-SUN','Sunday morning meditation, breakfast and the closing meeting.','<p>A gentle final morning: meditation, spiritual breakfast and the closing meeting.</p>',25000,NULL,NULL,1,150,15,6,1,1,'/assets/img/venue/gardens.jpg','Sunday day pass for the SARCNA 2027 Convention.',0,1,5),
+(3,1,'day_pass','Friday Day Pass','friday-day-pass','REG-FRI','Friday afternoon and evening, including the opening meeting.','<p>Covers Friday from registration at 14:00 through the welcome fellowship and the opening meeting.</p>',25000,NULL,NULL,1,150,15,6,1,1,'/assets/img/venue/boma-firepit.jpg','Friday day pass for the SARCNA 2027 Convention.',0,1,3),
+(4,1,'day_pass','Saturday Day Pass','saturday-day-pass','REG-SAT','The full Saturday programme, including the evening celebration.','<p>The busiest day of the weekend: the main meeting, workshops, speaker sessions, the service forum and the Saturday night celebration.</p>',45000,NULL,NULL,1,200,15,6,1,1,'/assets/img/venue/auditorium.jpg','Saturday day pass for the SARCNA 2027 Convention.',1,1,4),
+(5,1,'day_pass','Sunday Day Pass','sunday-day-pass','REG-SUN','Sunday morning meditation, breakfast and the closing meeting.','<p>A gentle final morning: meditation, spiritual breakfast and the closing meeting.</p>',25000,NULL,NULL,1,150,15,6,1,1,'/assets/img/venue/fynbos-gardens.jpg','Sunday day pass for the SARCNA 2027 Convention.',0,1,5),
 
 (6,3,'merchandise','SARCNA 2027 T-Shirt','sarcna-2027-t-shirt','MERCH-TEE','Soft cotton tee with the Cape Winelands badge.','<p>A comfortable cotton t-shirt carrying the SARCNA 2027 badge and the convention slogan on the back.</p><p>Collected at the registration desk during the weekend.</p>',25000,NULL,NULL,1,240,20,5,0,1,'/assets/img/merch/t-shirt.jpg','Official SARCNA 2027 Convention t-shirt.',1,1,10),
 (7,3,'merchandise','SARCNA 2027 Hoodie','sarcna-2027-hoodie','MERCH-HOOD','Warm brushed-fleece hoodie for cool Winelands evenings.','<p>The Cape Winelands can turn cold after sunset. This brushed-fleece hoodie carries the badge on the chest and the slogan across the shoulders.</p>',55000,NULL,NULL,1,150,15,3,0,1,'/assets/img/merch/hoodie.jpg','Official SARCNA 2027 Convention hoodie.',1,1,11),
@@ -36,8 +36,8 @@ INSERT INTO `products` (`id`,`category_id`,`type`,`name`,`slug`,`sku`,`short_des
 (12,3,'merchandise','Convention Lanyard','sarcna-2027-lanyard','MERCH-LAN','Woven lanyard and badge holder for the weekend.','<p>A woven lanyard with a badge holder — handy for your registration card and room key.</p>',8000,NULL,NULL,1,350,30,6,0,1,'/assets/img/merch/lanyard.jpg','SARCNA 2027 Convention lanyard.',0,1,16),
 
 (13,5,'donation','7th Tradition Donation','7th-tradition-donation','DON-7TH','Support the convention with any amount.','<p>Every convention is self-supporting through the contributions of the fellowship. Give whatever you can.</p>',0,NULL,NULL,0,0,0,1,0,0,'/assets/img/backgrounds/section-mist.jpg','Make a Seventh Tradition donation to the SARCNA 2027 Convention.',1,1,20),
-(14,5,'donation','Sponsor a Newcomer Registration','sponsor-a-newcomer','DON-NEW','Cover one full weekend registration for someone who cannot afford it.','<p>Your R850 pays for one newcomer to attend the whole weekend. The committee allocates sponsorships confidentially.</p>',85000,NULL,NULL,0,0,0,10,0,0,'/assets/img/venue/fellowship-lawn.jpg','Sponsor a newcomer registration at the SARCNA 2027 Convention.',1,1,21),
-(15,5,'donation','Sponsor a Bed','sponsor-a-bed','DON-BED','Help someone stay for the weekend.','<p>Contribute any amount towards accommodation for attendees who could not otherwise stay over.</p>',0,NULL,NULL,0,0,0,1,0,0,'/assets/img/rooms/retreat-twin-cottage.jpg','Sponsor a bed at the SARCNA 2027 Convention.',0,1,22);
+(14,5,'donation','Sponsor a Newcomer Registration','sponsor-a-newcomer','DON-NEW','Cover one full weekend registration for someone who cannot afford it.','<p>Your R850 pays for one newcomer to attend the whole weekend. The committee allocates sponsorships confidentially.</p>',85000,NULL,NULL,0,0,0,10,0,0,'/assets/img/venue/boma-firepit.jpg','Sponsor a newcomer registration at the SARCNA 2027 Convention.',1,1,21),
+(15,5,'donation','Sponsor a Bed','sponsor-a-bed','DON-BED','Help someone stay for the weekend.','<p>Contribute any amount towards accommodation for attendees who could not otherwise stay over.</p>',0,NULL,NULL,0,0,0,1,0,0,'/assets/img/rooms/retreat-twin-room.jpg','Sponsor a bed at the SARCNA 2027 Convention.',0,1,22);
 
 UPDATE `products` SET `allows_custom_amount` = 1, `min_amount_cents` = 2000 WHERE `id` IN (13, 15);
 
@@ -60,31 +60,34 @@ INSERT INTO `product_images` (`product_id`,`file_path`,`alt_text`,`source_note`,
 (12,'/assets/img/merch/lanyard.jpg','Mock-up of the SARCNA 2027 lanyard','Original illustration generated for this mockup',1);
 
 -- ------------------------------------------------------------- room types --
+-- Modelled on the real Boschendal Retreat: 18 self-catering cottages, each with
+-- TWO bedrooms, each bedroom having its own private exterior entrance and
+-- en-suite bathroom. That is 36 lettable bedrooms and 72 beds — the venue's own
+-- published capacity of "72 guests sharing".
+--
+-- The sellable unit is therefore the BEDROOM, not the cottage. Two beds per
+-- bedroom, sold individually, with a private-room buyout for anyone who would
+-- rather not share. Cottages are shared between two bedrooms only, and each
+-- bedroom is entered from outside, so sharing a cottage is not sharing a room.
 
-INSERT INTO `room_types` (`id`,`name`,`slug`,`summary`,`description`,`beds_per_unit`,`bed_rate_cents`,`private_unit_rate_cents`,`allows_private_buyout`,`is_accessible`,`is_offsite`,`amenities`,`hero_image`,`meta_description`,`sort_order`,`is_mock`) VALUES
-(1,'Retreat Twin Cottage','retreat-twin-cottage','Two single beds in a private cottage, a short walk from the conference barn.','<p>The most popular option on the estate. Each cottage holds two single beds with a shared bathroom, a small stoep and a view over the orchards.</p><p>Book one bed and share with another attendee, or take the whole cottage for yourself.</p>',2,125000,250000,1,0,0,'Two single beds|En-suite bathroom|Private stoep|Tea and coffee station|Heating|Linen and towels supplied|Parking at the cottage','/assets/img/rooms/retreat-twin-cottage.jpg','Retreat Twin Cottage accommodation at the SARCNA 2027 Convention, from R1 250 per bed per night.',1,1),
-(2,'Garden Quad Cottage','garden-quad-cottage','Four beds in a garden cottage — the friendliest, best-value option.','<p>Four single beds in a bright cottage opening onto the gardens. Ideal for a home group travelling together, or for anyone happy to share with new friends.</p>',4,95000,380000,1,0,0,'Four single beds|Two bathrooms|Garden access|Tea and coffee station|Heating|Linen and towels supplied','/assets/img/rooms/garden-quad-cottage.jpg','Garden Quad Cottage accommodation at the SARCNA 2027 Convention, from R950 per bed per night.',2,1),
-(3,'Mountain View Shared Farmhouse','mountain-view-farmhouse','Eight beds in a farmhouse with the best view on the estate.','<p>A restored farmhouse sleeping eight, with a big shared kitchen table and a stoep that looks straight at the mountains. Our most affordable bed, and often the most sociable house on the estate.</p>',8,70000,560000,1,0,0,'Eight single beds|Three bathrooms|Shared kitchen and lounge|Mountain-facing stoep|Heating|Linen and towels supplied','/assets/img/rooms/mountain-view-farmhouse.jpg','Mountain View Shared Farmhouse accommodation at the SARCNA 2027 Convention, from R700 per bed per night.',3,1),
-(4,'Accessible Twin Cottage','accessible-twin-cottage','Step-free twin cottage closest to the conference barn.','<p>Step-free access throughout, a wider bathroom door, grab rails and a roll-in shower. These cottages sit closest to the conference barn and the dining terrace, on level paved paths.</p><p>Please describe your requirements in the booking notes so we can allocate the right unit.</p>',2,115000,230000,1,1,0,'Two single beds|Step-free access|Roll-in shower and grab rails|Widened doorways|Closest to the conference barn|Accessible parking bay','/assets/img/rooms/accessible-twin-cottage.jpg','Accessible twin cottage accommodation at the SARCNA 2027 Convention, from R1 150 per bed per night.',4,1),
-(5,'Overflow Partner Lodge','overflow-partner-lodge','Twin rooms at a partner guest house, five minutes away by shuttle.','<p>When the estate cottages are full, our partner guest house down the valley holds twin rooms for the weekend. A free shuttle runs between the lodge and the venue before and after every session.</p>',2,85000,170000,1,0,1,'Two single beds|En-suite bathroom|Breakfast included|Free shuttle to the venue|Secure parking','/assets/img/rooms/overflow-partner-lodge.jpg','Partner lodge accommodation for the SARCNA 2027 Convention, from R850 per bed per night.',5,1);
+INSERT INTO `room_types` (`id`,`name`,`slug`,`summary`,`description`,`beds_per_unit`,`bed_rate_cents`,`private_unit_rate_cents`,`allows_private_buyout`,`is_accessible`,`is_offsite`,`amenities`,`hero_image`,`meta_title`,`meta_description`,`sort_order`,`is_mock`) VALUES
+(1,'Retreat Cottage Twin Room','retreat-cottage-twin-room','An en-suite twin room in a Retreat cottage, with its own front door onto the lawns.','<p>The Boschendal Retreat is a cluster of eighteen self-catering cottages set across manicured lawns in a secluded corner of the 1&nbsp;800-hectare farm, with the Simonsberg on one side and the Groot Drakenstein on the other.</p><p>Each cottage holds <strong>two twin bedrooms</strong>. Every bedroom has <strong>its own private exterior entrance</strong> and <strong>its own en-suite bathroom</strong> with a shower over the bath, so you are never walking through anyone else&rsquo;s room. The two bedrooms share the cottage&rsquo;s living room, kitchen and fireplace, and a private patio with a braai.</p><p>Book one bed and share the room with another attendee, or take the whole room privately.</p>',2,145000,260000,1,0,0,'Two single beds|Private exterior entrance|En-suite bathroom with shower over bath|Shared cottage living room and kitchen|Indoor fireplace|Private patio and braai|WiFi and satellite TV|Heating|Linen and towels supplied','/assets/img/rooms/retreat-twin-room.jpg','Retreat Cottage Twin Room','En-suite twin rooms at the Boschendal Retreat for the SARCNA 2027 Convention, from R1 450 per bed per night.',1,1),
+(2,'Retreat Cottage Accessible Room','retreat-cottage-accessible-room','A step-free en-suite twin room in the cottages closest to the auditorium.','<p>The same Retreat cottage bedroom, in the units closest to the auditorium and the dining lounge, on level paved paths.</p><p>Step-free from the parking bay to the bed, a widened doorway, a roll-in shower and grab rails. Each room keeps its own private exterior entrance and en-suite bathroom.</p><p>Please describe your requirements in the booking notes so the accommodation team can allocate the right room and confirm the detail with the venue.</p>',2,145000,260000,1,1,0,'Two single beds|Step-free access throughout|Roll-in shower and grab rails|Widened doorway|Private exterior entrance|En-suite bathroom|Closest to the auditorium|Accessible parking bay|WiFi and satellite TV|Heating','/assets/img/rooms/retreat-accessible-room.jpg','Accessible Retreat Cottage Room','Step-free en-suite accommodation at the Boschendal Retreat for the SARCNA 2027 Convention.',2,1),
+(3,'Partner Guest House — Franschhoek','partner-guest-house-franschhoek','Twin rooms fifteen minutes away, with a free shuttle to every session.','<p>The Retreat sleeps seventy-two, and the convention is bigger than that. Our overflow partner guest house in Franschhoek holds the rest, fifteen minutes down the valley.</p><p>Twin rooms with en-suite bathrooms and breakfast included. A free shuttle runs to the Retreat before every session and back afterwards, including late after the Saturday night celebration.</p><p><strong>This allocation is still being contracted.</strong> Numbers and rates are indicative until the committee confirms them.</p>',2,95000,170000,1,0,1,'Two single beds|En-suite bathroom|Breakfast included|Free shuttle to the Retreat|Secure parking|WiFi|Heating','/assets/img/rooms/partner-guest-house.jpg','Partner Guest House accommodation','Overflow accommodation in Franschhoek for the SARCNA 2027 Convention, from R950 per bed per night, with a free shuttle.',3,1);
 
 INSERT INTO `room_type_images` (`room_type_id`,`file_path`,`alt_text`,`source_note`,`sort_order`) VALUES
-(1,'/assets/img/rooms/retreat-twin-cottage.jpg','Illustration of a retreat twin cottage at sunrise','Original illustration generated for this mockup',1),
-(1,'/assets/img/venue/retreat-cottages.jpg','Illustration of the cottage cluster on the estate','Original illustration generated for this mockup',2),
-(2,'/assets/img/rooms/garden-quad-cottage.jpg','Illustration of a garden quad cottage','Original illustration generated for this mockup',1),
-(2,'/assets/img/venue/gardens.jpg','Illustration of the estate gardens','Original illustration generated for this mockup',2),
-(3,'/assets/img/rooms/mountain-view-farmhouse.jpg','Illustration of the mountain view farmhouse','Original illustration generated for this mockup',1),
-(3,'/assets/img/venue/mountain-walk.jpg','Illustration of the mountain walk behind the farmhouse','Original illustration generated for this mockup',2),
-(4,'/assets/img/rooms/accessible-twin-cottage.jpg','Illustration of the accessible twin cottage','Original illustration generated for this mockup',1),
-(5,'/assets/img/rooms/overflow-partner-lodge.jpg','Illustration of the partner lodge down the valley','Original illustration generated for this mockup',1);
+(1,'/assets/img/rooms/retreat-twin-room.jpg','Illustration standing in for a Retreat cottage twin bedroom','PLACEHOLDER — replace with the venue media pack',1),
+(1,'/assets/img/venue/retreat-cottages.jpg','Illustration of the Retreat cottages across the lawns','PLACEHOLDER — replace with the venue media pack',2),
+(1,'/assets/img/venue/cottage-interior.jpg','Illustration standing in for a cottage living room and fireplace','PLACEHOLDER — replace with the venue media pack',3),
+(2,'/assets/img/rooms/retreat-accessible-room.jpg','Illustration standing in for the step-free Retreat room','PLACEHOLDER — replace with the venue media pack, showing the roll-in shower',1),
+(2,'/assets/img/venue/retreat-cottages.jpg','Illustration of the Retreat cottages across the lawns','PLACEHOLDER — replace with the venue media pack',2),
+(3,'/assets/img/rooms/partner-guest-house.jpg','Illustration standing in for the partner guest house in Franschhoek','PLACEHOLDER — supply once the partner property is contracted',1);
 
 -- Per-night rates: the Thursday early-arrival night is priced 10% lower.
 INSERT INTO `bed_rates` (`room_type_id`,`night`,`bed_rate_cents`,`private_unit_rate_cents`,`is_available`,`label`) VALUES
-(1,'2027-08-26',112500,225000,1,'Early arrival'),(1,'2027-08-27',125000,250000,1,NULL),(1,'2027-08-28',125000,250000,1,NULL),
-(2,'2027-08-26', 85500,342000,1,'Early arrival'),(2,'2027-08-27', 95000,380000,1,NULL),(2,'2027-08-28', 95000,380000,1,NULL),
-(3,'2027-08-26', 63000,504000,1,'Early arrival'),(3,'2027-08-27', 70000,560000,1,NULL),(3,'2027-08-28', 70000,560000,1,NULL),
-(4,'2027-08-26',103500,207000,1,'Early arrival'),(4,'2027-08-27',115000,230000,1,NULL),(4,'2027-08-28',115000,230000,1,NULL),
-(5,'2027-08-26', 76500,153000,1,'Early arrival'),(5,'2027-08-27', 85000,170000,1,NULL),(5,'2027-08-28', 85000,170000,1,NULL);
+(1,'2027-08-26',130500,234000,1,'Early arrival'),(1,'2027-08-27',145000,260000,1,NULL),(1,'2027-08-28',145000,260000,1,NULL),
+(2,'2027-08-26',130500,234000,1,'Early arrival'),(2,'2027-08-27',145000,260000,1,NULL),(2,'2027-08-28',145000,260000,1,NULL),
+(3,'2027-08-26', 85500,153000,1,'Early arrival'),(3,'2027-08-27', 95000,170000,1,NULL),(3,'2027-08-28', 95000,170000,1,NULL);
 
 -- --------------------------------------------------------------- transport --
 
@@ -116,29 +119,34 @@ INSERT INTO `transport_slots` (`route_id`,`departs_at`,`pickup_point`,`dropoff_p
 (7,'2027-08-28 08:00:00','Boschendal main gate','Day visitor parking field',120,'Free permit — one per vehicle');
 
 -- -------------------------------------------------------------- programme --
+-- Locations use the Retreat's real spaces: the auditorium, the screening room,
+-- the break-off boardrooms, the lounge and dining area, the boma and the
+-- natural swimming pool.
 
 INSERT INTO `programme_items` (`day_date`,`start_time`,`title`,`description`,`location`,`track`,`is_highlight`,`sort_order`) VALUES
-('2027-08-27','14:00:00','Registration Opens','Collect your badge, your room key and your welcome pack.','Registration desk, the old barn','Logistics',0,1),
-('2027-08-27','16:00:00','Accommodation Check-in','Cottages and farmhouses open for check-in.','Estate cottages','Logistics',0,2),
-('2027-08-27','18:00:00','Welcome Fellowship','Meet the people you will share the weekend with, over something warm.','Dining terrace','Fellowship',0,3),
-('2027-08-27','19:30:00','Opening Meeting','The convention opens with a speaker and the reading of the theme.','Conference barn','Main meeting',1,4),
-('2027-08-27','21:00:00','Coffee, Connection &amp; Fireside Fellowship','Late fellowship around the fire pit.','Fire pit lawn','Fellowship',0,5),
+('2027-08-27','14:00:00','Registration Opens','Collect your badge, your room key and your welcome pack.','Retreat reception','Logistics',0,1),
+('2027-08-27','16:00:00','Cottage Check-in','Rooms open. Each bedroom has its own front door, so you can settle in quietly.','Retreat cottages','Logistics',0,2),
+('2027-08-27','18:00:00','Welcome Fellowship','Meet the people you will share the weekend with, over something warm.','Lounge and dining area','Fellowship',0,3),
+('2027-08-27','19:30:00','Opening Meeting','The convention opens with a speaker and the reading of the theme.','The auditorium','Main meeting',1,4),
+('2027-08-27','21:00:00','Fireside Fellowship at the Boma','Late fellowship around the communal fire.','The boma','Fellowship',0,5),
 
-('2027-08-28','07:00:00','Sunrise Reflection Walk','A guided walk up the farm road to watch the sun come over the mountains.','Meet at the main gate','Wellness',0,1),
-('2027-08-28','08:00:00','Breakfast &amp; Coffee','','Dining terrace','Meals',0,2),
-('2027-08-28','09:00:00','Main Meeting','The Saturday main meeting, with the weekend keynote.','Conference barn','Main meeting',1,3),
-('2027-08-28','11:00:00','Workshops','Concurrent workshops on sponsorship, service and the steps.','Workshop rooms 1–3','Workshops',0,4),
-('2027-08-28','13:00:00','Lunch','','Dining terrace','Meals',0,5),
-('2027-08-28','14:30:00','Speaker Sessions','Shared experience from speakers across the region.','Conference barn','Speakers',0,6),
-('2027-08-28','16:00:00','Service Forum','Open forum on convention and regional service.','Workshop room 1','Service',0,7),
-('2027-08-28','18:00:00','Dinner','','Dining terrace','Meals',0,8),
-('2027-08-28','20:00:00','Saturday Night Celebration','Music, dancing and the countdown — the highlight of the weekend.','Conference barn','Celebration',1,9),
-('2027-08-28','22:00:00','Fellowship Lounge','A quieter room for talking late.','Farmhouse lounge','Fellowship',0,10),
+('2027-08-28','07:00:00','Sunrise Trail Walk','A guided walk on the mountainside trails to watch the sun come over the Groot Drakenstein.','Meet at the Retreat reception','Wellness',0,1),
+('2027-08-28','08:00:00','Breakfast &amp; Coffee','','Lounge and dining area','Meals',0,2),
+('2027-08-28','09:00:00','Main Meeting','The Saturday main meeting, with the weekend keynote.','The auditorium','Main meeting',1,3),
+('2027-08-28','11:00:00','Workshops','Concurrent workshops on sponsorship, service and the steps.','Break-off boardrooms','Workshops',0,4),
+('2027-08-28','13:00:00','Lunch','','Lounge and dining area','Meals',0,5),
+('2027-08-28','14:30:00','Speaker Sessions','Shared experience from speakers across the region.','The auditorium','Speakers',0,6),
+('2027-08-28','14:30:00','Recovery Film &amp; Discussion','An alternative track in the Retreat''s private screening room.','The screening room','Workshops',0,7),
+('2027-08-28','16:00:00','Service Forum','Open forum on convention and regional service.','Break-off boardroom 1','Service',0,8),
+('2027-08-28','16:00:00','Quiet Hour at the Pool','The natural swimming pool and the fynbos gardens, for anyone who needs an hour off.','Natural swimming pool','Wellness',0,9),
+('2027-08-28','18:00:00','Dinner','','Lounge and dining area','Meals',0,10),
+('2027-08-28','20:00:00','Saturday Night Celebration','Music, dancing and the countdown — the highlight of the weekend.','The auditorium','Celebration',1,11),
+('2027-08-28','22:00:00','Fellowship Lounge','A quieter room for talking late.','Lounge','Fellowship',0,12),
 
-('2027-08-29','07:30:00','Morning Meditation','A quiet, guided start to the last day.','Gardens','Wellness',0,1),
-('2027-08-29','09:00:00','Spiritual Breakfast','Breakfast with a short shared reading.','Dining terrace','Fellowship',0,2),
-('2027-08-29','10:30:00','Closing Meeting','The convention closes together.','Conference barn','Main meeting',1,3),
-('2027-08-29','12:00:00','Checkout &amp; Transport Departures','Rooms vacated by 10:00; luggage can be left at the desk.','Registration desk','Logistics',0,4);
+('2027-08-29','07:30:00','Morning Meditation','A quiet, guided start to the last day in the fynbos gardens.','Fynbos gardens','Wellness',0,1),
+('2027-08-29','09:00:00','Spiritual Breakfast','Breakfast with a short shared reading.','Lounge and dining area','Fellowship',0,2),
+('2027-08-29','10:30:00','Closing Meeting','The convention closes together.','The auditorium','Main meeting',1,3),
+('2027-08-29','12:00:00','Checkout &amp; Transport Departures','Rooms vacated by 10:00; luggage can be left at reception.','Retreat reception','Logistics',0,4);
 
 -- -------------------------------------------------------------------- FAQ --
 
@@ -146,20 +154,25 @@ INSERT INTO `faqs` (`category`,`question`,`answer`,`sort_order`) VALUES
 ('Registration','What does registration include?','<p>Registration covers every meeting, workshop and speaker session, the Saturday night celebration and your convention badge. Accommodation, transport and meals outside the programme are booked separately.</p>',1),
 ('Registration','Can I come for only one day?','<p>Yes. Friday, Saturday and Sunday day passes are on sale in the shop. Saturday is the fullest day if you can only choose one.</p>',2),
 ('Registration','Can I register someone else?','<p>Yes. Add a registration to your cart for each person and enter their details at checkout. Each attendee gets their own badge and check-in code.</p>',3),
-('Accommodation','Can I book just one bed?','<p>Yes — that is exactly how our accommodation works. Beds are sold individually, so booking one bed in a two-bed cottage leaves the second bed on sale for someone else. If you would rather not share, choose the private unit option and the whole cottage is yours.</p>',10),
-('Accommodation','Can I choose who I share with?','<p>Add their name in the roommate request field when you book. We honour requests wherever we can, as long as you both book the same room type and the same nights.</p>',11),
-('Accommodation','Can I arrive on Thursday?','<p>Yes. Thursday 26 August is available as an optional early-arrival night on most room types, at a slightly lower rate.</p>',12),
-('Accommodation','What if I need step-free access?','<p>Book the Accessible Twin Cottage, which has step-free access, a roll-in shower and grab rails, and sits closest to the conference barn. Describe your requirements in the booking notes and the accommodation team will be in touch.</p>',13),
-('Accommodation','How long is a bed held while I check out?','<p>Fifteen minutes. Once you add a bed to your cart it is held for you and no one else can buy it. If you do not finish paying in that time, the bed goes back on sale.</p>',14),
+('Accommodation','How does the accommodation actually work?','<p>The Boschendal Retreat is eighteen self-catering cottages. Each cottage has <strong>two bedrooms</strong>, and each bedroom has <strong>its own front door onto the lawn</strong> and <strong>its own en-suite bathroom</strong>. So a cottage is shared between two rooms, but you never walk through anyone else&rsquo;s space to reach yours.</p><p>We sell the <strong>bedroom</strong>, and within it we sell <strong>each bed</strong>. Thirty-six bedrooms, seventy-two beds.</p>',10),
+('Accommodation','Can I book just one bed?','<p>Yes — that is exactly how it works. Beds are sold individually, so booking one bed in a twin room leaves the second bed on sale for someone else. If you would rather not share, choose the private room option and both beds are held for you.</p>',11),
+('Accommodation','Can I choose who I share with?','<p>Add their name in the roommate request field when you book. We honour requests wherever we can, as long as you both book the same room type and the same nights.</p>',12),
+('Accommodation','What is in the cottage?','<p>A living room with a kitchen and an indoor fireplace, shared between the two bedrooms, plus a private patio with a braai. WiFi and satellite TV throughout. Linen, towels and heating are included.</p>',13),
+('Accommodation','What happens when the Retreat is full?','<p>The Retreat sleeps seventy-two. Beyond that we place people at a partner guest house in Franschhoek, fifteen minutes down the valley, with a free shuttle to every session and back — including late after the Saturday night celebration.</p>',14),
+('Accommodation','Can I arrive on Thursday?','<p>Yes. Thursday 26 August is available as an optional early-arrival night, at a slightly lower rate.</p>',15),
+('Accommodation','What if I need step-free access?','<p>Book an Accessible Retreat Room. Those are the cottages closest to the auditorium and the dining lounge, on level paved paths, with a widened doorway, a roll-in shower and grab rails. Describe your requirements in the booking notes and the accommodation team will confirm the detail with the venue before you arrive.</p>',16),
+('Accommodation','How long is a bed held while I check out?','<p>Fifteen minutes. Once you add a bed to your cart it is held for you and no one else can buy it. If you do not finish paying in that time, the bed goes back on sale.</p>',17),
 ('Transport','How do the airport shuttles work?','<p>Choose your route and departure time in the shop, then give us your flight number. The transport co-ordinator matches passengers to vehicles and sends a WhatsApp with the meeting point the week before.</p>',20),
 ('Transport','What if my flight is delayed?','<p>Message the transport co-ordinator on WhatsApp as early as you can. We will move you to a later shuttle if there is a seat.</p>',21),
-('Transport','Can I drive myself?','<p>Yes, there is ample parking on the estate. Day visitors should book the free parking pass so the venue can plan the parking field.</p>',22),
+('Transport','Can I drive myself?','<p>Yes. The Retreat is about an hour from Cape Town and there is parking at the cottages. Day visitors should book the free parking pass so the venue can plan.</p>',22),
+('Transport','Should I hire a car?','<p>If you want to explore the valley outside session times, a car is worth it — the Retreat is secluded and there is nothing within walking distance. If you are only coming for the convention, the shuttles cover everything. There is a car hire link on the checkout page.</p>',23),
 ('Payments','How do I pay?','<p>All payments go through PayFast, which accepts cards, Instant EFT, SnapScan and more. We never see your card details.</p>',30),
 ('Payments','When is my booking confirmed?','<p>The moment PayFast tells us the payment succeeded. You will get a confirmation email with your check-in code, your bed allocation and your shuttle details.</p>',31),
 ('Payments','Can I get a refund?','<p>Yes, within the windows set out in our refund policy. Registration is refundable up to 30 days before the convention, and beds follow the venue cancellation terms.</p>',32),
-('The venue','Is this a wine estate?','<p>Boschendal is a historic Cape farm estate, and our convention weekend is entirely substance-free. Wine tasting is not part of the programme, is not offered at any convention event, and alcohol is not served at anything we run.</p>',40),
-('The venue','What is there to do between sessions?','<p>Farm roads and mountain paths to walk, gardens to sit in, a fire pit that runs late, and a lot of coffee. The venue is quiet, green and easy to move around.</p>',41),
-('The venue','What should I pack?','<p>Warm layers — Winelands nights in August are cold — comfortable walking shoes, and something smarter for the Saturday night celebration if you like.</p>',42),
+('The venue','Where exactly is the Retreat?','<p>In a secluded corner of the Boschendal farm — 1&nbsp;800 hectares between the Simonsberg and the Groot Drakenstein mountains, in the Dwars River valley between Franschhoek and Stellenbosch. About an hour from Cape Town.</p>',40),
+('The venue','Is this a wine estate?','<p>Boschendal is a historic Cape farm with a wine-making history going back to title deeds of 1685. Our convention weekend is entirely substance-free: wine tasting is not part of the programme, is not offered at any convention event, and no alcohol is served at anything we run. The Retreat is a self-contained venue in its own corner of the farm.</p>',41),
+('The venue','What is there to do between sessions?','<p>Mountainside walking trails, horse riding, a natural swimming pool, fynbos gardens, a communal boma that runs late, and a private screening room. The Retreat is quiet, green and easy to move around.</p>',42),
+('The venue','What should I pack?','<p>Warm layers — Winelands nights in August are cold, and the cottages have fireplaces for a reason — comfortable walking shoes, and something smarter for the Saturday night celebration if you like. Swimming things if you are brave enough for the natural pool.</p>',43),
 ('Service','How do I do service at the convention?','<p>Fill in the service application form. The service co-ordinator will place you in an area and send you a shift.</p>',50),
 ('Anonymity','Can I take photographs?','<p>Only with the consent of everyone in the picture, and never inside meetings or the fellowship lounge. Please read our photo and anonymity notice before you post anything.</p>',60);
 
@@ -170,27 +183,30 @@ INSERT INTO `banners` (`position`,`title`,`subtitle`,`body`,`image`,`image_alt`,
 ('home_cta','Bring someone with you','Sponsor a newcomer registration','Every sponsored registration puts one more person in the room who could not otherwise be there.','/assets/img/backgrounds/cta-sunset.jpg','Illustration of the Winelands at sunset','Sponsor a newcomer','/donations','See all donations','/donations',1,1);
 
 -- ---------------------------------------------------------------- gallery --
+-- Every file below is a PLACEHOLDER illustration. Replace with the venue media
+-- pack — see docs/image-source-log.md and tools/import-venue-images.php.
 
 INSERT INTO `gallery_images` (`title`,`alt_text`,`file_path`,`category`,`source_note`,`sort_order`,`is_mock`) VALUES
-('The estate at sunrise','Illustration of the Boschendal estate at sunrise, with vineyard rows leading to the mountains','/assets/img/venue/boschendal-overview.jpg','venue','Original illustration generated for this mockup — replace with licensed venue photography',1,1),
-('Retreat cottages','Illustration of the retreat cottages among the orchards','/assets/img/venue/retreat-cottages.jpg','venue','Original illustration generated for this mockup',2,1),
-('The conference barn','Illustration of the conference barn on the estate','/assets/img/venue/conference-barn.jpg','venue','Original illustration generated for this mockup',3,1),
-('Gardens','Illustration of the estate gardens in morning mist','/assets/img/venue/gardens.jpg','venue','Original illustration generated for this mockup',4,1),
-('The farm kitchen','Illustration of the dining terrace at dusk','/assets/img/venue/farm-kitchen.jpg','venue','Original illustration generated for this mockup',5,1),
-('Mountain walk','Illustration of the mountain path behind the estate','/assets/img/venue/mountain-walk.jpg','venue','Original illustration generated for this mockup',6,1),
-('Fireside','Illustration of the fire pit lawn after sunset','/assets/img/venue/fireside.jpg','venue','Original illustration generated for this mockup',7,1),
-('The arrival drive','Illustration of the oak-lined arrival drive','/assets/img/venue/arrival-drive.jpg','venue','Original illustration generated for this mockup',8,1),
-('Main hall','Illustration of the main meeting hall','/assets/img/conference/main-hall.jpg','conference','Original illustration generated for this mockup',9,1),
-('Workshop room','Illustration of a workshop room','/assets/img/conference/workshop-room.jpg','conference','Original illustration generated for this mockup',10,1),
-('Fellowship lawn','Illustration of the fellowship lawn','/assets/img/conference/fellowship-lawn.jpg','conference','Original illustration generated for this mockup',11,1),
-('Airport shuttle','Illustration of the shuttle route','/assets/img/transport/airport-shuttle.jpg','transport','Original illustration generated for this mockup',12,1),
-('Winelands road','Illustration of the road through the Winelands','/assets/img/transport/winelands-road.jpg','transport','Original illustration generated for this mockup',13,1);
+('The farm at sunrise','Illustration of the Boschendal farm at sunrise, vineyard rows running to the mountains','/assets/img/venue/boschendal-overview.jpg','venue','PLACEHOLDER — replace with licensed venue photography',1,1),
+('The Retreat cottages','Illustration of the Retreat cottages across the lawns','/assets/img/venue/retreat-cottages.jpg','venue','PLACEHOLDER — replace with licensed venue photography',2,1),
+('Inside a cottage','Illustration standing in for a cottage living room and fireplace','/assets/img/venue/cottage-interior.jpg','rooms','PLACEHOLDER — replace with licensed venue photography',3,1),
+('The auditorium','Illustration standing in for the Retreat auditorium','/assets/img/venue/auditorium.jpg','conference','PLACEHOLDER — replace with licensed venue photography',4,1),
+('The screening room','Illustration standing in for the private screening room','/assets/img/venue/screening-room.jpg','conference','PLACEHOLDER — replace with licensed venue photography',5,1),
+('Lounge and dining','Illustration standing in for the lounge and dining area','/assets/img/venue/dining-lounge.jpg','conference','PLACEHOLDER — replace with licensed venue photography',6,1),
+('The boma','Illustration of the communal boma after sunset','/assets/img/venue/boma-firepit.jpg','venue','PLACEHOLDER — replace with licensed venue photography',7,1),
+('The natural swimming pool','Illustration standing in for the natural swimming pool','/assets/img/venue/natural-pool.jpg','venue','PLACEHOLDER — replace with licensed venue photography',8,1),
+('Fynbos gardens','Illustration of the fynbos gardens in morning mist','/assets/img/venue/fynbos-gardens.jpg','venue','PLACEHOLDER — replace with licensed venue photography',9,1),
+('Mountainside trails','Illustration of the walking trails behind the Retreat','/assets/img/venue/walking-trails.jpg','venue','PLACEHOLDER — replace with licensed venue photography',10,1),
+('Horse trails','Illustration of the riding trails across the farm','/assets/img/venue/horse-trails.jpg','venue','PLACEHOLDER — replace with licensed venue photography',11,1),
+('The arrival drive','Illustration of the oak-lined arrival drive','/assets/img/venue/arrival-drive.jpg','venue','PLACEHOLDER — replace with licensed venue photography',12,1),
+('A Retreat twin room','Illustration standing in for an en-suite twin bedroom','/assets/img/rooms/retreat-twin-room.jpg','rooms','PLACEHOLDER — replace with licensed venue photography',13,1),
+('Winelands road','Illustration of the road through the valley','/assets/img/transport/winelands-road.jpg','transport','PLACEHOLDER — replace with licensed photography',14,1);
 
 -- ------------------------------------------------------- upcoming events --
 
 INSERT INTO `events` (`title`,`slug`,`description`,`starts_at`,`ends_at`,`location`,`image`,`link_url`,`is_mock`) VALUES
-('Convention Fundraiser Braai','convention-fundraiser-braai','<p>A fundraiser braai in aid of the newcomer sponsorship fund. Bring your own meat, salads provided.</p>','2027-03-14 12:00:00','2027-03-14 17:00:00','Rondebosch Community Hall, Cape Town','/assets/img/venue/fellowship-lawn.jpg','/donations',1),
-('Regional Service Workshop','regional-service-workshop','<p>An afternoon on convention service positions, open to anyone considering service in 2027.</p>','2027-05-08 14:00:00','2027-05-08 17:00:00','Stellenbosch','/assets/img/conference/workshop-room.jpg','/service',1),
+('Convention Fundraiser Braai','convention-fundraiser-braai','<p>A fundraiser braai in aid of the newcomer sponsorship fund. Bring your own meat, salads provided.</p>','2027-03-14 12:00:00','2027-03-14 17:00:00','Rondebosch Community Hall, Cape Town','/assets/img/venue/boma-firepit.jpg','/donations',1),
+('Regional Service Workshop','regional-service-workshop','<p>An afternoon on convention service positions, open to anyone considering service in 2027.</p>','2027-05-08 14:00:00','2027-05-08 17:00:00','Stellenbosch','/assets/img/venue/screening-room.jpg','/service',1),
 ('Early Bird Registration Closes','early-bird-closes','<p>The last day to register at the early-bird rate.</p>','2027-06-30 23:59:00',NULL,'Online','/assets/img/backgrounds/cta-sunset.jpg','/shop/registration',1);
 
 -- --------------------------------------------------------- test customer --

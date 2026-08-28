@@ -19,7 +19,7 @@ final class DonationController extends Controller
         return $this->page('pages.donations', [
             'title'       => 'Donations',
             'description' => 'Support the SARCNA 2027 Convention with a Seventh Tradition contribution, by sponsoring a newcomer registration, or by sponsoring a bed for someone who could not otherwise stay.',
-            'image'       => '/assets/img/venue/fellowship-lawn.jpg',
+            'image'       => '/assets/img/venue/boma-firepit.jpg',
         ], [
             'products' => ProductService::all(['type' => ['donation']]),
             'isOpen'   => SettingsService::bool('donations_enabled', true),

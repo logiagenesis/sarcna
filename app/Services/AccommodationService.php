@@ -47,6 +47,47 @@ final class AccommodationService
         return $labels;
     }
 
+    /**
+     * Names for newly generated units.
+     *
+     * The Retreat's cottages each hold two bedrooms, and each bedroom is let
+     * separately, so units are named "Cottage 07 · Room A". The booking chair
+     * and the venue both think in cottages, and this keeps the two in step.
+     * Everything else falls back to "<Room type> 01".
+     *
+     * @return array<int, array{name: string, code: string}>
+     */
+    public static function unitNames(array $roomType, int $count, int $existing = 0, int $cottageOffset = 0): array
+    {
+        $slug        = (string) $roomType['slug'];
+        $byCottage   = str_starts_with($slug, 'retreat-cottage');
+        $roomsPerUnit = 2;
+        $names       = [];
+
+        for ($index = 0; $index < $count; $index++) {
+            $position = $existing + $index;
+
+            if ($byCottage) {
+                $cottage = $cottageOffset + intdiv($position, $roomsPerUnit) + 1;
+                $letter  = chr(65 + ($position % $roomsPerUnit));
+
+                $names[] = [
+                    'name' => sprintf('Cottage %02d · Room %s', $cottage, $letter),
+                    'code' => sprintf('C%02d%s', $cottage, $letter),
+                ];
+
+                continue;
+            }
+
+            $names[] = [
+                'name' => sprintf('%s %02d', $roomType['name'], $position + 1),
+                'code' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $slug) ?: 'UNIT', 0, 3)) . sprintf('%02d', $position + 1),
+            ];
+        }
+
+        return $names;
+    }
+
     /* -------------------------------------------------------- room types */
 
     public static function roomTypes(bool $activeOnly = true): array

@@ -283,12 +283,20 @@ final class InstallController extends Controller
         $units     = 0;
         $beds      = 0;
 
+        // The real Boschendal Retreat: 18 cottages × 2 en-suite bedrooms = 36
+        // lettable rooms and 72 beds. Cottages 1–16 are standard, 17–18 are the
+        // step-free ones nearest the auditorium.
         $unitCounts = [
-            'retreat-twin-cottage'     => 40,
-            'garden-quad-cottage'      => 20,
-            'mountain-view-farmhouse'  => 8,
-            'accessible-twin-cottage'  => 4,
-            'overflow-partner-lodge'   => 15,
+            'retreat-cottage-twin-room'       => 32,
+            'retreat-cottage-accessible-room' => 4,
+            'partner-guest-house-franschhoek' => 20,
+        ];
+
+        // Cottage numbering continues across the two Retreat room types so the
+        // estate reads 1–18 rather than restarting.
+        $cottageOffsets = [
+            'retreat-cottage-twin-room'       => 0,
+            'retreat-cottage-accessible-room' => 16,
         ];
 
         $insertUnit = $pdo->prepare('INSERT INTO room_units (room_type_id, name, code, sort_order) VALUES (?, ?, ?, ?)');
@@ -304,11 +312,15 @@ final class InstallController extends Controller
             $unitCount = $unitCounts[$roomType['slug']] ?? 10;
             $bedCount  = max(1, (int) $roomType['beds_per_unit']);
 
-            for ($unit = 1; $unit <= $unitCount; $unit++) {
-                $name = sprintf('%s %02d', $roomType['name'], $unit);
-                $code = strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $roomType['slug']) ?: 'UNIT', 0, 3)) . sprintf('%02d', $unit);
+            $labels = \App\Services\AccommodationService::unitNames(
+                $roomType,
+                $unitCount,
+                0,
+                $cottageOffsets[$roomType['slug']] ?? 0
+            );
 
-                $insertUnit->execute([(int) $roomType['id'], $name, $code, $unit]);
+            foreach ($labels as $position => $label) {
+                $insertUnit->execute([(int) $roomType['id'], $label['name'], $label['code'], $position + 1]);
                 $unitId = (int) $pdo->lastInsertId();
                 $units++;
 

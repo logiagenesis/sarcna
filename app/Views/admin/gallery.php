@@ -49,7 +49,7 @@ View::start('content');
       </div>
       <div class="field">
         <label class="field__label" for="file_path">Or the path of an existing image</label>
-        <input type="text" id="file_path" name="file_path" placeholder="/assets/img/venue/gardens.jpg">
+        <input type="text" id="file_path" name="file_path" placeholder="/assets/img/venue/fynbos-gardens.jpg">
       </div>
       <div class="field">
         <label class="field__label" for="title">Title</label>

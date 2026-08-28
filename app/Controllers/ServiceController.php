@@ -25,7 +25,7 @@ final class ServiceController extends Controller
         return $this->page('pages.service', [
             'title'       => 'Service & Volunteer Applications',
             'description' => 'Put your hand up to do service at the SARCNA 2027 Convention — registration, hospitality, transport, merchandise, stewarding and more.',
-            'image'       => '/assets/img/conference/fellowship-lawn.jpg',
+            'image'       => '/assets/img/venue/natural-pool.jpg',
         ], ['areas' => self::SERVICE_AREAS]);
     }
 

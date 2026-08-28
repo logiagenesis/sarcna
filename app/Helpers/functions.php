@@ -60,7 +60,7 @@ if (!function_exists('asset')) {
 }
 
 if (!function_exists('uploaded')) {
-    function uploaded(?string $path, string $fallback = 'img/backgrounds/placeholder.svg'): string
+    function uploaded(?string $path, string $fallback = 'img/backgrounds/placeholder.jpg'): string
     {
         if ($path === null || trim($path) === '') {
             return asset($fallback);

@@ -7,7 +7,7 @@ View::start('content');
   'eyebrow' => 'Accommodation',
   'title'   => 'Book a bed, not a whole room',
   'lede'    => 'Beds are sold one at a time. Take a single bed in a shared cottage and the rest stay on sale for other attendees — or book a whole unit privately.',
-  'image'   => 'img/rooms/retreat-twin-cottage.jpg',
+  'image'   => 'img/rooms/retreat-twin-room.jpg',
   'crumbs'  => ['Accommodation' => null],
 ]); ?>
 

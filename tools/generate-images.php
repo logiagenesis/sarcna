@@ -322,24 +322,24 @@ $catalogue = [
     ['backgrounds/section-mist',        1600,  600, 3081, 'mist',  false, false, false],
     ['backgrounds/placeholder',          800,  600, 4120, 'day',   true,  false, true],
 
+    // The Retreat sits in a secluded corner of the 1 800 ha farm, between the
+    // Simonsberg and the Groot Drakenstein.
     ['venue/boschendal-overview',       1600, 1000, 5150, 'day',   true,  true,  true],
     ['venue/retreat-cottages',          1200,  800, 5211, 'dawn',  false, true,  true],
-    ['venue/conference-barn',           1200,  800, 5322, 'day',   false, true,  true],
-    ['venue/gardens',                   1200,  800, 5433, 'mist',  true,  false, true],
-    ['venue/farm-kitchen',              1200,  800, 5544, 'dusk',  false, true,  true],
-    ['venue/mountain-walk',             1200,  800, 5655, 'dawn',  false, false, true],
-    ['venue/fireside',                  1200,  800, 5766, 'dusk',  false, true,  true],
+    ['venue/cottage-interior',          1200,  800, 5266, 'dusk',  false, true,  true],
+    ['venue/auditorium',                1200,  800, 5322, 'day',   false, true,  true],
+    ['venue/screening-room',            1200,  800, 5377, 'mist',  false, true,  true],
+    ['venue/dining-lounge',             1200,  800, 5544, 'dusk',  false, true,  true],
+    ['venue/boma-firepit',              1200,  800, 5766, 'dusk',  false, true,  true],
+    ['venue/natural-pool',              1200,  800, 5820, 'day',   false, false, true],
+    ['venue/fynbos-gardens',            1200,  800, 5433, 'mist',  true,  false, true],
+    ['venue/walking-trails',            1200,  800, 5655, 'dawn',  false, false, true],
+    ['venue/horse-trails',              1200,  800, 5690, 'day',   true,  false, true],
     ['venue/arrival-drive',             1200,  800, 5877, 'day',   true,  false, true],
 
-    ['conference/main-hall',            1200,  800, 6100, 'day',   false, true,  true],
-    ['conference/workshop-room',        1200,  800, 6211, 'mist',  false, true,  true],
-    ['conference/fellowship-lawn',      1200,  800, 6322, 'dawn',  true,  false, true],
-
-    ['rooms/retreat-twin-cottage',      1200,  800, 7100, 'dawn',  false, true,  true],
-    ['rooms/garden-quad-cottage',       1200,  800, 7211, 'day',   true,  true,  true],
-    ['rooms/mountain-view-farmhouse',   1200,  800, 7322, 'dusk',  false, true,  true],
-    ['rooms/accessible-twin-cottage',   1200,  800, 7433, 'mist',  false, true,  true],
-    ['rooms/overflow-partner-lodge',    1200,  800, 7544, 'day',   true,  true,  true],
+    ['rooms/retreat-twin-room',         1200,  800, 7100, 'dawn',  false, true,  true],
+    ['rooms/retreat-accessible-room',   1200,  800, 7433, 'mist',  false, true,  true],
+    ['rooms/partner-guest-house',       1200,  800, 7544, 'day',   true,  true,  true],
 
     ['transport/airport-shuttle',       1200,  800, 8100, 'day',   false, false, true],
     ['transport/winelands-road',        1200,  800, 8211, 'dawn',  true,  false, true],

@@ -123,14 +123,12 @@ final class RoomController extends AdminController
         $createdUnits = 0;
         $createdBeds  = 0;
 
-        for ($index = 1; $index <= $count; $index++) {
-            $number = $existing + $index;
-
+        foreach (AccommodationService::unitNames($roomType, $count, $existing) as $position => $label) {
             $unitId = Database::insert('room_units', [
                 'room_type_id' => (int) $roomType['id'],
-                'name'         => sprintf('%s %02d', $roomType['name'], $number),
-                'code'         => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $roomType['slug']) ?: 'UNIT', 0, 3)) . sprintf('%02d', $number),
-                'sort_order'   => $number,
+                'name'         => $label['name'],
+                'code'         => $label['code'],
+                'sort_order'   => $existing + $position + 1,
             ]);
 
             $createdUnits++;

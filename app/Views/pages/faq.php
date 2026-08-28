@@ -7,7 +7,7 @@ View::start('content');
   'eyebrow' => 'Questions',
   'title'   => 'Frequently asked questions',
   'lede'    => 'If your question is not here, WhatsApp us — someone from the committee answers most days.',
-  'image'   => 'img/venue/farm-kitchen.jpg',
+  'image'   => 'img/venue/dining-lounge.jpg',
   'crumbs'  => ['FAQ' => null],
 ]); ?>
 
