@@ -1,0 +1,28 @@
+# Environment / credentials — never commit
+.env
+.env.local
+.env.*.local
+app/Config/installed.lock
+
+# Runtime storage
+storage/logs/*
+storage/cache/*
+storage/backups/*
+storage/email-queue/*
+!storage/**/.gitkeep
+
+# User uploads
+public_html/uploads/*
+!public_html/uploads/.htaccess
+!public_html/uploads/.gitkeep
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.idea/
+.vscode/
+
+# Build tooling (compiled CSS is committed on purpose)
+node_modules/

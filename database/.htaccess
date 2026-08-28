@@ -1,0 +1,9 @@
+# This folder must never be reachable over HTTP.
+# It only matters on hosts where the application root is inside public_html.
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+</IfModule>

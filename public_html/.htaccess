@@ -1,0 +1,94 @@
+# ------------------------------------------------------------------
+# SARCNA 2027 Convention — Apache / cPanel configuration
+# ------------------------------------------------------------------
+
+Options -Indexes -MultiViews
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # If the site lives in a subfolder, uncomment and set it:
+    # RewriteBase /
+
+    # Force HTTPS (cPanel AutoSSL issues the certificate).
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{HTTP_HOST} !^localhost [NC]
+    RewriteCond %{HTTP_HOST} !^127\.0\.0\.1
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+    # Canonical host: send the bare domain to www (edit to taste).
+    # RewriteCond %{HTTP_HOST} ^sarcna\.org\.za [NC]
+    # RewriteRule ^ https://www.sarcna.org.za%{REQUEST_URI} [L,R=301]
+
+    # Strip trailing slashes so URLs stay canonical for SEO.
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.+)/$ /$1 [L,R=301]
+
+    # Everything that is not a real file goes to the front controller.
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Block access to dotfiles and sensitive extensions.
+<FilesMatch "^\.|\.(env|log|sql|md|json|lock|ini|yml|yaml|bak|sh)$">
+    Require all denied
+</FilesMatch>
+
+<Files "composer.json">
+    Require all denied
+</Files>
+
+# ------------------------------------------------------------------
+# Compression
+# ------------------------------------------------------------------
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+    AddOutputFilterByType DEFLATE application/json application/xml image/svg+xml
+</IfModule>
+
+# ------------------------------------------------------------------
+# Caching — hashed asset URLs carry ?v=<mtime>, so long caches are safe.
+# ------------------------------------------------------------------
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault "access plus 1 month"
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType text/css "access plus 1 year"
+    ExpiresByType application/javascript "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+</IfModule>
+
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|webp|jpg|jpeg|png|svg|woff2|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+    Header always set X-Content-Type-Options "nosniff"
+    Header unset X-Powered-By
+    Header always unset X-Powered-By
+</IfModule>
+
+<IfModule mod_mime.c>
+    AddType image/webp .webp
+    AddType font/woff2 .woff2
+    AddType image/svg+xml .svg
+</IfModule>
+
+# ------------------------------------------------------------------
+# Custom error documents (handled by the front controller).
+# ------------------------------------------------------------------
+ErrorDocument 403 /index.php
+ErrorDocument 404 /index.php
+
+# Do not expose PHP details.
+<IfModule mod_php.c>
+    php_flag display_errors off
+    php_flag expose_php off
+</IfModule>
