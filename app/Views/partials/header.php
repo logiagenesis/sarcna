@@ -29,7 +29,7 @@ $navigation = [
 <header class="site-header">
   <div class="container site-header__inner">
     <a class="site-logo" href="<?= e(url('/')) ?>" aria-label="<?= e(SettingsService::get('site_name', config('app.name'))) ?> home">
-      <img src="<?= e(asset('brand/logo.svg')) ?>" alt="<?= e(SettingsService::get('site_name', config('app.name'))) ?>" width="230" height="66">
+      <img src="<?= e(asset('brand/logo.svg')) ?>" alt="<?= e(SettingsService::get('site_name', config('app.name'))) ?>" width="258" height="66">
     </a>
 
     <nav class="nav" aria-label="Main">
