@@ -134,3 +134,44 @@ are comfortable with both its accuracy and its tone.
 - [ ] Obtain the venue media pack and written permission to use it, then run
       `php tools/import-venue-images.php` and log it in
       `docs/image-source-log.md`.
+
+## Venue photography and film (added 28 Aug 2026)
+
+### Photographs
+
+`tools/import-venue-images.php` carries a curated manifest of 25 of
+Boschendal's own photographs — the Retreat cottages inside and out, the
+conference venues, and the estate — each listed with the exact
+`boschendal.com/wp-content/uploads/…` source URL. The development sandbox
+cannot reach image hosts, so the importer is run once from any machine with
+ordinary internet access (`php tools/import-venue-images.php`); it downloads,
+resizes to 1800px, writes JPEG + WebP pairs into
+`public_html/assets/img/venue/real/`, and registers gallery and room-type
+images in the database with a `source_note` naming the origin of every file.
+
+The manifest deliberately excludes the estate's wine-tasting and bar
+photography — this is a recovery convention.
+
+**Permission**: these are Boschendal's photographs. The committee must
+confirm usage with the venue in writing before launch. A venue hosting an
+event normally welcomes its own imagery being used to promote that event,
+but it is their call, not ours.
+
+### Films
+
+Three videos from Boschendal's official YouTube channel
+(`youtube.com/@boschendalfarm`, channel id `UCIuLpfkqfLXbLxQliHTsPfw`) are
+embedded on the venue page with a click-to-load facade — nothing loads from
+YouTube until a visitor presses play, and playback uses the
+privacy-enhanced `youtube-nocookie.com` player:
+
+| Video | ID | Why chosen |
+|---|---|---|
+| "Live Our Farm. Your Way." | `7OJNTWqSE0o` | The estate showcase film |
+| "Weddings at Boschendal" | `8W-kIQsgRLg` | The function spaces the convention hires |
+| "The Tree House: Where the Magic Happens" | `Jv-ejDHfSPQ` | One of the venues delegates will use |
+
+The channel's wine-tasting and MCC films were considered and excluded as
+inappropriate for a recovery convention. Embedding published YouTube videos
+via the standard player is within YouTube's terms; no video files are copied
+or re-hosted.
