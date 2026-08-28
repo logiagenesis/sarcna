@@ -4,16 +4,25 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Core\Database;
+use App\Core\Logger;
 
 /** Database-backed throttling for logins, password resets and public forms. */
 final class RateLimiter
 {
     public static function tooManyAttempts(string $key, int $maxAttempts, int $decaySeconds = 900): bool
     {
-        self::purge();
-
         $bucket = hash('sha256', $key);
-        $row    = Database::first('SELECT * FROM rate_limits WHERE bucket = ? LIMIT 1', [$bucket]);
+
+        try {
+            self::purge();
+            $row = Database::first('SELECT * FROM rate_limits WHERE bucket = ? LIMIT 1', [$bucket]);
+        } catch (\Throwable $e) {
+            // Before the installer has run there is no database to throttle
+            // against. Fail open rather than locking the site out of setup.
+            Logger::warning('Rate limiter unavailable: ' . $e->getMessage());
+
+            return false;
+        }
 
         if ($row === null) {
             return false;
@@ -33,7 +42,11 @@ final class RateLimiter
         $bucket    = hash('sha256', $key);
         $expiresAt = date('Y-m-d H:i:s', time() + $decaySeconds);
 
-        $row = Database::first('SELECT * FROM rate_limits WHERE bucket = ? LIMIT 1', [$bucket]);
+        try {
+            $row = Database::first('SELECT * FROM rate_limits WHERE bucket = ? LIMIT 1', [$bucket]);
+        } catch (\Throwable) {
+            return 0;
+        }
 
         if ($row === null) {
             Database::insert('rate_limits', ['bucket' => $bucket, 'attempts' => 1, 'expires_at' => $expiresAt]);
@@ -50,12 +63,20 @@ final class RateLimiter
 
     public static function clear(string $key): void
     {
-        Database::delete('rate_limits', 'bucket = ?', [hash('sha256', $key)]);
+        try {
+            Database::delete('rate_limits', 'bucket = ?', [hash('sha256', $key)]);
+        } catch (\Throwable) {
+            // Nothing to clear if the table is not reachable.
+        }
     }
 
     public static function secondsRemaining(string $key): int
     {
-        $row = Database::first('SELECT expires_at FROM rate_limits WHERE bucket = ? LIMIT 1', [hash('sha256', $key)]);
+        try {
+            $row = Database::first('SELECT expires_at FROM rate_limits WHERE bucket = ? LIMIT 1', [hash('sha256', $key)]);
+        } catch (\Throwable) {
+            return 0;
+        }
 
         if ($row === null) {
             return 0;

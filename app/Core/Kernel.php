@@ -117,7 +117,7 @@ final class Kernel
         }
 
         if (!$installed && !str_starts_with($path, '/install') && !str_starts_with($path, '/assets')) {
-            Response::redirect(url('/install'));
+            Response::redirect('/install');
         }
     }
 

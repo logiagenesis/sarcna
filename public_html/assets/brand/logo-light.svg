@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" role="img" aria-label="SARCNA 2027 Cape Winelands Convention">
+  <title>SARCNA 2027 — Cape Winelands Convention</title>
+  <defs>
+    <clipPath id="lockupClip"><circle cx="60" cy="60" r="45"/></clipPath>
+    <linearGradient id="lockupSky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFF6E7"/><stop offset="55%" stop-color="#F7E3C0"/><stop offset="100%" stop-color="#E9C98F"/>
+    </linearGradient>
+    <linearGradient id="lockupSun" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F2C263"/><stop offset="100%" stop-color="#D9A441"/>
+    </linearGradient>
+    <linearGradient id="lockupField" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#8DA98F"/><stop offset="100%" stop-color="#173D2F"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="60" cy="60" r="58" fill="#0E241C"/>
+  <circle cx="60" cy="60" r="52.5" fill="none" stroke="#D9A441" stroke-width="1.4" opacity="0.85"/>
+  <g clip-path="url(#lockupClip)">
+    <rect x="10" y="15" width="100" height="90" fill="url(#lockupSky)"/>
+    <circle cx="60" cy="58" r="15" fill="url(#lockupSun)"/>
+    <path d="M10 66 L26 47 L37 58 L48 41 L63 63 L72 53 L84 66 L96 55 L110 68 L110 106 L10 106 Z" fill="#3D6152" opacity="0.55"/>
+    <path d="M10 72 L28 55 L44 70 L58 52 L74 70 L90 58 L110 76 L110 106 L10 106 Z" fill="#2A4A3C"/>
+    <path d="M10 106 L52 74 L58 74 L34 106 Z" fill="url(#lockupField)"/>
+    <path d="M110 106 L68 74 L62 74 L86 106 Z" fill="url(#lockupField)"/>
+    <path d="M60 74 L74 106 L46 106 Z" fill="#FFF6E7" opacity="0.92"/>
+  </g>
+  <circle cx="60" cy="60" r="45" fill="none" stroke="#0E241C" stroke-width="2.5"/>
+
+  <g fill="#FFF6E7" font-family="Lora, Georgia, 'Times New Roman', serif">
+    <text x="136" y="58" font-size="40" font-weight="700" letter-spacing="3.5">SARCNA</text>
+    <text x="330" y="58" font-size="40" font-weight="400" letter-spacing="1.5" fill="#D9A441">2027</text>
+  </g>
+  <line x1="137" y1="70" x2="404" y2="70" stroke="#D9A441" stroke-width="1.5"/>
+  <text x="137" y="88" font-family="'Work Sans', Helvetica, Arial, sans-serif" font-size="13.5" letter-spacing="4.2" fill="#8DA98F">CAPE WINELANDS CONVENTION</text>
+</svg>

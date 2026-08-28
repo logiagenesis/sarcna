@@ -5,12 +5,29 @@ use App\Core\Env;
 
 $root = dirname(__DIR__, 2);
 
+/**
+ * Fall back to the host actually serving the request when APP_URL is not set
+ * yet (before the installer has run, or on a staging copy of the site).
+ */
+$detectedUrl = static function (): string {
+    $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+
+    if ($host === '' || preg_match('/^[A-Za-z0-9.\-:\[\]]+$/', $host) !== 1) {
+        return 'http://localhost';
+    }
+
+    $secure = (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off')
+        || ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https';
+
+    return ($secure ? 'https://' : 'http://') . $host;
+};
+
 return [
     'app' => [
         'name'      => (string) Env::get('APP_NAME', 'SARCNA 2027 Convention'),
         'env'       => (string) Env::get('APP_ENV', 'production'),
         'debug'     => (bool) Env::get('APP_DEBUG', false),
-        'url'       => rtrim((string) Env::get('APP_URL', 'https://sarcna.org.za'), '/'),
+        'url'       => rtrim((string) Env::get('APP_URL', $detectedUrl()), '/'),
         'timezone'  => (string) Env::get('APP_TIMEZONE', 'Africa/Johannesburg'),
         'key'       => (string) Env::get('APP_KEY', ''),
         'locale'    => 'en_ZA',
