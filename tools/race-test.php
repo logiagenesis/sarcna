@@ -208,12 +208,17 @@ Database::run('DELETE FROM booking_holds WHERE bed_id = ?', [$bedId]);
 Database::run('DELETE FROM cart_items WHERE bed_id = ?', [$bedId]);
 
 $script = sys_get_temp_dir() . '/race-insert.php';
+
+// The worker is written out to a temporary file, so it cannot use __DIR__ to
+// find the application — the path is passed in as its first argument instead.
+// It used to be hardcoded, which meant this test only ever ran on the one
+// machine it was written on. CI caught that on its first run.
 file_put_contents($script, <<<'PHP'
 <?php
-require '/home/user/sarcna/app/bootstrap.php';
-use App\Core\Database;
+[$bootstrap, $bedId, $unitId, $typeId, $night, $n] = array_slice($argv, 1);
 
-[$bedId, $unitId, $typeId, $night, $n] = array_slice($argv, 1);
+require $bootstrap;
+use App\Core\Database;
 
 // Every worker tries to confirm the same bed for the same night at once.
 try {
@@ -238,8 +243,9 @@ $pipes = [];
 
 for ($i = 0; $i < $racers; $i++) {
     $cmd = sprintf(
-        'php %s %d %d %d %s %d',
+        'php %s %s %d %d %d %s %d',
         escapeshellarg($script),
+        escapeshellarg(dirname(__DIR__) . '/app/bootstrap.php'),
         $bedId, $unitId, $typeId, escapeshellarg($night), $i
     );
 
