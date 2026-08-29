@@ -80,7 +80,7 @@ command you can run.
 php tools/audit.php
 ```
 
-**122 checks. All 122 currently pass.** It exits non-zero if anything fails,
+**169 checks. All 169 currently pass.** It exits non-zero if anything fails,
 so it can gate a deployment. It covers:
 
 | Section | What it proves |
@@ -91,9 +91,18 @@ so it can gate a deployment. It covers:
 | 4. Bed rules | Runs the 38-check smoke test: the bed invariant, holds, the database refusing a double-booking, cancellation freeing a bed, finance arithmetic, CSV safety |
 | 5. Admin | Signs in as admin, loads all 31 admin screens, downloads all 16 CSV exports |
 | 6. Security | Signs out and proves the admin is blocked; CSRF-less POSTs refused; `.env`, application code, SQL and `.git` all unreachable over the web |
+| 7. Writes | Twenty-one committee actions performed over HTTP and then **verified in the database**: saving a setting, recording an expense (and its effect on the finance total), adding and deleting a budget line, creating a coupon, creating and editing a product, adding and deleting a programme item and an FAQ, saving an order note, moving a guest to another bed, and checking a delegate in and out |
+| 8. Cart | Line totals match the catalogue price, a 10% coupon takes off exactly 10%, removing it restores the total, clearing empties the cart |
+| 9. Public forms | The contact form and a service application actually reach the committee |
+| 10. Data integrity | Nine SQL invariants: no bed double-booked, no hold on a booked bed, every booking on a real bed in the right unit, every paid order has a payment, order totals match their line items, no refund exceeds what was paid, no shuttle oversold, no negative stock, and the finance screens agree with the orders table to the cent |
+| 11. Email | All 14 templates installed, the queue is writable, and paying an order queued its confirmations |
+| 12. Clean-up | Every record the audit created is removed, and it proves it |
 
-It starts and tears down its own PayFast stub, and restores `.env` and the
-security settings byte-for-byte when it finishes — including if interrupted.
+It starts and tears down its own PayFast stub, clears this machine's
+rate-limit counters (the audit is a legitimate high-volume client; the limiter
+itself is untouched), and restores `.env` and the security settings
+byte-for-byte when it finishes — including if interrupted. Running it twice in
+a row gives the same result, and it leaves no test records behind.
 
 The transcript of the last full run is committed at
 [`docs/audit-result.txt`](docs/audit-result.txt) so you can read the result

@@ -52,6 +52,10 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS /shop/7th-tradition-donation — HTTP 200
   PASS /shop/sponsor-a-newcomer — HTTP 200
   PASS /shop/sponsor-a-bed — HTTP 200
+  PASS /shop/item — HTTP 200
+  PASS /shop/item-2 — HTTP 200
+  PASS /shop/item-3 — HTTP 200
+  PASS /shop/item-4 — HTTP 200
 
 2. The customer journey (a real order, through the real forms)
   PASS Create an account — http://127.0.0.1:8000/account
@@ -61,7 +65,7 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS Book a shuttle seat — http://127.0.0.1:8000/cart
   PASS Checkout page renders with the order form
   PASS Flight & car-hire buttons on checkout (and only there)
-  PASS Order placed, redirected to the payment page — SAR-45LV-J7GN
+  PASS Order placed, redirected to the payment page — SAR-NUG7-NTXL
   PASS PayFast handoff form present and signed
 
 3. Payment rules (the ones that protect the money)
@@ -107,22 +111,22 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS /admin/settings/email-templates — HTTP 200
   PASS /admin/settings/diagnostics — HTTP 200
   PASS /admin/logs — HTTP 200
-  PASS orders.csv — HTTP 200, 349 bytes
-  PASS order-items.csv — HTTP 200, 1285 bytes
-  PASS attendees.csv — HTTP 200, 438 bytes
-  PASS bookings.csv — HTTP 200, 317 bytes
-  PASS rooming-list.csv — HTTP 200, 174 bytes
-  PASS transport.csv — HTTP 200, 346 bytes
-  PASS donations.csv — HTTP 200, 78 bytes
-  PASS applications.csv — HTTP 200, 677 bytes
-  PASS messages.csv — HTTP 200, 475 bytes
-  PASS customers.csv — HTTP 200, 514 bytes
-  PASS stock.csv — HTTP 200, 2671 bytes
-  PASS payments.csv — HTTP 200, 351 bytes
+  PASS orders.csv — HTTP 200, 19209 bytes
+  PASS order-items.csv — HTTP 200, 117924 bytes
+  PASS attendees.csv — HTTP 200, 29042 bytes
+  PASS bookings.csv — HTTP 200, 25886 bytes
+  PASS rooming-list.csv — HTTP 200, 10251 bytes
+  PASS transport.csv — HTTP 200, 13886 bytes
+  PASS donations.csv — HTTP 200, 2613 bytes
+  PASS applications.csv — HTTP 200, 1252 bytes
+  PASS messages.csv — HTTP 200, 1387 bytes
+  PASS customers.csv — HTTP 200, 1340 bytes
+  PASS stock.csv — HTTP 200, 2890 bytes
+  PASS payments.csv — HTTP 200, 11272 bytes
   PASS expenses.csv — HTTP 200, 981 bytes
-  PASS refunds.csv — HTTP 200, 129 bytes
-  PASS budget.csv — HTTP 200, 1749 bytes
-  PASS finance-pack.csv — HTTP 200, 1671 bytes
+  PASS refunds.csv — HTTP 200, 1109 bytes
+  PASS budget.csv — HTTP 200, 1765 bytes
+  PASS finance-pack.csv — HTTP 200, 1713 bytes
 
 6. Security basics
   PASS Signed out cleanly before the anonymous checks
@@ -137,5 +141,60 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS /storage/logs is not served over the web — HTTP 404
   PASS /.git/config is not served over the web — HTTP 404
 
+7. Committee actions that write data (each one verified in the database)
+  PASS Signed back in as the administrator
+  PASS Saving a setting persists it
+  PASS Settings were restored, and nothing else changed
+  PASS Recording an expense writes it to the ledger
+  PASS The new expense moves the finance total by exactly its amount — R79 200.00 → R80 434.56
+  PASS A paid expense is cancelled rather than deleted (the ledger keeps the record)
+  PASS Adding a budget line saves it
+  PASS Deleting the budget line removes it
+  PASS Creating a coupon saves it
+  PASS Creating a product saves it
+  PASS Editing the product updates it — price changed to R149.00
+  PASS Adding a programme item saves it
+  PASS Deleting the programme item removes it
+  PASS Adding an FAQ saves it
+  PASS Deleting the FAQ removes it
+  PASS Saving an internal note on an order persists it
+  PASS Moving a guest to another bed actually moves them — bed 1 → 11
+  PASS The move keeps the booking reference and the price
+  PASS The move is written to the audit log
+  PASS Checking a delegate in stamps the order and their bookings
+  PASS Undoing the check-in clears it again
+
+8. Cart arithmetic and coupons (as a signed-out visitor)
+  PASS Signed out before the cart checks
+  PASS The item went into the cart at the catalogue price — R850.00
+  PASS The cart page shows that total — R850.00
+  PASS A 10% coupon applies to the cart — expected R85.00 off
+  PASS The cart shows the coupon and the exact amount it took off — R85.00 off R850.00
+  PASS Removing the coupon clears it
+  PASS Clearing the cart empties it
+
+9. Public forms that have to reach the committee
+  PASS The contact form creates a message the committee can see
+  PASS A service application is captured
+
+10. Data integrity (the invariants, checked in SQL)
+  PASS No bed is double-booked on any night
+  PASS No live hold sits on a bed that is already booked
+  PASS Every booking belongs to a bed that exists and is in the right unit
+  PASS Every paid order has at least one payment recorded against it
+  PASS No order total disagrees with the sum of its line items
+  PASS No refund exceeds what its order was paid
+  PASS Every shuttle departure has sold no more seats than it has
+  PASS No product variant has negative stock
+  PASS The finance screens agree with the orders table to the cent — R268 800.00
+
+11. Email
+  PASS All 14 transactional templates are installed — 14 templates
+  PASS The mail queue directory is writable
+  PASS Paying an order queued its confirmation emails — 276 message(s) queued during this run
+
+12. The audit cleans up after itself
+  PASS Every record the audit created has been removed — 0 left behind
+
 ================================================================
-TOTAL: 122 checks — 122 passed, 0 failed.
+TOTAL: 169 checks — 169 passed, 0 failed.

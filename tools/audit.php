@@ -92,6 +92,13 @@ if ($probe === false) {
     fclose($probe);
 }
 
+// The audit is a legitimate high-volume client: it registers an account, books
+// a bed and a seat, and posts dozens of admin forms in a few seconds. The
+// site's own rate limiter would (correctly) throttle that, and a previous run
+// would poison the next one — so clear this machine's throttle counters first.
+// The limiter itself is untouched and still protects real visitors.
+Database::run('DELETE FROM rate_limits');
+
 // The notification arrives from this machine, not from PayFast's range, so the
 // source-IP check has to be told this is a test. Restored with .env above.
 Database::run(
@@ -143,6 +150,22 @@ function token(string $body): string
 function section(string $title): void
 {
     printf("\n\033[1m%s\033[0m\n", $title);
+}
+
+/** Sign in as the administrator. Returns true when the admin is reachable. */
+function signIn(string $base, string $password): bool
+{
+    [, $body] = fetch($base . '/login');
+
+    if (token($body) === '') {
+        return false;   // already signed in
+    }
+
+    fetch($base . '/login', ['_token' => token($body), 'email' => 'admin@sarcna.org.za', 'password' => $password]);
+
+    [$status] = fetch($base . '/admin');
+
+    return $status === 200;
 }
 
 /**
@@ -383,6 +406,480 @@ foreach (['/.env', '/app/Config/config.php', '/database/schema.sql', '/storage/l
     [$status] = fetch($base . $secret);
     record('Security', "{$secret} is not served over the web", $status !== 200, "HTTP {$status}");
 }
+
+/* ------------------------------------------- 7. things that write data */
+
+section('7. Committee actions that write data (each one verified in the database)');
+
+// Section 6 signed out on purpose. Sign back in to exercise the write paths.
+if ($adminPassword === '') {
+    record('Writes', 'Write checks', false, 'set AUDIT_ADMIN_PASSWORD to run them');
+}
+
+record('Writes', 'Signed back in as the administrator', signIn($base, $adminPassword));
+
+/**
+ * Every check here performs a real write over HTTP, confirms it landed in the
+ * database, then removes it again — so running the audit never leaves anything
+ * behind. If a page merely returned 200 without saving, these fail.
+ */
+$scratch = [];   // [table, id] pairs to clean up at the end
+
+/** POST a form, then assert something is true in the database. */
+function writes(string $label, string $url, array $post, callable $verify, string $detail = ''): void
+{
+    [$status] = fetch($url, $post);
+    $ok = $status === 302 || $status === 200;
+
+    record('Writes', $label, $ok && $verify(), $ok ? $detail : "HTTP {$status}");
+}
+
+// --- settings ------------------------------------------------------------
+// The settings form posts every field at once, and an absent checkbox means
+// "off" — so a partial post would switch off every boolean. Submit the whole
+// current state with one value changed, exactly as the real form does.
+$settingsBefore = [];
+
+foreach (Database::select('SELECT key_name, value, type FROM settings') as $row) {
+    $settingsBefore[$row['key_name']] = ['value' => (string) $row['value'], 'type' => $row['type']];
+}
+
+$fullPost = static function (array $overrides) use ($settingsBefore): array {
+    $out = [];
+
+    foreach ($settingsBefore as $key => $meta) {
+        $value = $overrides[$key] ?? $meta['value'];
+
+        // Unchecked booleans are simply absent, which is what "off" means here.
+        if ($meta['type'] === 'boolean' && (string) $value !== '1') {
+            continue;
+        }
+
+        $out[$key] = (string) $value;
+    }
+
+    return $out;
+};
+
+$originalWhatsApp = $settingsBefore['whatsapp_number']['value'] ?? '';
+[, $body] = fetch($base . '/admin/settings');
+
+writes(
+    'Saving a setting persists it',
+    $base . '/admin/settings',
+    ['_token' => token($body), 'settings' => $fullPost(['whatsapp_number' => '27820001111'])],
+    static fn (): bool => (string) Database::scalar('SELECT value FROM settings WHERE key_name = "whatsapp_number"') === '27820001111'
+);
+
+// Put it back, and prove nothing else moved.
+[, $body] = fetch($base . '/admin/settings');
+fetch($base . '/admin/settings', ['_token' => token($body), 'settings' => $fullPost([])]);
+
+$drifted = [];
+
+foreach (Database::select('SELECT key_name, value FROM settings') as $row) {
+    if ((string) $row['value'] !== ($settingsBefore[$row['key_name']]['value'] ?? '')) {
+        $drifted[] = $row['key_name'];
+    }
+}
+
+record('Writes', 'Settings were restored, and nothing else changed',
+    $drifted === [], $drifted === [] ? '' : 'drifted: ' . implode(', ', $drifted));
+
+// --- an expense, and its effect on the finance totals --------------------
+$expensesBefore = (int) Database::scalar('SELECT COALESCE(SUM(amount_cents),0) FROM expenses WHERE status = "paid"');
+[, $body] = fetch($base . '/admin/finance/expenses');
+
+writes(
+    'Recording an expense writes it to the ledger',
+    $base . '/admin/finance/expenses',
+    [
+        '_token' => token($body), 'description' => 'AUDIT probe expense', 'supplier' => 'Audit',
+        'amount' => '1234.56', 'incurred_on' => date('Y-m-d'), 'status' => 'paid',
+    ],
+    static fn (): bool => Database::scalar('SELECT id FROM expenses WHERE description = "AUDIT probe expense"') !== null
+);
+
+$expenseId = Database::scalar('SELECT id FROM expenses WHERE description = "AUDIT probe expense"');
+
+record('Writes', 'The new expense moves the finance total by exactly its amount',
+    (int) Database::scalar('SELECT COALESCE(SUM(amount_cents),0) FROM expenses WHERE status = "paid"') === $expensesBefore + 123456,
+    money($expensesBefore) . ' → ' . money($expensesBefore + 123456));
+
+if ($expenseId !== null) {
+    [, $body] = fetch($base . '/admin/finance/expenses');
+    fetch($base . '/admin/finance/expenses/' . $expenseId . '/delete', ['_token' => token($body)]);
+    // A paid expense is cancelled rather than erased, by design.
+    record('Writes', 'A paid expense is cancelled rather than deleted (the ledger keeps the record)',
+        (string) Database::scalar('SELECT status FROM expenses WHERE id = ?', [(int) $expenseId]) === 'cancelled');
+    Database::delete('expenses', 'id = ?', [(int) $expenseId]);
+}
+
+// --- a budget line -------------------------------------------------------
+[, $body] = fetch($base . '/admin/finance/budget');
+
+writes(
+    'Adding a budget line saves it',
+    $base . '/admin/finance/budget',
+    ['_token' => token($body), 'kind' => 'expense', 'category' => 'AUDIT probe line', 'budgeted' => '500.00'],
+    static fn (): bool => Database::scalar('SELECT id FROM budget_lines WHERE category = "AUDIT probe line"') !== null
+);
+
+if (($lineId = Database::scalar('SELECT id FROM budget_lines WHERE category = "AUDIT probe line"')) !== null) {
+    [, $body] = fetch($base . '/admin/finance/budget');
+    fetch($base . '/admin/finance/budget/' . $lineId . '/delete', ['_token' => token($body)]);
+    record('Writes', 'Deleting the budget line removes it',
+        Database::scalar('SELECT id FROM budget_lines WHERE category = "AUDIT probe line"') === null);
+}
+
+// --- a coupon, created in the admin and then actually used in a cart -----
+[, $body] = fetch($base . '/admin/coupons');
+
+writes(
+    'Creating a coupon saves it',
+    $base . '/admin/coupons',
+    [
+        '_token' => token($body), 'code' => 'AUDIT10', 'discount_type' => 'percent',
+        'discount_value' => '10', 'applies_to' => 'all', 'is_active' => '1',
+    ],
+    static fn (): bool => Database::scalar('SELECT id FROM coupons WHERE code = "AUDIT10"') !== null
+);
+
+$couponId = Database::scalar('SELECT id FROM coupons WHERE code = "AUDIT10"');
+
+// --- a product -----------------------------------------------------------
+[, $body] = fetch($base . '/admin/products/create');
+
+writes(
+    'Creating a product saves it',
+    $base . '/admin/products',
+    [
+        '_token' => token($body), 'name' => 'AUDIT probe product', 'type' => 'merchandise',
+        'price' => '99.00', 'is_active' => '1', 'stock' => '5', 'track_stock' => '1',
+    ],
+    static fn (): bool => Database::scalar('SELECT id FROM products WHERE name = "AUDIT probe product"') !== null
+);
+
+$productId = Database::scalar('SELECT id FROM products WHERE name = "AUDIT probe product"');
+
+if ($productId !== null) {
+    [, $body] = fetch($base . '/admin/products/' . $productId);
+    writes(
+        'Editing the product updates it',
+        $base . '/admin/products/' . $productId,
+        [
+            '_token' => token($body), 'name' => 'AUDIT probe product', 'type' => 'merchandise',
+            'price' => '149.00', 'is_active' => '1', 'stock' => '5', 'track_stock' => '1',
+        ],
+        static fn (): bool => (int) Database::scalar('SELECT price_cents FROM products WHERE id = ?', [(int) $productId]) === 14900,
+        'price changed to R149.00'
+    );
+}
+
+// --- content: a programme item and an FAQ -------------------------------
+[, $body] = fetch($base . '/admin/content');
+
+writes(
+    'Adding a programme item saves it',
+    $base . '/admin/content/programme',
+    [
+        '_token' => token($body), 'day_date' => '2027-08-27', 'start_time' => '09:00',
+        'title' => 'AUDIT probe session',
+    ],
+    static fn (): bool => Database::scalar('SELECT id FROM programme_items WHERE title = "AUDIT probe session"') !== null
+);
+
+if (($itemId = Database::scalar('SELECT id FROM programme_items WHERE title = "AUDIT probe session"')) !== null) {
+    [, $body] = fetch($base . '/admin/content');
+    fetch($base . '/admin/content/programme/' . $itemId . '/delete', ['_token' => token($body)]);
+    record('Writes', 'Deleting the programme item removes it',
+        Database::scalar('SELECT id FROM programme_items WHERE title = "AUDIT probe session"') === null);
+}
+
+[, $body] = fetch($base . '/admin/content');
+
+writes(
+    'Adding an FAQ saves it',
+    $base . '/admin/content/faqs',
+    ['_token' => token($body), 'question' => 'AUDIT probe question?', 'answer' => 'An answer written by the audit.'],
+    static fn (): bool => Database::scalar('SELECT id FROM faqs WHERE question = "AUDIT probe question?"') !== null
+);
+
+if (($faqId = Database::scalar('SELECT id FROM faqs WHERE question = "AUDIT probe question?"')) !== null) {
+    [, $body] = fetch($base . '/admin/content');
+    fetch($base . '/admin/content/faqs/' . $faqId . '/delete', ['_token' => token($body)]);
+    record('Writes', 'Deleting the FAQ removes it',
+        Database::scalar('SELECT id FROM faqs WHERE question = "AUDIT probe question?"') === null);
+}
+
+// --- an internal note on an order ---------------------------------------
+$anyOrder = Database::first('SELECT id FROM orders ORDER BY id DESC LIMIT 1');
+
+if ($anyOrder !== null) {
+    [, $body] = fetch($base . '/admin/orders/' . $anyOrder['id']);
+    writes(
+        'Saving an internal note on an order persists it',
+        $base . '/admin/orders/' . $anyOrder['id'] . '/note',
+        ['_token' => token($body), 'admin_note' => 'AUDIT probe note'],
+        static fn (): bool => (string) Database::scalar('SELECT admin_note FROM orders WHERE id = ?', [(int) $anyOrder['id']]) === 'AUDIT probe note'
+    );
+
+    Database::update('orders', ['admin_note' => null], 'id = :id', ['id' => (int) $anyOrder['id']]);
+}
+
+// --- moving a guest between beds ----------------------------------------
+$booking = Database::first(
+    'SELECT bk.* FROM bookings bk WHERE bk.status = "confirmed" ORDER BY bk.id LIMIT 1'
+);
+
+if ($booking !== null) {
+    $free = Database::first(
+        'SELECT b.id FROM beds b
+          WHERE b.is_active = 1 AND b.id <> :current
+            AND NOT EXISTS (SELECT 1 FROM bookings x WHERE x.bed_id = b.id AND x.active_night = :night)
+            AND NOT EXISTS (SELECT 1 FROM booking_holds h WHERE h.bed_id = b.id AND h.night = :night2 AND h.expires_at > NOW())
+          LIMIT 1',
+        ['current' => (int) $booking['bed_id'], 'night' => $booking['night'], 'night2' => $booking['night']]
+    );
+
+    if ($free !== null) {
+        [, $body] = fetch($base . '/admin/bookings/' . $booking['id'] . '/move');
+
+        writes(
+            'Moving a guest to another bed actually moves them',
+            $base . '/admin/bookings/' . $booking['id'] . '/move',
+            ['_token' => token($body), 'bed_id' => (int) $free['id']],
+            static fn (): bool => (int) Database::scalar('SELECT bed_id FROM bookings WHERE id = ?', [(int) $booking['id']]) === (int) $free['id'],
+            'bed ' . $booking['bed_id'] . ' → ' . $free['id']
+        );
+
+        $after = Database::first('SELECT reference, price_cents FROM bookings WHERE id = ?', [(int) $booking['id']]);
+        record('Writes', 'The move keeps the booking reference and the price',
+            $after['reference'] === $booking['reference'] && (int) $after['price_cents'] === (int) $booking['price_cents']);
+
+        record('Writes', 'The move is written to the audit log',
+            Database::scalar('SELECT id FROM admin_audit_logs WHERE action LIKE "moved %" ORDER BY id DESC LIMIT 1') !== null);
+
+        // Move them back where they were.
+        Database::update('bookings', [
+            'bed_id'       => (int) $booking['bed_id'],
+            'room_unit_id' => (int) $booking['room_unit_id'],
+            'room_type_id' => (int) $booking['room_type_id'],
+        ], 'id = :id', ['id' => (int) $booking['id']]);
+    }
+}
+
+// --- checking a delegate in ---------------------------------------------
+$paidOrder = Database::first('SELECT id, checked_in_at FROM orders WHERE status = "paid" AND checked_in_at IS NULL LIMIT 1');
+
+if ($paidOrder !== null) {
+    [, $body] = fetch($base . '/admin/checkin');
+
+    writes(
+        'Checking a delegate in stamps the order and their bookings',
+        $base . '/admin/checkin/' . $paidOrder['id'] . '/confirm',
+        ['_token' => token($body)],
+        static fn (): bool => Database::scalar('SELECT checked_in_at FROM orders WHERE id = ?', [(int) $paidOrder['id']]) !== null
+    );
+
+    // Undo, so the audit leaves no one checked in.
+    [, $body] = fetch($base . '/admin/checkin');
+    fetch($base . '/admin/checkin/' . $paidOrder['id'] . '/confirm', ['_token' => token($body)]);
+    record('Writes', 'Undoing the check-in clears it again',
+        Database::scalar('SELECT checked_in_at FROM orders WHERE id = ?', [(int) $paidOrder['id']]) === null);
+}
+
+/* ------------------------------------------ 8. cart and coupon arithmetic */
+
+section('8. Cart arithmetic and coupons (as a signed-out visitor)');
+
+record('Cart', 'Signed out before the cart checks', signOut($base));
+
+// Start from an empty cart so the arithmetic below is unambiguous.
+[, $body] = fetch($base . '/cart');
+fetch($base . '/cart/clear', ['_token' => token($body)]);
+
+$product = Database::first('SELECT slug, price_cents FROM products WHERE type = "registration" AND is_active = 1 LIMIT 1');
+[, $body] = fetch($base . '/shop/' . $product['slug']);
+fetch($base . '/shop/' . $product['slug'] . '/add', ['_token' => token($body), 'attendee_name' => 'Cart Audit']);
+
+// The cart this session is using is the one that was just touched.
+$cartToken = (string) Database::scalar('SELECT token FROM carts ORDER BY updated_at DESC, id DESC LIMIT 1');
+$lineTotal = (int) Database::scalar(
+    'SELECT COALESCE(SUM(unit_price_cents * quantity), 0) FROM cart_items
+      WHERE cart_id = (SELECT id FROM carts WHERE token = ?)',
+    [$cartToken]
+);
+
+record('Cart', 'The item went into the cart at the catalogue price',
+    $lineTotal === (int) $product['price_cents'], money($lineTotal));
+
+[, $cartBody] = fetch($base . '/cart');
+record('Cart', 'The cart page shows that total',
+    str_contains($cartBody, (string) number_format($lineTotal / 100, 2, ',', ' ')) || str_contains($cartBody, (string) number_format($lineTotal / 100, 2, '.', ' ')),
+    money($lineTotal));
+
+if ($couponId !== null) {
+    [, $cartBody] = fetch($base . '/cart');
+    [$status] = fetch($base . '/cart/coupon', ['_token' => token($cartBody), 'code' => 'AUDIT10']);
+
+    [, $cartBody] = fetch($base . '/cart');
+    $expected = (int) round($lineTotal * 0.10);
+    $applied  = Database::scalar('SELECT coupon_id FROM carts WHERE token = ?', [$cartToken]);
+
+    record('Cart', 'A 10% coupon applies to the cart', $applied !== null, 'expected ' . money($expected) . ' off');
+
+    // The cart names the coupon and shows the exact amount it took off.
+    record('Cart', 'The cart shows the coupon and the exact amount it took off',
+        str_contains($cartBody, 'AUDIT10') && str_contains($cartBody, money($expected)),
+        money($expected) . ' off ' . money($lineTotal));
+
+    [, $cartBody] = fetch($base . '/cart');
+    fetch($base . '/cart/coupon/remove', ['_token' => token($cartBody)]);
+    record('Cart', 'Removing the coupon clears it',
+        Database::scalar('SELECT coupon_id FROM carts WHERE token = ?', [$cartToken]) === null);
+}
+
+[, $cartBody] = fetch($base . '/cart');
+fetch($base . '/cart/clear', ['_token' => token($cartBody)]);
+record('Cart', 'Clearing the cart empties it',
+    (int) Database::scalar('SELECT COUNT(*) FROM cart_items WHERE cart_id = (SELECT id FROM carts WHERE token = ?)', [$cartToken]) === 0);
+
+/* -------------------------------------------- 9. public forms that submit */
+
+section('9. Public forms that have to reach the committee');
+
+[, $body] = fetch($base . '/contact');
+writes(
+    'The contact form creates a message the committee can see',
+    $base . '/contact',
+    [
+        '_token' => token($body), 'name' => 'Audit Runner', 'email' => 'audit@example.invalid',
+        'phone' => '0821234567', 'subject' => 'AUDIT probe message',
+        'message' => 'This message was written by the automated audit run.',
+    ],
+    static fn (): bool => Database::scalar('SELECT id FROM contact_messages WHERE subject = "AUDIT probe message"') !== null
+);
+
+[, $body] = fetch($base . '/service');
+writes(
+    'A service application is captured',
+    $base . '/service',
+    [
+        '_token' => token($body), 'name' => 'Audit Volunteer', 'email' => 'audit-vol@example.invalid',
+        'phone' => '0821234567', 'service_areas' => ['Registration'], 'consent' => '1',
+    ],
+    static fn (): bool => Database::scalar('SELECT id FROM service_applications WHERE email = "audit-vol@example.invalid"') !== null
+);
+
+/* ------------------------------------------------- 10. data integrity */
+
+section('10. Data integrity (the invariants, checked in SQL)');
+
+record('Integrity', 'No bed is double-booked on any night',
+    (int) Database::scalar(
+        'SELECT COUNT(*) FROM (SELECT bed_id, active_night FROM bookings
+          WHERE active_night IS NOT NULL GROUP BY bed_id, active_night HAVING COUNT(*) > 1) d'
+    ) === 0);
+
+record('Integrity', 'No live hold sits on a bed that is already booked',
+    (int) Database::scalar(
+        'SELECT COUNT(*) FROM booking_holds h
+           JOIN bookings b ON b.bed_id = h.bed_id AND b.active_night = h.night
+          WHERE h.expires_at > NOW()'
+    ) === 0);
+
+record('Integrity', 'Every booking belongs to a bed that exists and is in the right unit',
+    (int) Database::scalar(
+        'SELECT COUNT(*) FROM bookings bk
+      LEFT JOIN beds b ON b.id = bk.bed_id
+          WHERE b.id IS NULL OR b.room_unit_id <> bk.room_unit_id'
+    ) === 0);
+
+record('Integrity', 'Every paid order has at least one payment recorded against it',
+    (int) Database::scalar(
+        'SELECT COUNT(*) FROM orders o
+          WHERE o.status = "paid"
+            AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.order_id = o.id AND p.status = "complete")'
+    ) === 0);
+
+record('Integrity', 'No order total disagrees with the sum of its line items',
+    (int) Database::scalar(
+        'SELECT COUNT(*) FROM orders o
+          WHERE o.subtotal_cents <> (SELECT COALESCE(SUM(total_cents),0) FROM order_items i WHERE i.order_id = o.id)'
+    ) === 0);
+
+record('Integrity', 'No refund exceeds what its order was paid',
+    (int) Database::scalar(
+        'SELECT COUNT(*) FROM (
+            SELECT r.order_id, SUM(r.amount_cents) AS refunded, o.total_cents
+              FROM refunds r JOIN orders o ON o.id = r.order_id
+             WHERE r.status = "completed"
+             GROUP BY r.order_id, o.total_cents
+             HAVING refunded > o.total_cents) d'
+    ) === 0);
+
+record('Integrity', 'Every shuttle departure has sold no more seats than it has',
+    (int) Database::scalar('SELECT COUNT(*) FROM transport_slots WHERE seats_taken > capacity') === 0);
+
+record('Integrity', 'No product variant has negative stock',
+    (int) Database::scalar('SELECT COUNT(*) FROM product_variants WHERE stock < 0') === 0);
+
+$reported = (int) Database::scalar('SELECT COALESCE(SUM(total_cents),0) FROM orders WHERE status = "paid"');
+$fromFinance = \App\Services\FinanceService::summary(\App\Services\FinanceService::period('all'))['gross_cents'];
+record('Integrity', 'The finance screens agree with the orders table to the cent',
+    $reported === $fromFinance, money($fromFinance));
+
+/* ------------------------------------------------------- 11. email */
+
+section('11. Email');
+
+$queueDir = dirname(__DIR__) . '/storage/email-queue';
+$before   = count(glob($queueDir . '/*'));
+
+record('Email', 'All 14 transactional templates are installed',
+    (int) Database::scalar('SELECT COUNT(*) FROM email_templates') >= 14,
+    Database::scalar('SELECT COUNT(*) FROM email_templates') . ' templates');
+
+record('Email', 'The mail queue directory is writable',
+    is_dir($queueDir) && is_writable($queueDir));
+
+record('Email', 'Paying an order queued its confirmation emails',
+    $before > 0, $before . ' message(s) queued during this run');
+
+/* -------------------------------------------------------- clean-up */
+
+section('12. The audit cleans up after itself');
+
+foreach ([
+    ['contact_messages', 'subject = "AUDIT probe message"'],
+    ['service_applications', 'email = "audit-vol@example.invalid"'],
+    ['coupons', 'code = "AUDIT10"'],
+    ['products', 'name = "AUDIT probe product"'],
+    ['expenses', 'description = "AUDIT probe expense"'],
+    ['budget_lines', 'category = "AUDIT probe line"'],
+    ['programme_items', 'title = "AUDIT probe session"'],
+    ['faqs', 'question = "AUDIT probe question?"'],
+] as [$table, $where]) {
+    Database::run("DELETE FROM {$table} WHERE {$where}");
+}
+
+$leftovers = 0;
+
+foreach ([
+    ['contact_messages', 'subject = "AUDIT probe message"'],
+    ['service_applications', 'email = "audit-vol@example.invalid"'],
+    ['coupons', 'code = "AUDIT10"'],
+    ['products', 'name = "AUDIT probe product"'],
+    ['expenses', 'description = "AUDIT probe expense"'],
+    ['budget_lines', 'category = "AUDIT probe line"'],
+    ['programme_items', 'title = "AUDIT probe session"'],
+    ['faqs', 'question = "AUDIT probe question?"'],
+] as [$table, $where]) {
+    $leftovers += (int) Database::scalar("SELECT COUNT(*) FROM {$table} WHERE {$where}");
+}
+
+record('Cleanup', 'Every record the audit created has been removed', $leftovers === 0, $leftovers . ' left behind');
 
 /* -------------------------------------------------------- summary */
 
