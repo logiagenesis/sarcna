@@ -125,7 +125,13 @@ function record(string $section, string $label, bool $pass, string $detail = '')
     printf("  %s %s%s\n", $pass ? "\033[32mPASS\033[0m" : "\033[31mFAIL\033[0m", $label, $detail !== '' ? " — {$detail}" : '');
 }
 
-function fetch(string $url, array $post = []): array
+/**
+ * @param array<string, mixed>  $post
+ * @param array<string, string> $files field name => path on disk; sending any
+ *                                     file switches the request to multipart,
+ *                                     which is what a real upload form does.
+ */
+function fetch(string $url, array $post = [], array $files = []): array
 {
     global $cookies;
 
@@ -139,9 +145,18 @@ function fetch(string $url, array $post = []): array
         CURLOPT_PROXY          => '',
     ]);
 
-    if ($post !== []) {
+    if ($post !== [] || $files !== []) {
         curl_setopt($ch, CURLOPT_POST, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
+
+        if ($files === []) {
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($post));
+        } else {
+            foreach ($files as $field => $path) {
+                $post[$field] = new CURLFile($path);
+            }
+
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
+        }
     }
 
     $body   = (string) curl_exec($ch);
@@ -348,7 +363,11 @@ foreach ($smokeOut as $line) {
     }
 }
 
-record('Bed rules', 'Smoke test (38 checks: bed invariant, holds, forged ITN, finance arithmetic, CSV safety)', $smokeCode === 0, $smokeSummary);
+// The smoke test's own total varies with the data present — a site with no
+// demo orders has one fewer check to run — so the count is reported from the
+// run rather than written in here, where it would drift out of date.
+record('Bed rules', 'Smoke test (bed invariant, holds, forged ITN, finance arithmetic, CSV safety)',
+    $smokeCode === 0, $smokeSummary);
 
 /* ---------------------------------------------------- 5. the admin */
 
@@ -866,9 +885,145 @@ record('Email', 'The mail queue directory is writable',
 record('Email', 'Paying an order queued its confirmation emails',
     $before > 0, $before . ' message(s) queued during this run');
 
+/* ----------------------------------------------------- 12. photographs */
+
+section('12. The photograph manager (how the real pictures get in)');
+
+// The venue photographs cannot be fetched by this machine, and the target host
+// has no shell, so the committee's only route is this screen. If it breaks,
+// the site launches with drawings on it — so it is tested like anything else.
+
+// Section 8 signed out again for the cart checks.
+record('Photos', 'Signed back in as the administrator', signIn($base, $adminPassword));
+
+[$status, $body] = fetch($base . '/admin/photos');
+record('Photos', 'The Photographs screen loads', $status === 200, "HTTP {$status}");
+
+$slotForms = substr_count($body, 'name="slot"');
+record('Photos', 'It lists an upload slot for every picture on the site', $slotForms >= 10, "{$slotForms} slot forms");
+record('Photos', 'Each slot states the minimum size it will accept', str_contains($body, 'at least'));
+
+preg_match('/name="slot" value="(room:\d+)"/', $body, $m);
+$photoSlot   = $m[1] ?? '';
+$photoRoomId = $photoSlot === '' ? 0 : (int) explode(':', $photoSlot)[1];
+record('Photos', 'A room photograph slot is offered', $photoRoomId > 0, $photoSlot);
+
+if ($photoRoomId > 0) {
+    $tmpDir = sys_get_temp_dir();
+
+    // A picture too small for the slot must be refused, not quietly accepted
+    // and stretched. "If it's low quality, we're not interested."
+    $small = imagecreatetruecolor(400, 250);
+    imagefill($small, 0, 0, imagecolorallocate($small, 120, 90, 60));
+    imagejpeg($small, $tmpDir . '/audit-small.jpg', 90);
+    imagedestroy($small);
+
+    $heroBefore = Database::scalar('SELECT hero_image FROM room_types WHERE id = ?', [$photoRoomId]);
+
+    [, $body] = fetch($base . '/admin/photos');
+    fetch($base . '/admin/photos', ['_token' => token($body), 'slot' => $photoSlot, 'alt_text' => 'AUDIT probe photo'],
+        ['photo' => $tmpDir . '/audit-small.jpg']);
+
+    $heroAfter = Database::scalar('SELECT hero_image FROM room_types WHERE id = ?', [$photoRoomId]);
+    record('Photos', 'A photograph below the minimum size is refused', $heroAfter === $heroBefore,
+        'the slot was left alone');
+
+    // A proper one must be accepted, resized, given a WebP twin, and stripped
+    // of the EXIF block that would otherwise publish the photographer's GPS.
+    $bigImage = imagecreatetruecolor(2400, 1600);
+    for ($x = 0; $x < 2400; $x += 8) {
+        imagefilledrectangle($bigImage, $x, 0, $x + 8, 1600,
+            imagecolorallocate($bigImage, 60 + (int) ($x / 20) % 120, 90 + (int) ($x / 30) % 100, 70));
+    }
+    imagejpeg($bigImage, $tmpDir . '/audit-photo.jpg', 92);
+    imagedestroy($bigImage);
+
+    [, $body] = fetch($base . '/admin/photos');
+    fetch($base . '/admin/photos', [
+        '_token'   => token($body), 'slot' => $photoSlot,
+        'alt_text' => 'AUDIT probe photo', 'credit' => 'AUDIT probe',
+    ], ['photo' => $tmpDir . '/audit-photo.jpg']);
+
+    $stored = (string) Database::scalar('SELECT hero_image FROM room_types WHERE id = ?', [$photoRoomId]);
+    record('Photos', 'A full-size photograph is accepted and assigned', str_starts_with($stored, 'photos/'), $stored);
+
+    $onDisk = dirname(__DIR__) . '/public_html/uploads/' . $stored;
+    $webp   = preg_replace('/\.jpg$/', '.webp', $onDisk);
+
+    record('Photos', 'The file and its WebP twin are written to disk', is_file($onDisk) && is_file($webp));
+
+    if (is_file($onDisk)) {
+        $size = getimagesize($onDisk);
+        record('Photos', 'It is resized and centre-cropped to the slot shape',
+            $size[0] === 1600 && $size[1] === 1000, "{$size[0]}x{$size[1]}");
+        record('Photos', 'EXIF metadata (including GPS) is stripped',
+            !str_contains((string) file_get_contents($onDisk), 'Exif'));
+    }
+
+    $slug = (string) Database::scalar('SELECT slug FROM room_types WHERE id = ?', [$photoRoomId]);
+    [$status, $publicBody] = fetch($base . '/accommodation/' . $slug);
+    record('Photos', 'The uploaded photograph shows on the public room page',
+        $status === 200 && str_contains($publicBody, basename($stored, '.jpg')), "HTTP {$status}");
+
+    // Put the room back exactly as it was, and take the probe files with it.
+    [, $body] = fetch($base . '/admin/photos');
+    fetch($base . '/admin/photos/reset', ['_token' => token($body), 'slot' => $photoSlot]);
+
+    if ($heroBefore !== null) {
+        Database::run('UPDATE room_types SET hero_image = ? WHERE id = ?', [$heroBefore, $photoRoomId]);
+    }
+
+    record('Photos', 'Resetting a slot restores the shipped illustration',
+        Database::scalar('SELECT hero_image FROM room_types WHERE id = ?', [$photoRoomId]) === $heroBefore);
+
+    // The venue gallery is the part a delegate actually scrolls through, so
+    // replacing one of those pictures in place is checked too.
+    [, $body] = fetch($base . '/admin/photos');
+    preg_match('/name="slot" value="(gallery:\d+)"/', $body, $m);
+    $gallerySlot = $m[1] ?? '';
+    record('Photos', 'Every venue-gallery picture has its own replace slot', $gallerySlot !== '', $gallerySlot);
+
+    if ($gallerySlot !== '') {
+        $galleryId   = (int) explode(':', $gallerySlot)[1];
+        $galleryWas  = Database::first('SELECT file_path, alt_text, source_note, sort_order FROM gallery_images WHERE id = ?', [$galleryId]);
+
+        fetch($base . '/admin/photos', [
+            '_token'   => token($body), 'slot' => $gallerySlot,
+            'alt_text' => 'AUDIT probe photo', 'credit' => 'AUDIT probe',
+        ], ['photo' => $tmpDir . '/audit-photo.jpg']);
+
+        $galleryNow = Database::first('SELECT file_path, sort_order FROM gallery_images WHERE id = ?', [$galleryId]);
+
+        record('Photos', 'Replacing a gallery picture swaps the file in place',
+            str_starts_with((string) $galleryNow['file_path'], 'photos/'), (string) $galleryNow['file_path']);
+
+        record('Photos', 'It keeps its position in the running order',
+            (int) $galleryNow['sort_order'] === (int) $galleryWas['sort_order']);
+
+        $replaced = dirname(__DIR__) . '/public_html/uploads/' . $galleryNow['file_path'];
+
+        Database::run(
+            'UPDATE gallery_images SET file_path = ?, alt_text = ?, source_note = ? WHERE id = ?',
+            [$galleryWas['file_path'], $galleryWas['alt_text'], $galleryWas['source_note'], $galleryId]
+        );
+
+        record('Photos', 'The original gallery picture is restored by the audit',
+            Database::scalar('SELECT file_path FROM gallery_images WHERE id = ?', [$galleryId]) === $galleryWas['file_path']);
+
+        @unlink($replaced);
+        @unlink(preg_replace('/\.jpg$/', '.webp', $replaced));
+    }
+
+    Database::run('DELETE FROM gallery_images WHERE source_note = "AUDIT probe"');
+    @unlink($onDisk);
+    @unlink($webp);
+    @unlink($tmpDir . '/audit-small.jpg');
+    @unlink($tmpDir . '/audit-photo.jpg');
+}
+
 /* -------------------------------------------------------- clean-up */
 
-section('12. The audit cleans up after itself');
+section('13. The audit cleans up after itself');
 
 // The committee records the audit writes in section 7.
 $probes = [

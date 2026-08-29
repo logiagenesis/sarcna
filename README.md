@@ -107,7 +107,7 @@ data invariants:
 php tools/audit.php --password=YOUR_ADMIN_PASSWORD
 ```
 
-167 checks. It exits non-zero if anything fails, so it can gate a deploy, and
+183 checks. It exits non-zero if anything fails, so it can gate a deploy, and
 it removes everything it creates. On Windows use the same command in
 PowerShell — see **[HANDOVER.md](HANDOVER.md)** for the Windows notes.
 

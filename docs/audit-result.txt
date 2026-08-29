@@ -61,7 +61,7 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS Book a shuttle seat — http://127.0.0.1:8000/cart
   PASS Checkout page renders with the order form
   PASS Flight & car-hire buttons on checkout (and only there)
-  PASS Order placed, redirected to the payment page — SAR-FKPG-RUYE
+  PASS Order placed, redirected to the payment page — SAR-TDEA-HSAB
   PASS PayFast handoff form present and signed
 
 3. Payment rules (the ones that protect the money)
@@ -72,7 +72,7 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS Fulfilment wrote the shuttle passenger
 
 4. The bed rules (straight from the smoke test)
-  PASS Smoke test (38 checks: bed invariant, holds, forged ITN, finance arithmetic, CSV safety) — Passed: 38   Failed: 0
+  PASS Smoke test (bed invariant, holds, forged ITN, finance arithmetic, CSV safety) — Passed: 38   Failed: 0
 
 5. Every admin screen and every export
   PASS Signing out works, and blocks the admin again
@@ -187,12 +187,30 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
 11. Email
   PASS All 14 transactional templates are installed — 14 templates
   PASS The mail queue directory is writable
-  PASS Paying an order queued its confirmation emails — 451 message(s) queued during this run
+  PASS Paying an order queued its confirmation emails — 634 message(s) queued during this run
 
-12. The audit cleans up after itself
+12. The photograph manager (how the real pictures get in)
+  PASS Signed back in as the administrator
+  PASS The Photographs screen loads — HTTP 200
+  PASS It lists an upload slot for every picture on the site — 33 slot forms
+  PASS Each slot states the minimum size it will accept
+  PASS A room photograph slot is offered — room:1
+  PASS A photograph below the minimum size is refused — the slot was left alone
+  PASS A full-size photograph is accepted and assigned — photos/20260829-084910-a65ca6c2.jpg
+  PASS The file and its WebP twin are written to disk
+  PASS It is resized and centre-cropped to the slot shape — 1600x1000
+  PASS EXIF metadata (including GPS) is stripped
+  PASS The uploaded photograph shows on the public room page — HTTP 200
+  PASS Resetting a slot restores the shipped illustration
+  PASS Every venue-gallery picture has its own replace slot — gallery:4
+  PASS Replacing a gallery picture swaps the file in place — photos/20260829-084910-bbb64b7a.jpg
+  PASS It keeps its position in the running order
+  PASS The original gallery picture is restored by the audit
+
+13. The audit cleans up after itself
   PASS The delegate account, its order and its fulfilment are gone — 1 account(s), 1 order(s) removed
   PASS Every record the audit created has been removed — 0 left behind
   PASS Stock and shuttle seats were handed back correctly — 0 slot(s) out of range, 0 negative stock row(s)
 
 ================================================================
-TOTAL: 167 checks — 167 passed, 0 failed.
+TOTAL: 183 checks — 183 passed, 0 failed.

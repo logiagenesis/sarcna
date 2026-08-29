@@ -9,6 +9,23 @@ View::include('install._head', ['pageTitle' => 'Installation complete']);
   <p class="muted" style="margin-inline:auto">The installer has locked itself and cannot be run again.</p>
 </div>
 
+<?php if (!\App\Services\PayFastService::isConfigured()): ?>
+  <div class="alert alert--warning">
+    <div>
+      <div class="alert__title">The site cannot take a payment yet</div>
+      <p style="margin:.4rem 0 0">
+        The PayFast merchant ID and merchant key were left blank, so a delegate who reaches the
+        payment step is sent back to their basket with a message asking them to contact the
+        committee. Everything else works — only the payment handoff is missing.
+      </p>
+      <p style="margin:.4rem 0 0">
+        Enter them in <strong>Admin &rarr; Settings &rarr; Payments</strong>, then confirm
+        <em>PayFast configured</em> is green under <strong>Settings &rarr; Diagnostics</strong>.
+      </p>
+    </div>
+  </div>
+<?php endif; ?>
+
 <div class="alert alert--info">
   <div>
     <div class="alert__title">Do these three things next</div>

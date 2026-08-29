@@ -28,6 +28,14 @@ if (PHP_SAPI !== 'cli') {
     exit("Command line only.\n");
 }
 
+// Never die silently. A test tool that stops with no output is worse than one
+// that fails, because it reads as "nothing to report".
+set_exception_handler(static function (\Throwable $e): void {
+    fwrite(STDERR, sprintf("\n\033[31mThe race test stopped:\033[0m %s\n  %s:%d\n",
+        $e->getMessage(), $e->getFile(), $e->getLine()));
+    exit(1);
+});
+
 $base    = rtrim($argv[1] ?? 'http://127.0.0.1:8000', '/');
 $racers  = 12;
 $passed  = 0;
@@ -52,6 +60,29 @@ if ($night === null) {
 }
 
 Database::run('DELETE FROM rate_limits');
+
+/**
+ * Clear any fixture a previous run left behind.
+ *
+ * This test builds a room with a fixed slug. If a run is interrupted — the
+ * machine sleeps, the dev server dies, somebody presses ctrl-C — the room
+ * survives, and every later run then dies on the duplicate slug with nothing
+ * printed. Clearing first makes the tool safe to re-run, always.
+ */
+$stale = Database::first('SELECT id FROM room_types WHERE slug = "race-test-room"');
+
+if ($stale !== null) {
+    $staleType = (int) $stale['id'];
+
+    echo "Clearing a fixture left behind by an interrupted run.\n";
+
+    Database::run('DELETE FROM bookings WHERE room_type_id = ?', [$staleType]);
+    Database::run('DELETE FROM booking_holds WHERE bed_id IN (SELECT id FROM beds WHERE room_unit_id IN (SELECT id FROM room_units WHERE room_type_id = ?))', [$staleType]);
+    Database::run('DELETE FROM cart_items WHERE bed_id IN (SELECT id FROM beds WHERE room_unit_id IN (SELECT id FROM room_units WHERE room_type_id = ?))', [$staleType]);
+    Database::run('DELETE FROM beds WHERE room_unit_id IN (SELECT id FROM room_units WHERE room_type_id = ?)', [$staleType]);
+    Database::run('DELETE FROM room_units WHERE room_type_id = ?', [$staleType]);
+    Database::run('DELETE FROM room_types WHERE id = ?', [$staleType]);
+}
 
 $typeId = Database::insert('room_types', [
     'name'            => 'RACE TEST room',

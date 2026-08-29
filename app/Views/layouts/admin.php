@@ -44,6 +44,7 @@ $navigation = [
     ],
     'Content' => [
         ['/admin/content', 'Banners, pages, programme', 'content'],
+        ['/admin/photos', 'Photographs', 'gallery'],
         ['/admin/gallery', 'Gallery', 'gallery'],
     ],
     'Settings' => [
