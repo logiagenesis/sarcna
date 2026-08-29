@@ -61,7 +61,7 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS Book a shuttle seat — http://127.0.0.1:8000/cart
   PASS Checkout page renders with the order form
   PASS Flight & car-hire buttons on checkout (and only there)
-  PASS Order placed, redirected to the payment page — SAR-HAAU-M9A3
+  PASS Order placed, redirected to the payment page — SAR-ZNDB-FA84
   PASS PayFast handoff form present and signed
 
 3. Payment rules (the ones that protect the money)
@@ -72,7 +72,7 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS Fulfilment wrote the shuttle passenger
 
 4. The bed rules (straight from the smoke test)
-  PASS Smoke test (38 checks: bed invariant, holds, forged ITN, finance arithmetic, CSV safety) — Passed: 38   Failed: 0
+  PASS Smoke test (bed invariant, holds, forged ITN, finance arithmetic, CSV safety) — Passed: 38   Failed: 0
 
 5. Every admin screen and every export
   PASS Signing out works, and blocks the admin again
@@ -107,22 +107,22 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS /admin/settings/email-templates — HTTP 200
   PASS /admin/settings/diagnostics — HTTP 200
   PASS /admin/logs — HTTP 200
-  PASS orders.csv — HTTP 200, 19704 bytes
-  PASS order-items.csv — HTTP 200, 121536 bytes
-  PASS attendees.csv — HTTP 200, 30023 bytes
-  PASS bookings.csv — HTTP 200, 26432 bytes
-  PASS rooming-list.csv — HTTP 200, 10384 bytes
-  PASS transport.csv — HTTP 200, 14558 bytes
-  PASS donations.csv — HTTP 200, 2613 bytes
+  PASS orders.csv — HTTP 200, 6874 bytes
+  PASS order-items.csv — HTTP 200, 40635 bytes
+  PASS attendees.csv — HTTP 200, 10278 bytes
+  PASS bookings.csv — HTTP 200, 9718 bytes
+  PASS rooming-list.csv — HTTP 200, 4177 bytes
+  PASS transport.csv — HTTP 200, 2598 bytes
+  PASS donations.csv — HTTP 200, 976 bytes
   PASS applications.csv — HTTP 200, 677 bytes
   PASS messages.csv — HTTP 200, 475 bytes
-  PASS customers.csv — HTTP 200, 1652 bytes
-  PASS stock.csv — HTTP 200, 2677 bytes
-  PASS payments.csv — HTTP 200, 12037 bytes
+  PASS customers.csv — HTTP 200, 241 bytes
+  PASS stock.csv — HTTP 200, 2672 bytes
+  PASS payments.csv — HTTP 200, 3852 bytes
   PASS expenses.csv — HTTP 200, 981 bytes
-  PASS refunds.csv — HTTP 200, 1109 bytes
-  PASS budget.csv — HTTP 200, 1765 bytes
-  PASS finance-pack.csv — HTTP 200, 1708 bytes
+  PASS refunds.csv — HTTP 200, 446 bytes
+  PASS budget.csv — HTTP 200, 1760 bytes
+  PASS finance-pack.csv — HTTP 200, 1697 bytes
 
 6. Security basics
   PASS Signed out cleanly before the anonymous checks
@@ -154,7 +154,7 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS Adding an FAQ saves it
   PASS Deleting the FAQ removes it
   PASS Saving an internal note on an order persists it
-  PASS Moving a guest to another bed actually moves them — bed 1 → 18
+  PASS Moving a guest to another bed actually moves them — bed 54 → 2
   PASS The move keeps the booking reference and the price
   PASS The move is written to the audit log
   PASS Checking a delegate in stamps the order and their bookings
@@ -182,15 +182,35 @@ SARCNA 2027 — full site audit against http://127.0.0.1:8000
   PASS No refund exceeds what its order was paid
   PASS Every shuttle departure has sold no more seats than it has
   PASS No product variant has negative stock
-  PASS The finance screens agree with the orders table to the cent — R276 615.00
+  PASS The finance screens agree with the orders table to the cent — R99 640.00
 
 11. Email
   PASS All 14 transactional templates are installed — 14 templates
   PASS The mail queue directory is writable
-  PASS Paying an order queued its confirmation emails — 309 message(s) queued during this run
+  PASS Paying an order queued its confirmation emails — 682 message(s) queued during this run
 
-12. The audit cleans up after itself
+12. The photograph manager (how the real pictures get in)
+  PASS Signed back in as the administrator
+  PASS The Photographs screen loads — HTTP 200
+  PASS It lists an upload slot for every picture on the site — 42 slot forms
+  PASS Each slot states the minimum size it will accept
+  PASS A room photograph slot is offered — room:1
+  PASS A photograph below the minimum size is refused — the slot was left alone
+  PASS A full-size photograph is accepted and assigned — /photos/20260829-093859-4b18210b.jpg
+  PASS The file and its WebP twin are written to disk
+  PASS It is resized and centre-cropped to the slot shape — 1200x800, slot wants 1200x800
+  PASS EXIF metadata (including GPS) is stripped
+  PASS The uploaded photograph shows on the public room page — HTTP 200
+  PASS Resetting a slot restores the shipped illustration
+  PASS Every venue-gallery picture has its own replace slot — gallery:64
+  PASS Replacing a gallery picture swaps the file in place — /photos/20260829-093900-fa4a1dad.jpg
+  PASS It keeps its position in the running order
+  PASS The original gallery picture is restored by the audit
+
+13. The audit cleans up after itself
+  PASS The delegate account, its order and its fulfilment are gone — 1 account(s), 1 order(s) removed
   PASS Every record the audit created has been removed — 0 left behind
+  PASS Stock and shuttle seats were handed back correctly — 0 slot(s) out of range, 0 negative stock row(s)
 
 ================================================================
-TOTAL: 165 checks — 165 passed, 0 failed.
+TOTAL: 183 checks — 183 passed, 0 failed.

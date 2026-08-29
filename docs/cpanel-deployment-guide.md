@@ -50,7 +50,7 @@ Confirmed by direct observation on 29 August 2026, not assumed.
 | PHP | **8.4.24** — the application requires 8.1+ ✓ |
 | cPanel user | `sarcnaor`, home `/home/sarcnaor` |
 | Disk quota | 25 GB |
-| **SSH** | **Blocked.** Ports 22, 2222 and 21098 all time out. |
+| **SSH** | **Did not connect.** Ports 22, 2222 and 21098 all timed out from where this was tested. cPanel *does* show an SSH Access page with Manage SSH Keys, so the feature exists on the account — it may be firewalled, or need enabling with the host. Treat shell access as unavailable until somebody has actually opened a session. |
 | **cPanel API** | **Unavailable.** No token feature; Basic Auth rejected. |
 | **Document root outside `public_html`** | **Not permitted on this account.** cPanel silently relocates it. |
 
@@ -283,8 +283,12 @@ it does not have to be the server:
 php tools/audit.php https://2027.sarcna.org.za --password=YOUR_ADMIN_PASSWORD
 ```
 
-**169 checks. All 169 must pass.** It exits non-zero on failure, so it can gate
+**183 checks. All 183 must pass.** It exits non-zero on failure, so it can gate
 a go-live decision. It creates test records and removes them again.
+
+**Run it a second time.** The total must be identical. A different total means
+it left something behind — and what it creates is a *paid order*, which would
+sit in the treasurer's figures as revenue that never existed.
 
 ---
 

@@ -217,6 +217,9 @@ $router->group('/admin', ['admin'], static function (Router $router): void {
     $router->get('/gallery', [Admin\GalleryController::class, 'index'], ['admin:gallery']);
     $router->post('/gallery', [Admin\GalleryController::class, 'store'], ['admin:gallery']);
     $router->post('/gallery/{id}/delete', [Admin\GalleryController::class, 'destroy'], ['admin:gallery']);
+    $router->get('/photos', [Admin\PhotoController::class, 'index'], ['admin:gallery']);
+    $router->post('/photos', [Admin\PhotoController::class, 'upload'], ['admin:gallery']);
+    $router->post('/photos/reset', [Admin\PhotoController::class, 'reset'], ['admin:gallery']);
 
     // Applications, donations, messages
     $router->get('/applications', [Admin\ApplicationController::class, 'index'], ['admin:dashboard']);

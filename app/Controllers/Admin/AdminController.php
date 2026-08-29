@@ -109,7 +109,10 @@ abstract class AdminController extends Controller
 
         $this->makeWebp($path, $info[2]);
 
-        return preg_replace('/[^a-z0-9\-]/', '', $folder) . '/' . $name;
+        // Leading slash, so picture() routes this through uploaded() and finds
+        // it under /uploads/. Without it the path falls through to asset() and
+        // every admin-uploaded image 404s.
+        return '/' . preg_replace('/[^a-z0-9\-]/', '', $folder) . '/' . $name;
     }
 
     /** Write a WebP twin so picture() can serve the smaller file. */

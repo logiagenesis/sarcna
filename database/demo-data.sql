@@ -256,3 +256,44 @@ INSERT INTO `expenses` (`reference`,`category_id`,`supplier`,`description`,`amou
 ('EXP-DEMO-0005',(SELECT id FROM expense_categories WHERE slug='merchandise-stock' ),NULL,'Merchandise first run',0,'2026-08-25',NULL,NULL,'planned',NULL,NULL,'Awaiting final designs');
 
 UPDATE `expenses` SET `category_id` = (SELECT id FROM expense_categories WHERE slug='merchandise'), `amount_cents` = 2400000 WHERE `reference` = 'EXP-DEMO-0005';
+
+-- --------------------------------------------------- venue photographs --
+-- Real photographs of Boschendal, supplied by the committee and processed by
+-- tools/import-drive-images.php. These are NOT mock data: they are the actual
+-- venue, and they ship with the code because the target host has no shell for
+-- running an importer after deployment. The files live in
+-- public_html/uploads/photos and are committed to the repository.
+--
+-- Everything above this line that is still an illustration of the venue is
+-- switched off at the end of this block, so a fresh install shows photographs
+-- rather than drawings.
+
+UPDATE `banners`
+   SET `image` = '/photos/boschendal-manor-house.jpg',
+       `image_alt` = 'The historic Boschendal manor house in late afternoon light, framed by oak trees'
+ WHERE `position` = 'home_hero';
+
+UPDATE `room_types` SET `hero_image` = '/photos/retreat-cottages-mountain.jpg' WHERE `slug` = 'retreat-cottage-twin-room';
+UPDATE `room_types` SET `hero_image` = '/photos/accessible-cottage-ramp.jpg'   WHERE `slug` = 'retreat-cottage-accessible-room';
+UPDATE `room_types` SET `hero_image` = '/photos/orchard-cottage-veranda.jpg'   WHERE `slug` = 'partner-guest-house-franschhoek';
+
+INSERT INTO `room_type_images` (`room_type_id`,`file_path`,`alt_text`,`source_note`,`sort_order`)
+SELECT `id`, '/photos/cottage-veranda-mountains.jpg',
+       'A cottage veranda set with armchairs and a dining table, mountains rising behind',
+       'Boschendal Estate, supplied by the committee (permission to be confirmed in writing)', 1
+  FROM `room_types` WHERE `slug` = 'retreat-cottage-twin-room';
+
+INSERT INTO `gallery_images` (`title`,`alt_text`,`file_path`,`category`,`source_note`,`sort_order`,`is_active`,`is_mock`) VALUES
+('The manor house','The historic Boschendal manor house in late afternoon light, framed by oak trees','/photos/boschendal-manor-house.jpg','venue','Boschendal Estate, supplied by the committee (permission to be confirmed in writing)',1,1,0),
+('The Retreat cottages','A row of whitewashed retreat cottages with the Simonsberg mountains behind them','/photos/retreat-cottages-mountain.jpg','venue','Boschendal Estate, supplied by the committee (permission to be confirmed in writing)',2,1,0),
+('Step-free access','An accessible cottage veranda reached by a gently ramped path with handrails','/photos/accessible-cottage-ramp.jpg','venue','Boschendal Estate, supplied by the committee (permission to be confirmed in writing)',3,1,0),
+('A cottage veranda','A cottage veranda opening onto lavender beds and lawn, with the mountains beyond','/photos/orchard-cottage-veranda.jpg','venue','Boschendal Estate, supplied by the committee (permission to be confirmed in writing)',4,1,0),
+('Where we gather','A cottage veranda set with armchairs and a dining table, mountains rising behind','/photos/cottage-veranda-mountains.jpg','venue','Boschendal Estate, supplied by the committee (permission to be confirmed in writing)',5,1,0),
+('The walled kitchen garden','The walled kitchen garden at sunrise, with raised beds and a stone water furrow','/photos/walled-kitchen-garden.jpg','venue','Boschendal Estate, supplied by the committee (permission to be confirmed in writing)',6,1,0),
+('The pool and the Simonsberg','A swimming pool and parasols on the lawn beneath the Simonsberg','/photos/pool-and-simonsberg.jpg','venue','Boschendal Estate, supplied by the committee (permission to be confirmed in writing)',7,1,0),
+('Tented suites in the fynbos','Canvas tented suites tucked into mountain fynbos above the estate','/photos/tented-suites-fynbos.jpg','venue','Boschendal Estate, supplied by the committee (permission to be confirmed in writing)',8,1,0);
+
+UPDATE `gallery_images`
+   SET `is_active` = 0
+ WHERE `category` IN ('venue','conference')
+   AND `file_path` NOT LIKE '/photos/%';

@@ -129,6 +129,89 @@
     }
   }
 
+  /* ------------------------------------------------- card band alignment */
+
+  /* CSS gets the cards in a grid to the same height and puts the chips, the
+     rule and the price on shared lines. The one band it cannot share across
+     cards is the heading: a two-line title pushes its own body copy a line
+     lower than the one-line title beside it. Nothing in CSS can hand a
+     heading the height of its neighbour's heading, so measure the tallest
+     one in each row and give the rest that as a floor.
+
+     This is polish on top of a layout that is already correct without it. */
+
+  var bandGrids = document.querySelectorAll('.grid--2, .grid--3, .grid--4');
+  /* Bands whose height is set by how many lines their content happens to take:
+     badges and night chips wrap at some column widths and not others, and a
+     heading is one or two lines depending on the name. */
+  var BANDS = ['.cluster', '.card__title, h3', '.availability'];
+
+  function alignBands() {
+    bandGrids.forEach(function (grid) {
+      var cards = [];
+      var i;
+
+      for (i = 0; i < grid.children.length; i++) {
+        var child = grid.children[i];
+        if (child.classList.contains('card') || child.classList.contains('feature-card')) {
+          cards.push(child);
+        }
+      }
+      if (cards.length < 2) { return; }
+
+      /* Clear last pass first, so a resize measures real content and not the
+         floor the previous width left behind. */
+      cards.forEach(function (card) {
+        BANDS.forEach(function (selector) {
+          var band = card.querySelector(selector);
+          if (band) { band.style.minHeight = ''; }
+        });
+      });
+
+      /* offsetTop, not getBoundingClientRect: the reveal animation transforms
+         cards as they scroll in, and that would scatter the row grouping. */
+      var rows = [];
+      var index = {};
+      cards.forEach(function (card) {
+        var top = card.offsetTop;
+        if (!(top in index)) { index[top] = rows.length; rows.push([]); }
+        rows[index[top]].push(card);
+      });
+
+      rows.forEach(function (row) {
+        if (row.length < 2) { return; }
+        BANDS.forEach(function (selector) {
+          var bands = [];
+          var tallest = 0;
+          row.forEach(function (card) {
+            var band = card.querySelector(selector);
+            if (!band) { return; }
+            bands.push(band);
+            tallest = Math.max(tallest, band.getBoundingClientRect().height);
+          });
+          if (bands.length !== row.length || tallest === 0) { return; }
+          bands.forEach(function (band) { band.style.minHeight = tallest.toFixed(2) + 'px'; });
+        });
+      });
+    });
+  }
+
+  if (bandGrids.length) {
+    var alignPending = false;
+    var queueAlign = function () {
+      if (alignPending) { return; }
+      alignPending = true;
+      window.requestAnimationFrame(function () { alignPending = false; alignBands(); });
+    };
+
+    queueAlign();
+    /* Lora and Work Sans load with font-display:swap, so the first measurement
+       can be of the fallback face. Measure again once the real ones land. */
+    if (document.fonts && document.fonts.ready) { document.fonts.ready.then(queueAlign); }
+    window.addEventListener('load', queueAlign);
+    window.addEventListener('resize', queueAlign);
+  }
+
   /* ---------------------------------------------------------- lightbox */
 
   var lightbox = document.getElementById('lightbox');

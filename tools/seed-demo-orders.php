@@ -18,6 +18,7 @@ declare(strict_types=1);
  */
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
+require_once __DIR__ . '/purge.php';
 
 use App\Core\Database;
 use App\Services\AccommodationService;
@@ -34,54 +35,20 @@ $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 /* ------------------------------------------------------------------ purge */
 
 if (in_array('--purge', $argv, true)) {
-    $ids = Database::select('SELECT id, cart_token FROM orders WHERE is_mock = 1');
+    $orderIds = array_map(
+        static fn (array $r): int => (int) $r['id'],
+        Database::select('SELECT id FROM orders WHERE is_mock = 1')
+    );
 
-    if ($ids === []) {
+    if ($orderIds === []) {
         exit("No demo orders to remove.\n");
     }
 
-    $orderIds = array_map(static fn (array $r): int => (int) $r['id'], $ids);
-    $list     = implode(',', $orderIds);
+    $removed = purge_orders($orderIds);
 
-    // Put stock back before the order items disappear.
-    foreach (Database::select("SELECT product_id, variant_id, quantity FROM order_items
-                                WHERE order_id IN ({$list}) AND item_type IN ('merchandise','registration')
-                                  AND product_id IS NOT NULL") as $item) {
-        if ($item['variant_id'] !== null) {
-            Database::run('UPDATE product_variants SET stock = stock + ? WHERE id = ?', [(int) $item['quantity'], (int) $item['variant_id']]);
-        }
+    Database::run('DELETE FROM users WHERE is_mock = 1 AND is_admin = 0');
 
-        Database::run('UPDATE products SET stock = stock + ? WHERE id = ? AND track_stock = 1', [(int) $item['quantity'], (int) $item['product_id']]);
-    }
-
-    // Give the shuttle seats back.
-    foreach (Database::select("SELECT transport_slot_id, quantity FROM order_items
-                                WHERE order_id IN ({$list}) AND item_type = 'transport'
-                                  AND transport_slot_id IS NOT NULL") as $item) {
-        Database::run('UPDATE transport_slots SET seats_taken = GREATEST(0, seats_taken - ?) WHERE id = ?', [(int) $item['quantity'], (int) $item['transport_slot_id']]);
-    }
-
-    foreach (['refunds', 'payments', 'payment_logs', 'bookings', 'transport_bookings', 'donations',
-              'inventory_movements', 'order_items'] as $table) {
-        if (Database::scalar("SELECT COUNT(*) FROM information_schema.columns
-                               WHERE table_schema = DATABASE() AND table_name = ? AND column_name = 'order_id'", [$table])) {
-            Database::run("DELETE FROM {$table} WHERE order_id IN ({$list})");
-        }
-    }
-
-    Database::run("DELETE FROM orders WHERE id IN ({$list})");
-
-    foreach ($ids as $row) {
-        if ($row['cart_token'] !== null) {
-            Database::run('DELETE FROM booking_holds WHERE cart_token = ?', [$row['cart_token']]);
-            Database::run('DELETE FROM cart_items WHERE cart_id IN (SELECT id FROM carts WHERE token = ?)', [$row['cart_token']]);
-            Database::run('DELETE FROM carts WHERE token = ?', [$row['cart_token']]);
-        }
-    }
-
-    Database::run("DELETE FROM users WHERE is_mock = 1 AND is_admin = 0");
-
-    printf("Removed %d demo orders and everything attached to them.\n", count($orderIds));
+    printf("Removed %d demo orders and everything attached to them.\n", $removed);
     exit(0);
 }
 

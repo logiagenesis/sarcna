@@ -80,15 +80,17 @@ command you can run.
 php tools/audit.php --password=YOUR_ADMIN_PASSWORD
 ```
 
-**169 checks. All 169 currently pass.** It exits non-zero if anything fails,
-so it can gate a deployment. It covers:
+**183 checks. All 183 pass** — verified on this repository's demo database and
+again on a completely fresh install. Run it twice and the total must be
+identical both times; a total that climbs means it left records behind. It
+exits non-zero if anything fails, so it can gate a deployment. It covers:
 
 | Section | What it proves |
 |---|---|
 | 1. Public pages | Every public page, plus every active room type, transport route and product detail page, returns HTTP 200 |
 | 2. Customer journey | Creates a real account, adds a registration, **holds a real bed**, books a shuttle seat, reaches checkout, places an order and gets a signed PayFast handoff — through the real forms, not fixtures |
 | 3. Payment rules | Landing on the success URL does **not** mark an order paid; a forged signature is rejected; a correctly signed notification does mark it paid and allocates the bed and the shuttle passenger |
-| 4. Bed rules | Runs the 38-check smoke test: the bed invariant, holds, the database refusing a double-booking, cancellation freeing a bed, finance arithmetic, CSV safety |
+| 4. Bed rules | Runs the smoke test: the bed invariant, holds, the database refusing a double-booking, cancellation freeing a bed, finance arithmetic, CSV safety |
 | 5. Admin | Signs in as admin, loads all 31 admin screens, downloads all 16 CSV exports |
 | 6. Security | Signs out and proves the admin is blocked; CSRF-less POSTs refused; `.env`, application code, SQL and `.git` all unreachable over the web |
 | 7. Writes | Twenty-one committee actions performed over HTTP and then **verified in the database**: saving a setting, recording an expense (and its effect on the finance total), adding and deleting a budget line, creating a coupon, creating and editing a product, adding and deleting a programme item and an FAQ, saving an order note, moving a guest to another bed, and checking a delegate in and out |
@@ -96,7 +98,8 @@ so it can gate a deployment. It covers:
 | 9. Public forms | The contact form and a service application actually reach the committee |
 | 10. Data integrity | Nine SQL invariants: no bed double-booked, no hold on a booked bed, every booking on a real bed in the right unit, every paid order has a payment, order totals match their line items, no refund exceeds what was paid, no shuttle oversold, no negative stock, and the finance screens agree with the orders table to the cent |
 | 11. Email | All 14 templates installed, the queue is writable, and paying an order queued its confirmations |
-| 12. Clean-up | Every record the audit created is removed, and it proves it |
+| 12. Photographs | The Photographs screen loads and offers a slot for every picture on the site; a photograph below the minimum size is **refused**; a full-size one is accepted, centre-cropped, given a WebP twin, stripped of its EXIF (including GPS) and appears on the public page; replacing a gallery picture keeps its position; resetting a slot restores the illustration |
+| 13. Clean-up | Every record the audit created is removed — the delegate account, its paid order, its bed, its shuttle seat — and the stock and seats it consumed are handed back. It then counts what is left by joining back through the schema, not by looking only where it just deleted |
 
 It starts and tears down its own PayFast stub, clears this machine's
 rate-limit counters (the audit is a legitimate high-volume client; the limiter
@@ -105,15 +108,34 @@ byte-for-byte when it finishes — including if interrupted. Running it twice in
 a row gives the same result, and it leaves no test records behind.
 
 The transcript of the last full run is committed at
-[`docs/audit-result.txt`](docs/audit-result.txt) so you can read the result
-without running anything.
+[`docs/audit-result.txt`](docs/audit-result.txt), and the race test's at
+[`docs/race-test-result.txt`](docs/race-test-result.txt), so you can read both
+results without running anything.
 
-### The other two commands
+### The other commands
 
 ```bash
-php tools/smoke-test.php        # 38 invariant checks, all passing
+php tools/smoke-test.php        # 37–38 invariant checks (the last needs demo orders)
+php tools/race-test.php         # 8 checks, all passing — see below
 php tools/seed-demo-orders.php  # realistic demo data; --purge removes it exactly
 ```
+
+### The double-booking guarantee, under real concurrency
+
+`tools/audit.php` and `tools/smoke-test.php` both check the bed rule one
+request at a time. That is not how it breaks in real life. `tools/race-test.php`
+builds a room with exactly one bed and then:
+
+1. fires **twelve genuinely simultaneous** booking requests at it from twelve
+   separate browser sessions, and asserts exactly one wins;
+2. does the same again with twelve concurrent processes writing **straight to
+   the database, bypassing the application entirely** — one write is accepted,
+   eleven are refused by the unique index with SQLSTATE 23000. This is the
+   proof that the guarantee lives in the schema and not merely in the PHP;
+3. cancels the winning booking and shows the bed is immediately bookable again
+   with no cleanup job in between.
+
+**8 checks, all passing.** It removes the room it built.
 
 ### Verified from a completely empty database
 
@@ -133,7 +155,7 @@ web form exactly as it will be on cPanel. Result:
 
 44 tables, 3 room types, 56 units, 112 beds, 15 products, 7 routes, 16
 departures, 14 email templates, 40 settings, 1 admin, **0 orders**. Visiting
-`/install` again returns HTTP 410. The full 122-check audit then passed
+`/install` again returns HTTP 410. The full 183-check audit then passed
 against that fresh install.
 
 ---
@@ -173,7 +195,8 @@ The three things that caused that failure, and what now prevents each:
 | A Windows Explorer zip silently dropped every `.htaccess`, so `/install` 404'd | The guide bans Explorer zips; `php tools/package.php` builds a zip with all hidden files, verified; preflight reports any that are missing |
 | `.env` sat inside a web-served folder because this host will not allow a document root outside `public_html` | The repository now ships an `.htaccess` in its root and in every private folder, and preflight proves over real HTTP that each one refuses requests |
 
-**This hosting has no SSH and no cPanel API**, so `php tools/audit.php` cannot
+**No SSH session has been established with this hosting, and the cPanel API is
+unavailable**, so `php tools/audit.php` cannot
 run on the server. Open `preflight.php` in a browser instead, then run the full
 audit from any other machine that can reach the site:
 
@@ -429,7 +452,7 @@ Nothing on this list can be invented by a developer.
 |---|---|---|
 | 1 | **Signed venue contract** | Rates, check-in times, the accessible-room split and the partner guest house are placeholders |
 | 2 | **Confirmed rates for 2027** | `bed_rates` currently holds placeholder pricing |
-| 3 | **Written permission to use Boschendal's photographs** | The importer is ready; the permission is the committee's to get |
+| 3 | **The venue photographs themselves, and written permission to use them** | See *The photographs* below. This is the one thing on this list that cannot be worked around |
 | 4 | **Written accessibility details from the venue** | Guests booking accessible units rely on this |
 | 5 | **Transport supplier quotes** | Routes, times, pick-up points, capacities and prices are demo data |
 | 6 | **Live PayFast credentials** and the payout account | The site cannot take real money without them |
@@ -440,6 +463,49 @@ Nothing on this list can be invented by a developer.
 | 11 | **Legal review of the policy pages** | They are competent drafts, not legal advice |
 | 12 | **Merchandise range, sizes, colours, prices** | Currently demo data |
 | 13 | **Programme confirmation** | Currently a plausible demo weekend |
+
+### The photographs
+
+**Admin → Photographs.** This is the screen the committee uses. It lists every
+picture the public site shows — the home hero, each room type and its gallery,
+the venue gallery, every product — with a thumbnail, the size that slot needs,
+and an upload button. A counter at the top says how many are still
+illustrations.
+
+What it does with each upload, so nobody has to think about it:
+
+| | |
+|---|---|
+| **Refuses anything too small** | Below roughly the slot's own size it is rejected, with the actual dimensions and the required ones in the message. A picture saved out of WhatsApp or copied off a web page will be refused — that is the point. |
+| **Crops to the right shape** | Centre-cropped to the slot, never letterboxed and never upscaled. |
+| **Makes the WebP** | Written beside the JPEG automatically, which is what `picture()` serves. |
+| **Strips EXIF** | Re-encoding removes the metadata block, so a phone photograph does not publish its GPS coordinates. |
+| **Records where it came from** | The "where it came from" note is stored with the picture. If the committee is ever asked to prove permission, that note is the answer. |
+| **Is reversible** | Uploads go to `public_html/uploads/photos`, never over the repository's own files. *Back to the illustration* restores the shipped drawing and deliberately leaves the uploaded file on the server. |
+
+Section 12 of the audit exercises all of it, including that an undersized
+photograph is genuinely refused.
+
+**Eight real photographs are already in.** The committee supplied a folder of
+Boschendal photography, and `tools/import-drive-images.php` processed it
+through exactly the same code the upload screen uses. The files are committed
+at `public_html/uploads/photos/` and seeded in `database/demo-data.sql`, so a
+fresh install comes up showing photographs rather than drawings — which
+matters, because the target host has no shell to run an importer on.
+
+**Five of the supplied photographs were deliberately left out**, and the
+reasons are recorded in `tools/import-drive-images.php` so the committee can
+overrule any of them:
+
+| Reason | Files |
+|---|---|
+| **Alcohol** — Boschendal is a wine estate, and this is a Narcotics Anonymous convention | wine tasting, wine retail, a restaurant with wine on every table, two night-market shots not verified free of it |
+| **Identifiable children** — anonymity is a founding principle of the fellowship | three close portraits |
+| **Below the quality bar** | one portrait crop, two letterbox panoramas too short for any 3:2 slot |
+
+The remaining slots — the shop products, the page headers — are still
+illustrations. Use **Admin → Photographs** for those; it is the route that
+needs no developer and no command line.
 
 ### From the outgoing vendors
 
@@ -476,10 +542,11 @@ refuses to remove the last super admin, but it cannot create one for you.
 Work top to bottom. Each step is verifiable.
 
 - [ ] **1. Deploy** — follow `docs/cpanel-deployment-guide.md`, run `/install`
-- [ ] **2. Import the venue photographs** — `php tools/import-venue-images.php`
-      from any machine with ordinary internet access (25 curated Boschendal
-      photographs; the build sandbox could not reach image hosts). Get the
-      venue's written permission first.
+- [ ] **2. Check the photographs** — eight are already in (see §7). Sign in and go to
+      **Admin → Photographs** for the rest. Every picture the site shows has a slot with an
+      upload button; the page counts how many are still illustrations. Get the
+      venue's written permission first, and record it in the "where it came
+      from" box on each upload. See §7 — *The photographs* for the detail.
 - [ ] **3. Replace placeholder rates and dates** once the venue contract is signed
 - [ ] **4. Enter the real settings** — WhatsApp number, GA4 ID, Search Console
       token, committee email addresses (Admin → Settings)
@@ -496,7 +563,7 @@ Work top to bottom. Each step is verifiable.
       the admin
 - [ ] **9. Legal review** of the policy pages
 - [ ] **10. Run the audit on the production host** — `php tools/audit.php`.
-      All 122 checks must pass
+      Every check must pass
 - [ ] **11. Work through `docs/testing-checklist.md`** by hand on the live site
 - [ ] **12. Create the second super admin**
 - [ ] **13. Take a backup and prove it restores** — `docs/backup-restore-guide.md`
@@ -611,10 +678,23 @@ thing. Then `PayFastService`, then `OrderService::markPaid()`.
 ```bash
 find app public_html tools -name '*.php' -exec php -l {} \; | grep -v 'No syntax errors'
 php tools/smoke-test.php
-php tools/audit.php
+php tools/race-test.php
+php tools/audit.php --password=YOUR_ADMIN_PASSWORD
 ```
 
-Silence from the first, 38/38 from the second, 122/122 from the third.
+Silence from the first, then all-passing from each of the others.
+
+**Run the audit twice in a row.** The second run must give the same number as
+the first. If it does not, something it created was left behind — which is a
+defect in the audit, and a real one: those records land in the finance
+ledger. See `tools/purge.php`.
+
+**GitHub Actions runs all of this for you** on every push and every pull
+request — `.github/workflows/tests.yml`. It starts MariaDB, installs the site
+through the real `/install` form, and runs the lint, the smoke test, the race
+test and the audit twice. A red tick means do not merge. It exists because the
+clean-up defect described at the end of this document survived precisely
+because nothing ran the suite on a push.
 
 **The one constraint to preserve:** this must keep running on ordinary cPanel
 shared hosting with nothing but PHP and MySQL. Any change that adds a server
@@ -638,13 +718,18 @@ dependency is a regression, however nice the library.
 
 | Command | What it does |
 |---|---|
-| `php tools/audit.php` | **The whole checklist.** 122 checks, exits non-zero on failure |
-| `php tools/smoke-test.php` | 38 invariant checks: beds, holds, payments, finance, CSV safety |
+| `php tools/audit.php` | **The whole checklist.** 183 checks, exits non-zero on failure |
+| `php tools/smoke-test.php` | Invariant checks: beds, holds, payments, finance, CSV safety |
+| `php tools/race-test.php` | 8 checks: twelve simultaneous buyers, one bed, exactly one winner |
 | `php tools/seed-demo-orders.php [n]` | Realistic demo orders through the real cart and fulfilment |
 | `php tools/seed-demo-orders.php --purge` | Removes every demo order, restoring stock and seats exactly |
 | `php tools/import-venue-images.php` | Imports 25 curated Boschendal photographs (`--list`, `--dry-run`) |
 | `php tools/generate-images.php` | Regenerates the placeholder illustrations |
 | `php tools/package.php` | Builds the upload zip for cPanel |
+| `tools/purge.php` | Not a command — the shared routine `audit.php` and `seed-demo-orders.php` both use to remove an order **and** hand back the stock and shuttle seats fulfilment took for it |
+| `php tools/ci-install.php` | Installs through the real `/install` form, for CI. Refuses to run against anything but a local address |
+| `php tools/db-check.php` | One line: can this machine reach the configured database, and is it installed? |
+| `powershell -File tools/run-audit.ps1` | The whole audit on Windows, to a timestamped log. See `docs/DEPLOYMENT-HANDOFF.md` |
 | `php -S 127.0.0.1:8000 -t public_html tools/dev-router.php` | Local development server |
 
 ### Documentation
@@ -652,6 +737,8 @@ dependency is a regression, however nice the library.
 | Doc | For |
 |---|---|
 | **`HANDOVER.md`** | **This document. Start here.** |
+| **`docs/DEPLOYMENT-HANDBOOK.md`** | **The step-by-step deployment procedure. Verified against a replica of the target host. Read this to deploy.** |
+| `docs/DEPLOYMENT-HANDOFF.md` | The reference sheet: branch, commit, target, commands, env var names, runtimes, deployability verdict |
 | `docs/cpanel-deployment-guide.md` | Putting it on the server, step by step |
 | `docs/payfast-setup.md` | Sandbox to live, and why an order might not be paid |
 | `docs/smtp-setup.md` | Email, SPF and DKIM |
@@ -674,6 +761,30 @@ dependency is a regression, however nice the library.
 | `demo.volunteer@sarcna.org.za` | `Convention2027` |
 
 The administrator account is the one created during installation.
+
+---
+
+## The rule this project is held to
+
+**No guessing.**
+
+Every claim in this document is attached to a command that produces evidence —
+an HTTP status, a row count, a check total, a page that says Ready. Where
+something has not been verified, it is written down as not verified, in §10.
+
+That rule found two real defects the day this section was written, both of
+which had been sitting behind a green tick:
+
+| What was claimed | What was actually true |
+|---|---|
+| "Every record the audit created has been removed — 0 left behind" | 230 records were left behind: 14 delegate accounts, 12 paid orders, their beds, their shuttle seats and their payments. The clean-up only looked at eight small tables and never at the order it had just paid for. Fictional revenue was accumulating in the finance screens on every run. |
+| "122 checks" in three places, "169 checks" in two others | Neither. Nobody had run it and read the total. It is 183, and every number quoted in this document now comes from a run whose output is committed. |
+
+Both are fixed — `tools/purge.php` now does the clean-up for both tools, and
+the clean-up check counts what is left by joining back through the schema
+rather than by looking only where it just deleted. The lesson is the general
+one: **a passing test that was never made to fail is not evidence.** If you
+change the audit, break something on purpose first and confirm it goes red.
 
 ---
 

@@ -154,7 +154,7 @@ View::start('content');
             </div>
             <h3 class="card__title"><?= e($roomType['name']) ?></h3>
             <p class="card__text"><?= e($roomType['summary']) ?></p>
-            <div class="availability" style="margin-top:.5rem">
+            <div class="availability">
               <?php foreach ($availability as $night => $free): ?>
                 <span class="availability__night <?= $free === 0 ? 'is-out' : ($free < 6 ? 'is-low' : '') ?>">
                   <strong><?= e(za_date($night, 'D j M')) ?></strong>
@@ -291,7 +291,9 @@ View::start('content');
       <div class="rule" style="margin-inline:auto"></div>
       <span class="eyebrow">The estate</span>
       <h2>Where we will be</h2>
-      <p class="muted">Imagery below is original illustration for this preview build, not photographs of the venue.</p>
+      <?php if (\App\Services\PhotoService::stillShowingIllustrations()): ?>
+        <p class="muted">Some imagery below is original illustration for this preview build rather than photographs of the venue.</p>
+      <?php endif; ?>
     </div>
     <div class="gallery-grid">
       <?php foreach ($gallery as $image): ?>

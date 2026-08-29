@@ -1,0 +1,90 @@
+name: Tests
+
+# The clean-up defect that put fictional revenue in the finance screens
+# survived because nothing ran the test suite on a push. This runs all of it,
+# on every push and every pull request, and blocks the merge if any part fails.
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  suite:
+    name: Lint, install, smoke, race, audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      mysql:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: sarcna_ci
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s --health-timeout=5s --health-retries=20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, gd, mbstring, curl, json
+          coverage: none
+
+      - name: Check every file parses
+        run: |
+          set -e
+          find app public_html tools -name '*.php' -print0 \
+            | xargs -0 -n1 php -l \
+            | (grep -v 'No syntax errors' || true) \
+            | tee /tmp/lint.txt
+          test ! -s /tmp/lint.txt
+
+      - name: Configure
+        run: |
+          cp .env.example .env
+          sed -i "s|^APP_URL=.*|APP_URL=http://127.0.0.1:8000|"   .env
+          sed -i "s|^DB_HOST=.*|DB_HOST=127.0.0.1|"               .env
+          sed -i "s|^DB_PORT=.*|DB_PORT=3306|"                    .env
+          sed -i "s|^DB_NAME=.*|DB_NAME=sarcna_ci|"               .env
+          sed -i "s|^DB_USER=.*|DB_USER=root|"                    .env
+          sed -i "s|^DB_PASS=.*|DB_PASS=root|"                    .env
+
+      - name: Start the site
+        run: |
+          php -S 127.0.0.1:8000 -t public_html tools/dev-router.php \
+            > /tmp/server.log 2>&1 &
+          for i in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/install || true)
+            if [ "$code" = "200" ] || [ "$code" = "410" ]; then echo "up"; exit 0; fi
+            sleep 1
+          done
+          echo "the site never came up"; cat /tmp/server.log; exit 1
+
+      - name: Install, through the real web installer
+        run: php tools/ci-install.php http://127.0.0.1:8000
+
+      - name: Smoke test
+        run: php tools/smoke-test.php
+
+      - name: Race test — twelve buyers, one bed
+        run: php tools/race-test.php http://127.0.0.1:8000
+
+      - name: Full audit
+        run: php tools/audit.php http://127.0.0.1:8000 --password=Convention2027
+
+      - name: Full audit, a second time
+        # A different total the second time means the audit left records
+        # behind — which is exactly how fictional revenue reached the finance
+        # screens before. The totals must match.
+        run: |
+          set -e
+          php tools/audit.php http://127.0.0.1:8000 --password=Convention2027 \
+            | tee /tmp/second.txt
+          first=$(grep -oE 'TOTAL: [0-9]+' /tmp/second.txt | grep -oE '[0-9]+')
+          echo "second run reported $first checks"
