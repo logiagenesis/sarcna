@@ -98,15 +98,28 @@ Build a cPanel upload package:
 php tools/package.php
 ```
 
-Prove the critical paths still work after a change — bed inventory, holds,
+Check the whole site in one command — every page, a complete customer
+journey through the real forms, the payment rules, every admin screen and
+export, the committee actions that write data, the cart arithmetic and the
+data invariants:
+
+```bash
+php tools/audit.php --password=YOUR_ADMIN_PASSWORD
+```
+
+169 checks. It exits non-zero if anything fails, so it can gate a deploy, and
+it removes everything it creates. On Windows use the same command in
+PowerShell — see **[HANDOVER.md](HANDOVER.md)** for the Windows notes.
+
+For a faster check of just the critical invariants — bed inventory, holds,
 fulfilment and PayFast verification:
 
 ```bash
 php tools/smoke-test.php
 ```
 
-It creates its own test data and cleans up after itself. Run it on a staging
-copy, not on a live site with real bookings.
+Both create their own test data and clean up after themselves. Run them on a
+staging copy, not on a live site with real bookings.
 
 ---
 

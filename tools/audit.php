@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * The full site audit.
  *
- *   php tools/audit.php [base-url]
+ *   php tools/audit.php [base-url] [--password=…]
  *
  * One command that walks the whole checklist: every public route, every admin
  * screen, every CSV export, every form endpoint, the booking invariants, the
@@ -12,8 +12,9 @@ declare(strict_types=1);
  * line with a summary at the end. Exit code 0 only when everything passes.
  *
  * Run it before every deploy. It needs a running site (default
- * http://127.0.0.1:8000) with the admin password in AUDIT_ADMIN_PASSWORD or
- * passed interactively.
+ * http://127.0.0.1:8000) and the administrator password, given either as
+ * --password=… or in the AUDIT_ADMIN_PASSWORD environment variable. Works
+ * identically on Linux, macOS and Windows.
  */
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
@@ -24,7 +25,15 @@ if (PHP_SAPI !== 'cli') {
     exit("Command line only.\n");
 }
 
-$base    = rtrim($argv[1] ?? 'http://127.0.0.1:8000', '/');
+$base = 'http://127.0.0.1:8000';
+
+foreach (array_slice($argv, 1) as $arg) {
+    if (!str_starts_with((string) $arg, '--')) {
+        $base = (string) $arg;
+    }
+}
+
+$base    = rtrim($base, '/');
 $results = [];
 $cookies = tempnam(sys_get_temp_dir(), 'audit-cookies-');
 $stub    = null;
@@ -344,10 +353,19 @@ record('Bed rules', 'Smoke test (38 checks: bed invariant, holds, forged ITN, fi
 
 section('5. Every admin screen and every export');
 
+// --password=… works the same in bash, PowerShell and cmd. The environment
+// variable still works, for CI where a password on the command line would be
+// visible in the process list.
 $adminPassword = getenv('AUDIT_ADMIN_PASSWORD') ?: '';
 
+foreach ($argv as $arg) {
+    if (str_starts_with((string) $arg, '--password=')) {
+        $adminPassword = substr((string) $arg, 11);
+    }
+}
+
 if ($adminPassword === '') {
-    record('Admin', 'Admin checks', false, 'set AUDIT_ADMIN_PASSWORD to run the admin half');
+    record('Admin', 'Admin checks', false, 'pass --password=… to run the admin half');
 } else {
     // The journey above signed us in as a delegate. Sign out first: /login is
     // guest-only, so an already-authenticated session cannot reach it.
@@ -413,7 +431,7 @@ section('7. Committee actions that write data (each one verified in the database
 
 // Section 6 signed out on purpose. Sign back in to exercise the write paths.
 if ($adminPassword === '') {
-    record('Writes', 'Write checks', false, 'set AUDIT_ADMIN_PASSWORD to run them');
+    record('Writes', 'Write checks', false, 'pass --password=… to run them');
 }
 
 record('Writes', 'Signed back in as the administrator', signIn($base, $adminPassword));

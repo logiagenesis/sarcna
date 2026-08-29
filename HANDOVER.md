@@ -77,7 +77,7 @@ command you can run.
 ### The one command that checks everything
 
 ```bash
-php tools/audit.php
+php tools/audit.php --password=YOUR_ADMIN_PASSWORD
 ```
 
 **169 checks. All 169 currently pass.** It exits non-zero if anything fails,
@@ -159,6 +159,55 @@ php tools/seed-demo-orders.php 110
 ```
 
 To put it on a real cPanel host, follow `docs/cpanel-deployment-guide.md`.
+
+### On Windows (PowerShell)
+
+Every command above works unchanged in PowerShell, with two things to know.
+
+**You need PHP and MySQL.** The easiest way on Windows is
+[Laragon](https://laragon.org/) or [XAMPP](https://www.apachefriends.org/) —
+both bundle PHP 8 and MySQL/MariaDB. After installing, open PowerShell in the
+project folder and confirm PHP is on the path:
+
+```powershell
+php -v          # should print PHP 8.1 or newer
+```
+
+If it does not, add the PHP folder to your PATH (Laragon: `C:\laragon\bin\php\php-8.x`;
+XAMPP: `C:\xampp\php`), or call it by full path.
+
+**Then:**
+
+```powershell
+git clone https://github.com/logiagenesis/sarcna.git
+cd sarcna
+Copy-Item .env.example .env
+php -S 127.0.0.1:8000 -t public_html tools/dev-router.php
+```
+
+Leave that window running and open `http://127.0.0.1:8000/install` in your
+browser. To run the tools, open a **second** PowerShell window in the same
+folder:
+
+```powershell
+php tools/audit.php --password=YOUR_ADMIN_PASSWORD
+php tools/smoke-test.php
+php tools/seed-demo-orders.php 110
+php tools/import-venue-images.php
+```
+
+**The one bash-ism that does not work in PowerShell.** Setting a variable in
+front of a command — `AUDIT_ADMIN_PASSWORD=x php tools/audit.php` — is bash
+syntax and PowerShell rejects it. That is why the audit takes
+`--password=…` instead, which behaves the same on every platform. If you
+prefer an environment variable, PowerShell spells it:
+
+```powershell
+$env:AUDIT_ADMIN_PASSWORD = "YOUR_ADMIN_PASSWORD"
+php tools/audit.php
+```
+
+Forward slashes in the paths above are correct — PHP accepts them on Windows.
 
 ---
 
