@@ -45,7 +45,7 @@ actually here.
 
 | Field | Value | How it is established |
 |---|---|---|
-| **Source-of-truth branch** | Either — they are identical | PR #1 was merged on 29 August 2026. `main` and `claude/google-drive-folder-ruuvgu` now have **byte-identical trees**. The repository's *default* branch is still `claude/google-drive-folder-ruuvgu`, so a plain `git clone` gets the right code either way. See *Branches* |
+| **Source-of-truth branch** | `main` | It is the repository's default branch, so a plain `git clone` gets it. Do not take that on trust — see *Branches* for the two commands that confirm it |
 | **Source commit** | `f70d1fc` on `main`, `b534231` on the default branch | Identical trees; see *Branches* |
 | **Deployment target** | cPanel shared hosting, `cp71.domains.co.za`, LiteSpeed, PHP 8.4.24 | `docs/cpanel-deployment-guide.md` §"The verified environment" |
 | **Expected production URL** | `https://2027.sarcna.org.za` | `docs/cpanel-deployment-guide.md` Step 2. **Not yet live** — `sarcna.org.za` still points at Firebase (the 2026 site) and must be left alone |
@@ -96,58 +96,51 @@ completion page says so explicitly.
 
 ## Branches
 
-**PR #1 and PR #3 are merged. So is PR #4, from a separate branch, which fixed
-six defects the test suite was not asking about — including a `/payment/cancelled`
-route that any other site could fire from a victim's browser to cancel their
-order.** See `docs/audit-2026-08-29.md`.
+**Deploy `main`.** As of 29 August 2026 it is the default branch and carries
+everything.
 
-| Branch | Head | State |
-|---|---|---|
-| `main` | `6f575e1` | **Current.** Contains everything |
-| `claude/google-drive-folder-ruuvgu` | `6f575e1` | The repository's default branch, fast-forwarded to `main`. **Byte-identical tree** |
-
-`claude/comprehensive-audit-lzwl4z` has been merged (PR #4) and is no longer a
-separate concern.
-
-> **Why the fast-forward mattered.** For a short window after PR #4 merged,
-> `main` carried the six security fixes and the default branch did not — so a
-> plain `git clone`, which is exactly what the deployment procedure tells you to
-> run, would have fetched code *without* the `/payment/cancelled` authorization
-> guard. Checked directly, not assumed: the guard is at
-> `app/Controllers/PaymentController.php:89` and was absent from the default
-> branch. Both branches now point at the same commit.
-
-Verified identical, not assumed:
+But do not trust that sentence — it has been wrong three times in one day. The
+default branch moved from `main`, to a working branch, and back to `main` again
+as branches were merged and deleted. **A branch name in a document is a fact
+with a date on it.** These two commands are not:
 
 ```bash
+# 1. What does the repository itself say is the default?
+curl -s https://api.github.com/repos/logiagenesis/sarcna | grep '"default_branch"'
+
+# 2. Is what you have checked out the same code as main?
+git rev-parse HEAD^{tree}
 git rev-parse origin/main^{tree}
-git rev-parse origin/claude/google-drive-folder-ruuvgu^{tree}
-# same hash
+# identical hashes = identical code, whatever the branches are called
 ```
 
-**Clone and change nothing:**
+A plain `git clone` fetches the default branch, which is the right answer
+whenever those two checks agree.
 
-```bash
-git clone https://github.com/logiagenesis/sarcna.git
-```
+### Why this is not pedantry
 
-The default branch is still `claude/google-drive-folder-ruuvgu`, so that is
-what a plain clone gets — and since its tree is identical to `main`, that is
-correct. If you would rather deploy `main`, `git checkout main` is equally
-correct. There is no longer a wrong answer between those two.
+For roughly fifteen minutes today, `main` carried six security fixes — among
+them an authorization guard on `/payment/cancelled`, a route any other website
+could otherwise fire from a victim's browser to cancel their order — and the
+then-default branch did not.
 
-### Two corrections, recorded rather than quietly fixed
+The deployment procedure says "clone and change nothing". During that window,
+following it exactly would have fetched the code **without** that guard.
+Verified rather than assumed: the guard is at
+`app/Controllers/PaymentController.php:89`, and it was absent from the default
+branch at the time.
 
-**First:** an earlier version of this file said *"deploy from `main`"* while
-`main` was seven commits behind, and I repeated that advice several times. It
-was wrong at the time — deploying `main` then would have shipped a site with no
-venue photographs, the broken `picture()` path bug, no CI, and the audit
-clean-up defect that put fictional revenue in the finance screens.
+Nobody wrote a bug to cause that. It was branch mechanics. The tree comparison
+above is what catches it.
 
-**Second:** the fix for that then said *"`main` is behind — deploy the default
-branch."* The merge has now made that stale too. Both statements were true when
-written; neither is true now. This is what a branch fact looks like: it has a
-date on it. The check above is the durable version — compare the trees.
+### The corrections, recorded rather than quietly replaced
+
+| Said | Status |
+|---|---|
+| "Deploy from `main`" | Wrong when written — `main` was seven commits behind |
+| "`main` is behind, deploy the default branch" | Right when written; stale within the hour |
+| "They are identical, either is fine" | True when written; PR #4 broke it |
+| **"Compare the trees"** | **Still true. It always will be** |
 
 ---
 
