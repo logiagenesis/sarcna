@@ -116,7 +116,7 @@ results without running anything.
 ### The other commands
 
 ```bash
-php tools/smoke-test.php        # 37–38 invariant checks (the last needs demo orders)
+php tools/smoke-test.php        # 44 invariant checks (43 without demo orders)
 php tools/race-test.php         # 8 checks, all passing — see below
 php tools/seed-demo-orders.php  # realistic demo data; --purge removes it exactly
 ```
@@ -789,7 +789,7 @@ change the audit, break something on purpose first and confirm it goes red.
 
 ### The second audit, and what a green suite was not covering
 
-A later full audit ran the whole suite green — 183 checks, twice, with matching
+A later full audit ran the whole suite green — 200 checks, twice, with matching
 totals — and then went looking for what the suite did not ask. It found six
 defects, every one of them behind that green tick. They are listed with their
 consequences in **[`docs/audit-2026-08-29.md`](docs/audit-2026-08-29.md)**; the

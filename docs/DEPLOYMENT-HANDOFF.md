@@ -96,13 +96,26 @@ completion page says so explicitly.
 
 ## Branches
 
-**PR #1 was merged into `main` on 29 August 2026 at 11:11 UTC.**
+**PR #1 and PR #3 are merged. So is PR #4, from a separate branch, which fixed
+six defects the test suite was not asking about — including a `/payment/cancelled`
+route that any other site could fire from a victim's browser to cancel their
+order.** See `docs/audit-2026-08-29.md`.
 
 | Branch | Head | State |
 |---|---|---|
-| `main` | `f70d1fc` | **Current.** Contains everything |
-| `claude/google-drive-folder-ruuvgu` | `b534231` | The repository's default branch. **Byte-identical tree to `main`** |
-| `claude/comprehensive-audit-lzwl4z` | `7ecd1aa` | A third branch, not merged. Review before deploying anything from it |
+| `main` | `6f575e1` | **Current.** Contains everything |
+| `claude/google-drive-folder-ruuvgu` | `6f575e1` | The repository's default branch, fast-forwarded to `main`. **Byte-identical tree** |
+
+`claude/comprehensive-audit-lzwl4z` has been merged (PR #4) and is no longer a
+separate concern.
+
+> **Why the fast-forward mattered.** For a short window after PR #4 merged,
+> `main` carried the six security fixes and the default branch did not — so a
+> plain `git clone`, which is exactly what the deployment procedure tells you to
+> run, would have fetched code *without* the `/payment/cancelled` authorization
+> guard. Checked directly, not assumed: the guard is at
+> `app/Controllers/PaymentController.php:89` and was absent from the default
+> branch. Both branches now point at the same commit.
 
 Verified identical, not assumed:
 

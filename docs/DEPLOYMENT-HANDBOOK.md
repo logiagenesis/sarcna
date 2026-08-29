@@ -686,7 +686,12 @@ cd sarcna
 php tools/audit.php https://2027.sarcna.org.za --password=YOUR_ADMIN_PASSWORD
 ```
 
-**183 checks. All 183 must pass.**
+**200 checks. All 200 must pass.**
+
+> The count was 183 when this handbook was written. PR #4 ("Fix six defects a
+> green test suite was not asking about") added 17 checks along with its fixes.
+> Read the total the run prints rather than the one written here — that is the
+> durable form.
 
 **Run it a second time and compare the totals.** They must be identical. A
 different total means it left something behind — and what it creates is a *paid
@@ -874,9 +879,9 @@ php -S 127.0.0.1:8000 -t public_html tools/dev-router.php
 Test suites:
 
 ```bash
-php tools/smoke-test.php                     # 37 checks, fast invariants
+php tools/smoke-test.php                     # 44 checks, fast invariants
 php tools/race-test.php  http://127.0.0.1:8000   # 8 checks, concurrency
-php tools/audit.php      http://127.0.0.1:8000 --password=PASSWORD   # 183 checks
+php tools/audit.php      http://127.0.0.1:8000 --password=PASSWORD   # 200 checks
 ```
 
 Run all three on a staging copy, **never on a live site with real bookings.**
