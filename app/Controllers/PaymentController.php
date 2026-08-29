@@ -54,7 +54,13 @@ final class PaymentController extends Controller
         $reference = (string) $this->request->input('reference', '');
         $order     = $reference === '' ? null : OrderService::findByReference($reference);
 
-        if ($order !== null && $order['status'] === 'pending_payment') {
+        // Only the buyer may cancel, and only their own order. An order
+        // reference is not proof of ownership: it travels in confirmation
+        // email, in the address bar and through PayFast, so without this check
+        // any GET request carrying a reference — an <img> tag on another site
+        // would do — cancelled a stranger's order and handed back the beds and
+        // shuttle seats they were in the middle of paying for.
+        if ($order !== null && $order['status'] === 'pending_payment' && $this->ownsOrder($order)) {
             OrderService::markCancelled($order);
         }
 
@@ -64,6 +70,25 @@ final class PaymentController extends Controller
             'title'       => 'Payment cancelled',
             'description' => 'Your SARCNA 2027 Convention payment was cancelled.',
         ], ['order' => $order]);
+    }
+
+    /**
+     * Is this request coming from the person who placed the order?
+     *
+     * Two things count as proof, and neither can be read off a reference:
+     * being signed in as the account that owns it, or holding the session
+     * whose cart became it. A guest who has just been sent back from PayFast
+     * still has that session cookie, so the honest cancel path is unaffected.
+     */
+    private function ownsOrder(array $order): bool
+    {
+        if ($order['user_id'] !== null && auth_id() !== null && (int) $order['user_id'] === auth_id()) {
+            return true;
+        }
+
+        $cartToken = (string) ($order['cart_token'] ?? '');
+
+        return $cartToken !== '' && hash_equals($cartToken, CartService::token());
     }
 
     /**

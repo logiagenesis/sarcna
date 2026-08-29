@@ -2,7 +2,7 @@
 SARCNA 2027 — race test (12 simultaneous buyers, one bed)
 ============================================================
 
-Built one room, one unit, one bed (#125) for the night of 2027-08-26.
+Built one room, one unit, one bed (#114) for the night of 2027-08-26.
 
 Round 1 — twelve separate browsers, all clicking at once
   PASS Exactly one of 12 simultaneous buyers holds the bed — 1 hold(s) on the bed

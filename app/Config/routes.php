@@ -222,13 +222,13 @@ $router->group('/admin', ['admin'], static function (Router $router): void {
     $router->post('/photos/reset', [Admin\PhotoController::class, 'reset'], ['admin:gallery']);
 
     // Applications, donations, messages
-    $router->get('/applications', [Admin\ApplicationController::class, 'index'], ['admin:dashboard']);
-    $router->get('/applications/{id}', [Admin\ApplicationController::class, 'show'], ['admin:dashboard']);
-    $router->post('/applications/{id}', [Admin\ApplicationController::class, 'update'], ['admin:dashboard']);
-    $router->post('/applications/{id}/email', [Admin\ApplicationController::class, 'email'], ['admin:dashboard']);
+    $router->get('/applications', [Admin\ApplicationController::class, 'index'], ['admin:applications']);
+    $router->get('/applications/{id}', [Admin\ApplicationController::class, 'show'], ['admin:applications']);
+    $router->post('/applications/{id}', [Admin\ApplicationController::class, 'update'], ['admin:applications']);
+    $router->post('/applications/{id}/email', [Admin\ApplicationController::class, 'email'], ['admin:applications']);
     $router->get('/donations', [Admin\DonationController::class, 'index'], ['admin:donations']);
-    $router->get('/messages', [Admin\MessageController::class, 'index'], ['admin:dashboard']);
-    $router->post('/messages/{id}', [Admin\MessageController::class, 'update'], ['admin:dashboard']);
+    $router->get('/messages', [Admin\MessageController::class, 'index'], ['admin:messages']);
+    $router->post('/messages/{id}', [Admin\MessageController::class, 'update'], ['admin:messages']);
 
     // Check-in
     $router->get('/checkin', [Admin\CheckinController::class, 'index'], ['admin:checkin']);

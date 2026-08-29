@@ -254,6 +254,16 @@ final class FinanceController extends AdminController
             $this->abort(404);
         }
 
+        // You cannot refund money that was never taken. The order screen only
+        // offers this form on a paid order, but the form is not the guard: a
+        // refund against an unpaid order is subtracted from net income while
+        // its total was never counted as income, so the surplus the treasurer
+        // reports would be understated by the whole amount.
+        if (!in_array($order['status'], ['paid', 'refunded'], true)) {
+            $this->flashError('That order has not been paid, so there is nothing to refund.');
+            $this->back(url('/admin/orders/' . $order['id']));
+        }
+
         $validator = Validator::make($this->request->all(), [
             'amount' => 'required|numeric|gt:0',
             'reason' => 'required|max:255',

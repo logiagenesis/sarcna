@@ -516,6 +516,7 @@ CREATE TABLE IF NOT EXISTS `donations` (
   `id`            INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `reference`     VARCHAR(24)  NOT NULL,
   `order_id`      INT UNSIGNED     NULL,
+  `order_item_id` INT UNSIGNED     NULL,
   `user_id`       INT UNSIGNED     NULL,
   `donation_type` VARCHAR(80)  NOT NULL DEFAULT '7th Tradition Donation',
   `name`          VARCHAR(160)     NULL,
@@ -527,6 +528,10 @@ CREATE TABLE IF NOT EXISTS `donations` (
   `created_at`    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uniq_donation_reference` (`reference`),
+  -- One donation row per donation line item. This is what makes fulfilment
+  -- idempotent: a repeated PayFast notification cannot record the same
+  -- donation twice, and an order carrying two donations records both.
+  UNIQUE KEY `uniq_donation_order_item` (`order_item_id`),
   KEY `idx_donations_status` (`status`, `created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 

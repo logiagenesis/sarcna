@@ -357,6 +357,20 @@ final class OrderService
         }
     }
 
+    /**
+     * One donation record per donation line item.
+     *
+     * The check here has to be per line item, not per order. An order can
+     * legitimately carry several donations — a Seventh Tradition contribution
+     * and a sponsored newcomer registration, say — and asking whether the
+     * ORDER already had a donation meant the first insert answered yes for all
+     * the rest. The money was taken and counted as income, but every donation
+     * after the first was missing from the ledger, the donations screen, the
+     * CSV and the public "raised so far" total.
+     *
+     * donations.order_item_id carries a unique index, so this stays idempotent
+     * when PayFast sends the same notification twice.
+     */
     private static function confirmDonations(array $order): void
     {
         Database::update('donations', ['status' => 'paid'], 'order_id = :order', ['order' => (int) $order['id']]);
@@ -366,7 +380,10 @@ final class OrderService
                 continue;
             }
 
-            $exists = (int) Database::scalar('SELECT COUNT(*) FROM donations WHERE order_id = ?', [(int) $order['id']]);
+            $exists = (int) Database::scalar(
+                'SELECT COUNT(*) FROM donations WHERE order_item_id = ?',
+                [(int) $item['id']]
+            );
 
             if ($exists > 0) {
                 continue;
@@ -377,6 +394,7 @@ final class OrderService
             Database::insert('donations', [
                 'reference'     => reference_code('DON'),
                 'order_id'      => (int) $order['id'],
+                'order_item_id' => (int) $item['id'],
                 'user_id'       => $order['user_id'] === null ? null : (int) $order['user_id'],
                 'donation_type' => $meta['donation_type'] ?? $item['description'],
                 'name'          => ($meta['is_anonymous'] ?? false) ? null : trim(($order['first_name'] ?? '') . ' ' . ($order['last_name'] ?? '')),

@@ -445,9 +445,132 @@ foreach (['/.env', '/app/Config/config.php', '/database/schema.sql', '/storage/l
     record('Security', "{$secret} is not served over the web", $status !== 200, "HTTP {$status}");
 }
 
-/* ------------------------------------------- 7. things that write data */
+// An order reference is not a password. It travels in confirmation email, in
+// the address bar and through PayFast, so anything that changes an order on
+// the strength of one alone can be fired by a stranger — or by an <img> tag on
+// another site, since this is a GET. The cancel page must therefore look at
+// who is asking, not just at what they typed.
+$strangerRef   = reference_code('AUD');
+$strangerOrder = Database::insert('orders', [
+    'reference'    => $strangerRef,
+    'cart_token'   => hash('sha256', 'audit-someone-elses-cart'),
+    'email'        => 'audit-stranger@example.invalid',
+    'first_name'   => 'Audit',
+    'last_name'    => 'Stranger',
+    'status'       => 'pending_payment',
+    'total_cents'  => 50000,
+    'checkin_code' => reference_code('CHK'),
+]);
 
-section('7. Committee actions that write data (each one verified in the database)');
+fetch($base . '/payment/cancelled?reference=' . urlencode($strangerRef));
+
+record(
+    'Security',
+    "A stranger's GET cannot cancel someone else's pending order",
+    Database::scalar('SELECT status FROM orders WHERE id = ?', [$strangerOrder]) === 'pending_payment',
+    'order ' . $strangerRef
+);
+
+Database::run('DELETE FROM payment_logs WHERE order_id = ?', [$strangerOrder]);
+Database::run('DELETE FROM orders WHERE id = ?', [$strangerOrder]);
+
+/* ------------------------------------------ 7. what each role may reach */
+
+section('7. Role boundaries (a limited admin, exercised for real)');
+
+/**
+ * The whole point of admin roles is that a volunteer given one job cannot
+ * reach the rest. That is only true if it holds at every door, not just the
+ * ones with a link on them: for a while the export route asked only for the
+ * broad "exports" capability, so a transport admin who was refused at
+ * /admin/finance could still download the finance pack and the customer list
+ * from /admin/export/. A CSV is the same data as the screen it came from.
+ *
+ * These checks stand up a real limited admin, sign in as them, and try the
+ * doors — including the ones they are supposed to get through, so a fix that
+ * over-blocks fails here just as loudly as one that under-blocks.
+ */
+$limitedEmail    = 'audit-role@example.invalid';
+$limitedPassword = 'AuditRole2027!';
+
+Database::run('DELETE FROM user_roles WHERE user_id IN (SELECT id FROM users WHERE email = ?)', [$limitedEmail]);
+Database::run('DELETE FROM users WHERE email = ?', [$limitedEmail]);
+
+$limitedId = Database::insert('users', [
+    'first_name'    => 'Audit',
+    'last_name'     => 'Role',
+    'email'         => $limitedEmail,
+    'phone'         => '0820000000',
+    'password_hash' => App\Services\AuthService::hash($limitedPassword),
+    'is_admin'      => 1,
+    'status'        => 'active',
+]);
+
+/** Sign in as the limited admin, holding exactly one role. */
+$asRole = static function (string $role) use ($base, $limitedId, $limitedEmail, $limitedPassword): bool {
+    Database::run('DELETE FROM user_roles WHERE user_id = ?', [$limitedId]);
+    Database::insert('user_roles', ['user_id' => $limitedId, 'role' => $role]);
+
+    signOut($base);
+
+    [, $body] = fetch($base . '/login');
+    fetch($base . '/login', ['_token' => token($body), 'email' => $limitedEmail, 'password' => $limitedPassword]);
+
+    [$status] = fetch($base . '/admin');
+
+    return $status === 200;
+};
+
+record('Roles', 'A transport admin can sign in', $asRole('transport_admin'));
+
+// What the job needs must still work.
+foreach (['/admin/transport' => 'the transport screen', '/admin/export/transport' => 'the passenger CSV'] as $path => $what) {
+    [$status] = fetch($base . $path);
+    record('Roles', "A transport admin can still reach {$what}", $status === 200, "HTTP {$status}");
+}
+
+// Everything else must not.
+$offLimits = [
+    '/admin/finance'              => 'the finance screen',
+    '/admin/customers'            => 'the customer list',
+    '/admin/export/finance-pack'  => 'the finance pack CSV',
+    '/admin/export/customers'     => 'the customer CSV',
+    '/admin/export/payments'      => 'the payments CSV',
+    '/admin/export/refunds'       => 'the refunds CSV',
+    '/admin/export/messages'      => 'the contact-message CSV',
+    '/admin/export/applications'  => 'the service-application CSV',
+];
+
+foreach ($offLimits as $path => $what) {
+    [$status] = fetch($base . $path);
+    record('Roles', "A transport admin is refused {$what}", $status === 403, "HTTP {$status}");
+}
+
+// A check-in volunteer is documented as "the check-in desk only". Service
+// applications carry clean time, phone numbers and email addresses, so they
+// must not be reachable on the one capability every role holds.
+record('Roles', 'A check-in volunteer can sign in', $asRole('checkin_volunteer'));
+
+[$status] = fetch($base . '/admin/checkin');
+record('Roles', 'A check-in volunteer can still reach the check-in desk', $status === 200, "HTTP {$status}");
+
+foreach (['/admin/applications' => 'service applications', '/admin/messages' => 'contact messages'] as $path => $what) {
+    [$status] = fetch($base . $path);
+    record('Roles', "A check-in volunteer cannot read {$what}", $status === 403, "HTTP {$status}");
+}
+
+Database::run('DELETE FROM user_roles WHERE user_id = ?', [$limitedId]);
+Database::run('DELETE FROM users WHERE id = ?', [$limitedId]);
+
+record(
+    'Roles',
+    'The temporary admin the audit created has been removed',
+    (int) Database::scalar('SELECT COUNT(*) FROM users WHERE email = ?', [$limitedEmail]) === 0
+);
+
+/* ------------------------------------------- 8. things that write data */
+
+section('8. Committee actions that write data (each one verified in the database)');
 
 // Section 6 signed out on purpose. Sign back in to exercise the write paths.
 if ($adminPassword === '') {
@@ -727,9 +850,9 @@ if ($paidOrder !== null) {
         Database::scalar('SELECT checked_in_at FROM orders WHERE id = ?', [(int) $paidOrder['id']]) === null);
 }
 
-/* ------------------------------------------ 8. cart and coupon arithmetic */
+/* ------------------------------------------ 9. cart and coupon arithmetic */
 
-section('8. Cart arithmetic and coupons (as a signed-out visitor)');
+section('9. Cart arithmetic and coupons (as a signed-out visitor)');
 
 record('Cart', 'Signed out before the cart checks', signOut($base));
 
@@ -783,9 +906,9 @@ fetch($base . '/cart/clear', ['_token' => token($cartBody)]);
 record('Cart', 'Clearing the cart empties it',
     (int) Database::scalar('SELECT COUNT(*) FROM cart_items WHERE cart_id = (SELECT id FROM carts WHERE token = ?)', [$cartToken]) === 0);
 
-/* -------------------------------------------- 9. public forms that submit */
+/* ------------------------------------------- 10. public forms that submit */
 
-section('9. Public forms that have to reach the committee');
+section('10. Public forms that have to reach the committee');
 
 [, $body] = fetch($base . '/contact');
 writes(
@@ -810,9 +933,9 @@ writes(
     static fn (): bool => Database::scalar('SELECT id FROM service_applications WHERE email = "audit-vol@example.invalid"') !== null
 );
 
-/* ------------------------------------------------- 10. data integrity */
+/* ------------------------------------------------- 11. data integrity */
 
-section('10. Data integrity (the invariants, checked in SQL)');
+section('11. Data integrity (the invariants, checked in SQL)');
 
 record('Integrity', 'No bed is double-booked on any night',
     (int) Database::scalar(
@@ -868,9 +991,9 @@ $fromFinance = \App\Services\FinanceService::summary(\App\Services\FinanceServic
 record('Integrity', 'The finance screens agree with the orders table to the cent',
     $reported === $fromFinance, money($fromFinance));
 
-/* ------------------------------------------------------- 11. email */
+/* ------------------------------------------------------- 12. email */
 
-section('11. Email');
+section('12. Email');
 
 $queueDir = dirname(__DIR__) . '/storage/email-queue';
 $before   = count(glob($queueDir . '/*'));
@@ -885,9 +1008,9 @@ record('Email', 'The mail queue directory is writable',
 record('Email', 'Paying an order queued its confirmation emails',
     $before > 0, $before . ' message(s) queued during this run');
 
-/* ----------------------------------------------------- 12. photographs */
+/* ----------------------------------------------------- 13. photographs */
 
-section('12. The photograph manager (how the real pictures get in)');
+section('13. The photograph manager (how the real pictures get in)');
 
 // The venue photographs cannot be fetched by this machine, and the target host
 // has no shell, so the committee's only route is this screen. If it breaks,
@@ -1037,7 +1160,7 @@ if ($photoRoomId > 0) {
 
 /* -------------------------------------------------------- clean-up */
 
-section('13. The audit cleans up after itself');
+section('14. The audit cleans up after itself');
 
 // The committee records the audit writes in section 7.
 $probes = [

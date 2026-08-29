@@ -283,7 +283,7 @@ it does not have to be the server:
 php tools/audit.php https://2027.sarcna.org.za --password=YOUR_ADMIN_PASSWORD
 ```
 
-**183 checks. All 183 must pass.** It exits non-zero on failure, so it can gate
+**200 checks. All 200 must pass.** It exits non-zero on failure, so it can gate
 a go-live decision. It creates test records and removes them again.
 
 **Run it a second time.** The total must be identical. A different total means

@@ -16,7 +16,16 @@ final class AuthService
     private static ?array $user = null;
     private static bool $resolved = false;
 
-    /** Admin capabilities per role. */
+    /**
+     * Admin capabilities per role.
+     *
+     * "dashboard" means the landing page and nothing else — it is the one
+     * capability every role holds, so nothing that carries personal detail may
+     * be gated on it. Service applications and contact messages carry clean
+     * time, phone numbers and email addresses, so they answer to capabilities
+     * of their own; only a super admin holds those, which is what the role
+     * table in docs/admin-user-guide.md has always described.
+     */
     public const ROLE_PERMISSIONS = [
         'super_admin' => ['*'],
         'finance_admin' => ['dashboard', 'finance', 'orders', 'payments', 'donations', 'coupons', 'exports', 'customers'],
