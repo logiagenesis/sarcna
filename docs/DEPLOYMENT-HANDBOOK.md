@@ -115,44 +115,37 @@ There is no `package.json`, `Dockerfile`, `composer.json`, `requirements.txt`,
 `vercel.json` or `netlify.toml`. A generic audit tool that looks for these will
 report "nothing found" — that is a fact about the tool, not the project.
 
-### 3.2 Branches — READ THIS CAREFULLY
+### 3.2 Branches — check, do not trust this page
 
+This section has gone stale three times as branches merged and moved. It now
+tells you how to find the answer instead of stating one that expires.
+
+**A plain `git clone` with no branch specified gets the repository's default
+branch, and the default branch is always the one to deploy.** That is the whole
+rule. You do not need to know its name.
+
+If you want to confirm it before uploading, these two commands answer it:
+
+```bash
+# What is the default branch called right now?
+curl -s https://api.github.com/repos/logiagenesis/sarcna | grep '"default_branch"'
+
+# Does main have the same content? (identical hashes = identical trees)
+git rev-parse HEAD^{tree}; git rev-parse origin/main^{tree}
 ```
-Default branch (remote HEAD):  claude/google-drive-folder-ruuvgu   →  12d064f
-main                                                              →  0b5409f
-claude/comprehensive-audit-lzwl4z                                 →  7ecd1aa
-```
-
-> **UPDATE — 29 August 2026, 11:11 UTC.** PR #1 has since been merged. `main`
-> is no longer behind: `main` (`f70d1fc`) and the default branch (`b534231`)
-> now have **byte-identical trees**, verified with `git rev-parse <ref>^{tree}`.
-> The instruction below still works exactly as written — a plain clone gets the
-> default branch, which is correct — and `main` is now equally correct. The rest
-> of this section is left as originally written, because it was true when
-> written and explains why the branch matters.
-
-**At the time of writing, the repository's default branch was
-`claude/google-drive-folder-ruuvgu`, not `main`.**
-
-`main` was then **6 commits and 44 files behind** the default branch
-(2,537 insertions, 113 deletions).
-
-Because the default branch is the current one, **a plain `git clone` with no
-branch specified gets the correct, most complete code automatically.**
 
 > **DO NOT** merge anything.
-> **DO NOT** switch branches.
-> **DO NOT** check out `main`.
+> **DO NOT** switch branches after cloning.
 > Clone and leave the branch alone.
 
-*(Note: the repository's own `DEPLOYMENT-HANDOFF.md` says "deploy from `main`."
-That instruction is stale — `main` is behind, and the default branch is the
-tested one. Follow this document.)*
+*(An earlier revision of this page named a specific branch, and the
+repository's `DEPLOYMENT-HANDOFF.md` once said "deploy from `main`". Both went
+out of date within a day. Run the commands.)*
 
 ### 3.3 File inventory
 
-- **366 tracked files**
-- **212 PHP files**
+- **371 tracked files**
+- **213 PHP files**
 - **8 `.htaccess` files** — all essential:
 
 ```
@@ -879,13 +872,22 @@ php -S 127.0.0.1:8000 -t public_html tools/dev-router.php
 Test suites:
 
 ```bash
-php tools/smoke-test.php                     # 44 checks, fast invariants
-php tools/race-test.php  http://127.0.0.1:8000   # 8 checks, concurrency
-php tools/audit.php      http://127.0.0.1:8000 --password=PASSWORD   # 200 checks
+php tools/smoke-test.php                        # 46 checks, fast invariants
+php tools/race-test.php     http://127.0.0.1:8000   # 8 checks, concurrency
+php tools/security-test.php http://127.0.0.1:8000   # 42 checks, adversarial
+php tools/audit.php         http://127.0.0.1:8000 --password=PASSWORD   # 200 checks
 ```
 
-Run all three on a staging copy, **never on a live site with real bookings.**
+Run all four on a staging copy, **never on a live site with real bookings.**
 Run the audit twice and confirm identical totals.
+
+The audit proves the site works. The security test proves it cannot be made to
+misbehave: one delegate reading another's order, a customer setting their own
+price, a forged payment notification marking an order paid or destroying
+someone else's booking, an admin role reaching a route it has no business on
+(all 343 route/role combinations are walked). It refuses to run against
+anything but a local address, because it forges payments and places orders.
+Findings and fixes are written up in `docs/security-audit-2026-08-29.md`.
 
 > **Note:** `php tools/package.php` requires the PHP `zip` extension. If it is
 > not installed the script exits with a message and produces nothing. The GitHub
@@ -903,7 +905,7 @@ apt-get install -y apache2 libapache2-mod-php8.4
 # Clone
 git clone https://github.com/logiagenesis/sarcna.git
 
-# Syntax across all 212 files
+# Syntax across all 213 files
 find . -name "*.php" -exec php8.4 -l {} \;
 
 # Install through the real web form
@@ -912,6 +914,7 @@ php8.4 tools/ci-install.php http://127.0.0.1:8000
 # Suites
 php8.4 tools/smoke-test.php
 php8.4 tools/race-test.php http://127.0.0.1:8000
+php8.4 tools/security-test.php http://127.0.0.1:8000
 php8.4 tools/audit.php http://127.0.0.1:8000 --password=Convention2027
 
 # Dotfile / checksum proof

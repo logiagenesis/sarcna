@@ -10,11 +10,16 @@ use App\Core\Logger;
 /**
  * PayFast integration.
  *
- * Four checks run on every payment notification before an order is marked paid:
+ * Five checks run on every payment notification before an order is marked paid:
  *   1. the signature matches (with the passphrase),
- *   2. the request came from a PayFast server,
+ *   2. the order exists,
  *   3. the amount matches the order to the cent,
- *   4. PayFast itself confirms the data when we post it back.
+ *   4. the request came from a PayFast server,
+ *   5. PayFast itself confirms the data when we post it back.
+ *
+ * Cheap checks run first so a forged notification costs us nothing — but any
+ * check whose failure *changes* an order waits until 4 and 5 have passed, so
+ * a forgery can be rejected without also being able to destroy a booking.
  *
  * A customer landing on the return URL proves nothing and never marks an order
  * paid.
@@ -158,21 +163,26 @@ final class PayFastService
             return ['ok' => false, 'reason' => 'unknown_order'];
         }
 
-        // 3. Amount.
-        $grossAmount = (float) ($data['amount_gross'] ?? 0);
+        // 3. Amount — checked here because it is free, but only *reported*.
+        //
+        // Failing the order is destructive: it hands back the shuttle seats and
+        // emails the delegate to say their payment failed. That must never
+        // happen on the word of a notification we have not yet proved came from
+        // PayFast. The signature above is only as strong as the passphrase, and
+        // PayFast permits an empty one — so with no passphrase configured,
+        // anyone who has seen a reference could forge a wrong amount and kill a
+        // stranger's booking. The rejection is decided here; the consequence
+        // waits until after checks 4 and 5.
+        $grossAmount    = (float) ($data['amount_gross'] ?? 0);
         $expectedAmount = ((int) $order['total_cents']) / 100;
+        $amountMatches  = abs($grossAmount - $expectedAmount) <= 0.01;
 
-        if (abs($grossAmount - $expectedAmount) > 0.01) {
+        if (!$amountMatches) {
             self::logEvent($orderId, 'itn_amount_mismatch', sprintf(
                 'Amount mismatch: PayFast sent R%.2f, order total is R%.2f.',
                 $grossAmount,
                 $expectedAmount
             ), $data);
-
-            self::recordPayment($order, $data, 'failed', true, $sourceIp);
-            OrderService::markFailed($order, 'Payment amount did not match the order total.');
-
-            return ['ok' => false, 'reason' => 'amount_mismatch'];
         }
 
         // 4. Source address.
@@ -191,6 +201,15 @@ final class PayFastService
             self::recordPayment($order, $data, 'failed', true, $sourceIp);
 
             return ['ok' => false, 'reason' => 'not_validated'];
+        }
+
+        // The notification is genuinely PayFast's. Now the amount mismatch from
+        // check 3 can safely be acted on.
+        if (!$amountMatches) {
+            self::recordPayment($order, $data, 'failed', true, $sourceIp);
+            OrderService::markFailed($order, 'Payment amount did not match the order total.');
+
+            return ['ok' => false, 'reason' => 'amount_mismatch'];
         }
 
         $status  = strtoupper((string) ($data['payment_status'] ?? ''));

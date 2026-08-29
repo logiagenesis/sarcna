@@ -24,6 +24,7 @@ use App\Services\CsvService;
 use App\Services\FinanceService;
 use App\Services\OrderService;
 use App\Services\PayFastService;
+use App\Services\SettingsService;
 
 if (PHP_SAPI !== 'cli') {
     exit("This script is for the command line only.\n");
@@ -332,10 +333,33 @@ $result = PayFastService::handleNotification($forged, '127.0.0.1');
 check('A forged notification is rejected', ($result['reason'] ?? '') === 'invalid_signature');
 check('The order was not touched by the forged notification', OrderService::find($orderId)['status'] === 'pending_payment');
 
+// A correctly signed notification, for one rand, from an address PayFast does
+// not own. It must be rejected, and — because failing an order hands back the
+// shuttle seats and emails the delegate — it must not change the order either.
+// Which of the five checks catches it is an implementation detail: the source
+// check fires before the amount check precisely so that a forgery cannot
+// destroy a booking on its way to being refused.
 $underpaid = array_merge($signed, ['amount_gross' => '1.00']);
 $underpaid['signature'] = PayFastService::signature($underpaid);
 $result = PayFastService::handleNotification($underpaid, '127.0.0.1');
-check('An under-payment is rejected', ($result['reason'] ?? '') === 'amount_mismatch');
+check('An under-payment is rejected', ($result['ok'] ?? true) === false);
+check('An under-payment never marks the order paid', OrderService::find($orderId)['status'] !== 'paid');
+
+// Whether the order should also be *failed* depends on who sent this. Under
+// tools/audit.php the source check is waived and the confirmation is stubbed,
+// so the notification stands in for PayFast itself and failing the order is
+// correct. Run on its own, 127.0.0.1 is not an address PayFast owns, so the
+// same notification is a forgery and the booking must survive it.
+$standingInForPayFast = SettingsService::bool('payfast_skip_ip_check', false);
+$status = OrderService::find($orderId)['status'];
+
+check(
+    $standingInForPayFast
+        ? 'A genuine under-payment from PayFast fails the order'
+        : 'A forged under-payment does not destroy the order',
+    $standingInForPayFast ? $status === 'failed' : $status === 'pending_payment',
+    "status {$status}"
+);
 
 /* ---------------------------------------------------------------- finance */
 
