@@ -44,6 +44,23 @@ that describes it:
       policy pages
 - [ ] A made-up URL shows the styled 404 page
 
+### Card grids
+
+Check these on the convention, venue, shop, registration and home pages, at a
+desktop width, at about a tablet width, and on a phone:
+
+- [ ] Every card in a section is the same height as every other card in it,
+      including the cards on the last row.
+- [ ] The rule above the price, the price itself and the button or "View" link
+      sit on one line across the whole section, not just across one row.
+- [ ] Card body copy starts at the same height whether the heading above it
+      ran to one line or two.
+- [ ] The night chips on the room cards sit at the same height as each other.
+- [ ] `--3` really is three across and `--4` really is four, on a wide screen.
+- [ ] With JavaScript turned off, the cards are still all the same height and
+      the prices still line up. Only the body copy may sit a line lower under
+      a long heading.
+
 ## 3. Accommodation — the important one
 
 - [ ] The room list shows free beds per night, and the numbers look right.
