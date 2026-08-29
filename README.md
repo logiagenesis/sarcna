@@ -192,6 +192,7 @@ repository · error pages that leak nothing.
 | Document | What it covers |
 |---|---|
 | **[`HANDOVER.md`](HANDOVER.md)** | **The handover document. Start here.** What you have, proof it works, how it works, the launch checklist |
+| [`docs/DEPLOYMENT-HANDOFF.md`](docs/DEPLOYMENT-HANDOFF.md) | Every deployment fact with its evidence — branch, commit, target, commands, env var names, runtimes, verdict |
 | [`docs/cpanel-deployment-guide.md`](docs/cpanel-deployment-guide.md) | Uploading, installing, going live |
 | [`docs/payfast-setup.md`](docs/payfast-setup.md) | Sandbox to live, the ITN URL, troubleshooting |
 | [`docs/smtp-setup.md`](docs/smtp-setup.md) | cPanel mailbox email, SPF and DKIM |
