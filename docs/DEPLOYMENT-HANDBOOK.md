@@ -123,10 +123,18 @@ main                                                              →  0b5409f
 claude/comprehensive-audit-lzwl4z                                 →  7ecd1aa
 ```
 
-**The repository's default branch is `claude/google-drive-folder-ruuvgu`, not
-`main`.**
+> **UPDATE — 29 August 2026, 11:11 UTC.** PR #1 has since been merged. `main`
+> is no longer behind: `main` (`f70d1fc`) and the default branch (`b534231`)
+> now have **byte-identical trees**, verified with `git rev-parse <ref>^{tree}`.
+> The instruction below still works exactly as written — a plain clone gets the
+> default branch, which is correct — and `main` is now equally correct. The rest
+> of this section is left as originally written, because it was true when
+> written and explains why the branch matters.
 
-`main` is **6 commits and 44 files behind** the default branch
+**At the time of writing, the repository's default branch was
+`claude/google-drive-folder-ruuvgu`, not `main`.**
+
+`main` was then **6 commits and 44 files behind** the default branch
 (2,537 insertions, 113 deletions).
 
 Because the default branch is the current one, **a plain `git clone` with no

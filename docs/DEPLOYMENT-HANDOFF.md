@@ -4,7 +4,7 @@ Every field below is filled in from the repository itself. Nothing here is
 "unknown" and nothing here is inferred: each answer names the file or the
 command that establishes it.
 
-Written 29 August 2026, corrected against commit `12d064f`.
+Written 29 August 2026. Corrected after PR #1 was merged; current as of `f70d1fc`.
 
 > **For the step-by-step deployment procedure, read
 > [`DEPLOYMENT-HANDBOOK.md`](DEPLOYMENT-HANDBOOK.md).** It was produced by
@@ -45,8 +45,8 @@ actually here.
 
 | Field | Value | How it is established |
 |---|---|---|
-| **Source-of-truth branch** | `claude/google-drive-folder-ruuvgu` | **This is the repository's actual default branch**, confirmed from the GitHub API: `"default_branch": "claude/google-drive-folder-ruuvgu"`. A plain `git clone` with no `-b` gets it. See *Branches* below — an earlier version of this file said `main`, and that was wrong |
-| **Source commit** | `341eaba9407f2a8e0e8e271df16e0361e329d40c` | Head of `claude/google-drive-folder-ruuvgu` |
+| **Source-of-truth branch** | Either — they are identical | PR #1 was merged on 29 August 2026. `main` and `claude/google-drive-folder-ruuvgu` now have **byte-identical trees**. The repository's *default* branch is still `claude/google-drive-folder-ruuvgu`, so a plain `git clone` gets the right code either way. See *Branches* |
+| **Source commit** | `f70d1fc` on `main`, `b534231` on the default branch | Identical trees; see *Branches* |
 | **Deployment target** | cPanel shared hosting, `cp71.domains.co.za`, LiteSpeed, PHP 8.4.24 | `docs/cpanel-deployment-guide.md` §"The verified environment" |
 | **Expected production URL** | `https://2027.sarcna.org.za` | `docs/cpanel-deployment-guide.md` Step 2. **Not yet live** — `sarcna.org.za` still points at Firebase (the 2026 site) and must be left alone |
 | **Install command** | *None.* Open `https://<domain>/install` in a browser and complete the form | `app/Controllers/InstallController.php`; `docs/cpanel-deployment-guide.md` Step 8 |
@@ -96,11 +96,21 @@ completion page says so explicitly.
 
 ## Branches
 
+**PR #1 was merged into `main` on 29 August 2026 at 11:11 UTC.**
+
 | Branch | Head | State |
 |---|---|---|
-| **`claude/google-drive-folder-ruuvgu`** | `12d064f` | **The repository's default branch, and the code to deploy.** CI green |
-| `main` | `0b5409f` | **Six commits behind.** Do not deploy this |
-| `claude/comprehensive-audit-lzwl4z` | `7ecd1aa` | A third branch. Review before deploying anything from it |
+| `main` | `f70d1fc` | **Current.** Contains everything |
+| `claude/google-drive-folder-ruuvgu` | `b534231` | The repository's default branch. **Byte-identical tree to `main`** |
+| `claude/comprehensive-audit-lzwl4z` | `7ecd1aa` | A third branch, not merged. Review before deploying anything from it |
+
+Verified identical, not assumed:
+
+```bash
+git rev-parse origin/main^{tree}
+git rev-parse origin/claude/google-drive-folder-ruuvgu^{tree}
+# same hash
+```
 
 **Clone and change nothing:**
 
@@ -108,24 +118,23 @@ completion page says so explicitly.
 git clone https://github.com/logiagenesis/sarcna.git
 ```
 
-No `-b`, no checkout, no merge. The default branch is the tested one.
+The default branch is still `claude/google-drive-folder-ruuvgu`, so that is
+what a plain clone gets — and since its tree is identical to `main`, that is
+correct. If you would rather deploy `main`, `git checkout main` is equally
+correct. There is no longer a wrong answer between those two.
 
-### A correction, recorded rather than quietly fixed
+### Two corrections, recorded rather than quietly fixed
 
-An earlier version of this file said *"deploy from `main`"*, and I repeated that
-advice several times. **It was wrong.** The GitHub API says:
-
-```json
-"default_branch": "claude/google-drive-folder-ruuvgu"
-```
-
-`main` is six commits and 44 files behind. Deploying it would ship a site with
-no venue photographs, the broken `picture()` path bug, no CI, and the audit
+**First:** an earlier version of this file said *"deploy from `main`"* while
+`main` was seven commits behind, and I repeated that advice several times. It
+was wrong at the time — deploying `main` then would have shipped a site with no
+venue photographs, the broken `picture()` path bug, no CI, and the audit
 clean-up defect that put fictional revenue in the finance screens.
 
-Merging PR #1 into `main` is still worth doing so the branch names stop being
-misleading — but that is tidying, not a prerequisite. **Deploy the default
-branch.**
+**Second:** the fix for that then said *"`main` is behind — deploy the default
+branch."* The merge has now made that stale too. Both statements were true when
+written; neither is true now. This is what a branch fact looks like: it has a
+date on it. The check above is the durable version — compare the trees.
 
 ---
 
@@ -155,7 +164,7 @@ deployability verdict needs.
 |---|---|
 | Live PayFast merchant ID, key and passphrase | **Outstanding.** Without them checkout cannot complete. Nothing else is blocked |
 | DNS for `2027.sarcna.org.za` | **Already done.** `DEPLOYMENT-HANDBOOK.md` §2.1 records the explicit A record resolving to `169.239.218.71` and reaching LiteSpeed, overriding the wildcard. Not verified from here — this environment cannot resolve external DNS — but verified there |
-| The code being on the server | **Outstanding.** The document root is empty; `/` returns a plain LiteSpeed 404 |
+| The code being on the server | **Outstanding.** The document root is empty; `/` returns a plain LiteSpeed 404. This is now the only thing between the repository and a live site |
 
 Neither outstanding item is a code defect.
 
