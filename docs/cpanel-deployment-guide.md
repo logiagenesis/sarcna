@@ -283,8 +283,12 @@ it does not have to be the server:
 php tools/audit.php https://2027.sarcna.org.za --password=YOUR_ADMIN_PASSWORD
 ```
 
-**169 checks. All 169 must pass.** It exits non-zero on failure, so it can gate
+**167 checks. All 167 must pass.** It exits non-zero on failure, so it can gate
 a go-live decision. It creates test records and removes them again.
+
+**Run it a second time.** The total must be identical. A different total means
+it left something behind — and what it creates is a *paid order*, which would
+sit in the treasurer's figures as revenue that never existed.
 
 ---
 

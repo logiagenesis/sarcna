@@ -18,6 +18,7 @@ declare(strict_types=1);
  */
 
 require_once dirname(__DIR__) . '/app/bootstrap.php';
+require_once __DIR__ . '/purge.php';
 
 use App\Core\Database;
 
@@ -869,7 +870,8 @@ record('Email', 'Paying an order queued its confirmation emails',
 
 section('12. The audit cleans up after itself');
 
-foreach ([
+// The committee records the audit writes in section 7.
+$probes = [
     ['contact_messages', 'subject = "AUDIT probe message"'],
     ['service_applications', 'email = "audit-vol@example.invalid"'],
     ['coupons', 'code = "AUDIT10"'],
@@ -878,26 +880,44 @@ foreach ([
     ['budget_lines', 'category = "AUDIT probe line"'],
     ['programme_items', 'title = "AUDIT probe session"'],
     ['faqs', 'question = "AUDIT probe question?"'],
-] as [$table, $where]) {
+];
+
+foreach ($probes as [$table, $where]) {
     Database::run("DELETE FROM {$table} WHERE {$where}");
 }
 
-$leftovers = 0;
+// The delegate account from section 2, its paid order, and everything
+// fulfilment did on its behalf: the bed, the shuttle seat, the stock, the
+// payment. Leaving these behind would put fictional revenue in front of the
+// treasurer, so the pattern is deliberately broad — every run this tool has
+// ever done, not just this one.
+$purged = purge_users('audit-%@example.invalid');
 
-foreach ([
-    ['contact_messages', 'subject = "AUDIT probe message"'],
-    ['service_applications', 'email = "audit-vol@example.invalid"'],
-    ['coupons', 'code = "AUDIT10"'],
-    ['products', 'name = "AUDIT probe product"'],
-    ['expenses', 'description = "AUDIT probe expense"'],
-    ['budget_lines', 'category = "AUDIT probe line"'],
-    ['programme_items', 'title = "AUDIT probe session"'],
-    ['faqs', 'question = "AUDIT probe question?"'],
-] as [$table, $where]) {
+record(
+    'Cleanup',
+    'The delegate account, its order and its fulfilment are gone',
+    true,
+    sprintf('%d account(s), %d order(s) removed', $purged['users'], $purged['orders'])
+);
+
+$leftovers = purge_users_leftovers('audit-%@example.invalid');
+
+foreach ($probes as [$table, $where]) {
     $leftovers += (int) Database::scalar("SELECT COUNT(*) FROM {$table} WHERE {$where}");
 }
 
 record('Cleanup', 'Every record the audit created has been removed', $leftovers === 0, $leftovers . ' left behind');
+
+// The books must balance again afterwards. If clean-up gave back the wrong
+// amount of stock or the wrong number of seats, this is where it shows.
+$oversold = (int) Database::scalar(
+    'SELECT COUNT(*) FROM transport_slots WHERE seats_taken < 0 OR seats_taken > capacity'
+);
+$negative = (int) Database::scalar('SELECT COUNT(*) FROM product_variants WHERE stock < 0')
+    + (int) Database::scalar('SELECT COUNT(*) FROM products WHERE track_stock = 1 AND stock < 0');
+
+record('Cleanup', 'Stock and shuttle seats were handed back correctly', $oversold === 0 && $negative === 0,
+    "{$oversold} slot(s) out of range, {$negative} negative stock row(s)");
 
 /* -------------------------------------------------------- summary */
 

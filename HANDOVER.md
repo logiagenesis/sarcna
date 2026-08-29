@@ -80,7 +80,7 @@ command you can run.
 php tools/audit.php --password=YOUR_ADMIN_PASSWORD
 ```
 
-**169 checks. All 169 currently pass.** It exits non-zero if anything fails,
+**167 checks. All 167 currently pass.** It exits non-zero if anything fails,
 so it can gate a deployment. It covers:
 
 | Section | What it proves |
@@ -96,7 +96,7 @@ so it can gate a deployment. It covers:
 | 9. Public forms | The contact form and a service application actually reach the committee |
 | 10. Data integrity | Nine SQL invariants: no bed double-booked, no hold on a booked bed, every booking on a real bed in the right unit, every paid order has a payment, order totals match their line items, no refund exceeds what was paid, no shuttle oversold, no negative stock, and the finance screens agree with the orders table to the cent |
 | 11. Email | All 14 templates installed, the queue is writable, and paying an order queued its confirmations |
-| 12. Clean-up | Every record the audit created is removed, and it proves it |
+| 12. Clean-up | Every record the audit created is removed — the delegate account, its paid order, its bed, its shuttle seat — and the stock and seats it consumed are handed back. It then counts what is left by joining back through the schema, not by looking only where it just deleted |
 
 It starts and tears down its own PayFast stub, clears this machine's
 rate-limit counters (the audit is a legitimate high-volume client; the limiter
@@ -105,15 +105,34 @@ byte-for-byte when it finishes — including if interrupted. Running it twice in
 a row gives the same result, and it leaves no test records behind.
 
 The transcript of the last full run is committed at
-[`docs/audit-result.txt`](docs/audit-result.txt) so you can read the result
-without running anything.
+[`docs/audit-result.txt`](docs/audit-result.txt), and the race test's at
+[`docs/race-test-result.txt`](docs/race-test-result.txt), so you can read both
+results without running anything.
 
-### The other two commands
+### The other commands
 
 ```bash
 php tools/smoke-test.php        # 38 invariant checks, all passing
+php tools/race-test.php         # 8 checks, all passing — see below
 php tools/seed-demo-orders.php  # realistic demo data; --purge removes it exactly
 ```
+
+### The double-booking guarantee, under real concurrency
+
+`tools/audit.php` and `tools/smoke-test.php` both check the bed rule one
+request at a time. That is not how it breaks in real life. `tools/race-test.php`
+builds a room with exactly one bed and then:
+
+1. fires **twelve genuinely simultaneous** booking requests at it from twelve
+   separate browser sessions, and asserts exactly one wins;
+2. does the same again with twelve concurrent processes writing **straight to
+   the database, bypassing the application entirely** — one write is accepted,
+   eleven are refused by the unique index with SQLSTATE 23000. This is the
+   proof that the guarantee lives in the schema and not merely in the PHP;
+3. cancels the winning booking and shows the bed is immediately bookable again
+   with no cleanup job in between.
+
+**8 checks, all passing.** It removes the room it built.
 
 ### Verified from a completely empty database
 
@@ -133,7 +152,7 @@ web form exactly as it will be on cPanel. Result:
 
 44 tables, 3 room types, 56 units, 112 beds, 15 products, 7 routes, 16
 departures, 14 email templates, 40 settings, 1 admin, **0 orders**. Visiting
-`/install` again returns HTTP 410. The full 122-check audit then passed
+`/install` again returns HTTP 410. The full 167-check audit then passed
 against that fresh install.
 
 ---
@@ -496,7 +515,7 @@ Work top to bottom. Each step is verifiable.
       the admin
 - [ ] **9. Legal review** of the policy pages
 - [ ] **10. Run the audit on the production host** — `php tools/audit.php`.
-      All 122 checks must pass
+      All 167 checks must pass
 - [ ] **11. Work through `docs/testing-checklist.md`** by hand on the live site
 - [ ] **12. Create the second super admin**
 - [ ] **13. Take a backup and prove it restores** — `docs/backup-restore-guide.md`
@@ -611,10 +630,16 @@ thing. Then `PayFastService`, then `OrderService::markPaid()`.
 ```bash
 find app public_html tools -name '*.php' -exec php -l {} \; | grep -v 'No syntax errors'
 php tools/smoke-test.php
-php tools/audit.php
+php tools/race-test.php
+php tools/audit.php --password=YOUR_ADMIN_PASSWORD
 ```
 
-Silence from the first, 38/38 from the second, 122/122 from the third.
+Silence from the first, 38/38, 8/8, then 167/167.
+
+**Run the audit twice in a row.** The second run must give the same number as
+the first. If it does not, something it created was left behind — which is a
+defect in the audit, and a real one: those records land in the finance
+ledger. See `tools/purge.php`.
 
 **The one constraint to preserve:** this must keep running on ordinary cPanel
 shared hosting with nothing but PHP and MySQL. Any change that adds a server
@@ -638,13 +663,15 @@ dependency is a regression, however nice the library.
 
 | Command | What it does |
 |---|---|
-| `php tools/audit.php` | **The whole checklist.** 122 checks, exits non-zero on failure |
+| `php tools/audit.php` | **The whole checklist.** 167 checks, exits non-zero on failure |
 | `php tools/smoke-test.php` | 38 invariant checks: beds, holds, payments, finance, CSV safety |
+| `php tools/race-test.php` | 8 checks: twelve simultaneous buyers, one bed, exactly one winner |
 | `php tools/seed-demo-orders.php [n]` | Realistic demo orders through the real cart and fulfilment |
 | `php tools/seed-demo-orders.php --purge` | Removes every demo order, restoring stock and seats exactly |
 | `php tools/import-venue-images.php` | Imports 25 curated Boschendal photographs (`--list`, `--dry-run`) |
 | `php tools/generate-images.php` | Regenerates the placeholder illustrations |
 | `php tools/package.php` | Builds the upload zip for cPanel |
+| `tools/purge.php` | Not a command — the shared routine `audit.php` and `seed-demo-orders.php` both use to remove an order **and** hand back the stock and shuttle seats fulfilment took for it |
 | `php -S 127.0.0.1:8000 -t public_html tools/dev-router.php` | Local development server |
 
 ### Documentation
@@ -674,6 +701,30 @@ dependency is a regression, however nice the library.
 | `demo.volunteer@sarcna.org.za` | `Convention2027` |
 
 The administrator account is the one created during installation.
+
+---
+
+## The rule this project is held to
+
+**No guessing.**
+
+Every claim in this document is attached to a command that produces evidence —
+an HTTP status, a row count, a check total, a page that says Ready. Where
+something has not been verified, it is written down as not verified, in §10.
+
+That rule found two real defects the day this section was written, both of
+which had been sitting behind a green tick:
+
+| What was claimed | What was actually true |
+|---|---|
+| "Every record the audit created has been removed — 0 left behind" | 230 records were left behind: 14 delegate accounts, 12 paid orders, their beds, their shuttle seats and their payments. The clean-up only looked at eight small tables and never at the order it had just paid for. Fictional revenue was accumulating in the finance screens on every run. |
+| "122 checks" in three places, "169 checks" in two others | Neither. The audit has 167. Nobody had run it and read the total. |
+
+Both are fixed — `tools/purge.php` now does the clean-up for both tools, and
+the clean-up check counts what is left by joining back through the schema
+rather than by looking only where it just deleted. The lesson is the general
+one: **a passing test that was never made to fail is not evidence.** If you
+change the audit, break something on purpose first and confirm it goes red.
 
 ---
 

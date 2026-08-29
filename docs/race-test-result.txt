@@ -1,0 +1,24 @@
+
+SARCNA 2027 — race test (12 simultaneous buyers, one bed)
+============================================================
+
+Built one room, one unit, one bed (#116) for the night of 2027-08-26.
+
+Round 1 — twelve separate browsers, all clicking at once
+  PASS Exactly one of 12 simultaneous buyers holds the bed — 1 hold(s) on the bed
+  PASS Only that one buyer has it in their cart — 1 cart line(s)
+
+Round 2 — the same race, but bypassing the application entirely
+  PASS Exactly one of 12 concurrent writes is accepted — 1 accepted, 11 refused by the unique index
+  PASS Every loser was refused cleanly, with no unexpected errors — 0 unexpected
+  PASS The bed ends up with exactly one live booking — 1 live booking(s)
+
+Round 3 — cancelling puts the bed straight back on sale
+  PASS Cancelling clears the bed with no cleanup job
+  PASS Somebody else can immediately book the freed bed
+
+Cleaning up
+  PASS The test removed everything it created
+
+============================================================
+8 passed, 0 failed.

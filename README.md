@@ -107,7 +107,7 @@ data invariants:
 php tools/audit.php --password=YOUR_ADMIN_PASSWORD
 ```
 
-169 checks. It exits non-zero if anything fails, so it can gate a deploy, and
+167 checks. It exits non-zero if anything fails, so it can gate a deploy, and
 it removes everything it creates. On Windows use the same command in
 PowerShell — see **[HANDOVER.md](HANDOVER.md)** for the Windows notes.
 
@@ -118,8 +118,19 @@ fulfilment and PayFast verification:
 php tools/smoke-test.php
 ```
 
-Both create their own test data and clean up after themselves. Run them on a
-staging copy, not on a live site with real bookings.
+And to prove the central promise — that two people cannot take the same bed —
+under genuine concurrency rather than one request at a time:
+
+```bash
+php tools/race-test.php
+```
+
+Twelve simultaneous buyers, one bed, exactly one winner. 8 checks.
+
+All three create their own test data and clean up after themselves. Run them on
+a staging copy, not on a live site with real bookings. **Run the audit twice
+and check you get the same total both times** — a rising total means something
+it created was left behind.
 
 ---
 
