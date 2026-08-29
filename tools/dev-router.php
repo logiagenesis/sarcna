@@ -14,3 +14,4 @@ if ($path !== '/' && is_file($file)) {
 }
 
 require __DIR__ . '/../public_html/index.php';
+

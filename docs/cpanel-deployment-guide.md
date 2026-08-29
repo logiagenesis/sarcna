@@ -1,179 +1,364 @@
-# cPanel deployment guide
+# Deploying to cPanel — SARCNA 2027
 
-How to put the SARCNA 2027 Convention website onto a normal cPanel shared
-hosting account. No SSH, no command line, no Node.js.
-
-Allow about 45 minutes for a first deployment.
-
----
-
-## 1. What you need before you start
-
-- A cPanel login for the hosting account.
-- The domain pointing at that account (or a temporary subdomain to test on).
-- A copy of this repository as a ZIP file. Build one with `php tools/package.php`,
-  or download the repository ZIP from GitHub.
-- PayFast merchant ID, merchant key and passphrase (sandbox first).
-- A mailbox on the domain for sending email, e.g. `no-reply@sarcna.org.za`.
-
-Check the account meets the requirements: **PHP 8.1 or newer**, with the
-`pdo_mysql`, `mbstring`, `openssl`, `curl` and `gd` extensions. In cPanel this
-is under **Software → Select PHP Version**.
+**Read this whole file before touching the server. It takes four minutes. The
+first deployment attempt failed for several hours because this file was not
+opened.**
 
 ---
 
-## 2. Create the database
+## ⛔ The one fact that breaks everything
 
-1. cPanel → **MySQL® Databases**.
-2. Under *Create New Database*, enter `sarcna27` and press **Create Database**.
-   cPanel prefixes it with your account name, giving something like
-   `cpuser_sarcna27`. Write the full name down.
-3. Under *MySQL Users → Add New User*, create a user (e.g. `sarcna`) with a
-   long random password. Write the full username and password down.
-4. Under *Add User To Database*, add the user to the database and grant
-   **ALL PRIVILEGES**.
-
----
-
-## 3. Upload the files
-
-1. cPanel → **File Manager**.
-2. Go to the account's home directory — the folder that *contains*
-   `public_html`, not `public_html` itself.
-3. **Upload** the ZIP, then **Extract** it there.
-4. Move the extracted contents up one level if the ZIP created a wrapper
-   folder, so the final layout is:
+This application needs a **two-level folder structure**. The private folders
+must be the **parent** of the web root, never its siblings:
 
 ```
-/home/cpuser/
-    app/
-    database/
-    docs/
-    storage/
-    tools/
-    public_html/          ← the domain's document root
-    .env.example
-    README.md
+sarcna2027/                 ← the application root (NOT the document root)
+├── app/                    ← private
+├── database/               ← private
+├── docs/                   ← private
+├── storage/                ← private
+├── tools/                  ← private
+├── .env                    ← private. Database password.
+├── .htaccess               ← protects everything above. HIDDEN FILE.
+└── public_html/            ← THIS is the document root. Only this is public.
+    ├── index.php
+    ├── .htaccess           ← HIDDEN FILE
+    ├── preflight.php
+    ├── assets/
+    └── uploads/
 ```
 
-If the account already had files in `public_html`, back them up and remove
-them first — `public_html` must end up containing this project's
-`index.php`, `.htaccess` and `assets`.
+`public_html/index.php` requires `../app/bootstrap.php`.
 
-> **Add-on domains and subdomains.** If the site is not on the primary domain,
-> point the domain's document root at this project's `public_html` in
-> cPanel → **Domains**, and keep `app`, `database` and `storage` in the folder
-> above it.
+**If you flatten this — putting `app/` next to `index.php` — the site returns
+HTTP 500 and writes nothing to any log.** That is precisely what happened on
+the first attempt, and it cost hours. `preflight.php` (Step 7) detects it in
+one second.
 
-### Permissions
+---
 
-In File Manager, select each folder, choose **Permissions**, and set:
+## The verified environment
 
-| Path | Permissions |
+Confirmed by direct observation on 29 August 2026, not assumed.
+
+| Item | Value |
 |---|---|
-| All folders | `755` |
-| All files | `644` |
-| `storage` and everything in it | `755` (writable) |
-| `public_html/uploads` | `755` (writable) |
+| Host | domains.co.za, Web Hosting Basic |
+| Control panel | cPanel 136, Jupiter theme |
+| Server | `cp71.domains.co.za` |
+| Web server | **LiteSpeed** (reads `.htaccess`, like Apache) |
+| PHP | **8.4.24** — the application requires 8.1+ ✓ |
+| cPanel user | `sarcnaor`, home `/home/sarcnaor` |
+| Disk quota | 25 GB |
+| **SSH** | **Blocked.** Ports 22, 2222 and 21098 all time out. |
+| **cPanel API** | **Unavailable.** No token feature; Basic Auth rejected. |
+| **Document root outside `public_html`** | **Not permitted on this account.** cPanel silently relocates it. |
+
+### What those constraints mean in practice
+
+1. **You cannot run `php tools/audit.php` on this server.** There is no shell.
+   Use `preflight.php` in the browser (Step 7), then run the full audit from
+   any other machine that can reach the site (Step 11).
+2. **The application root has to live inside `public_html`.** That is why the
+   repository ships an `.htaccess` in its root and in every private folder.
+   **Do not delete them — they are the only thing keeping `.env` off the web.**
+3. **File Manager is your only file tool**, and its listing caches
+   aggressively. **Click Reload before believing any directory is empty.**
+
+### Do not disturb
+
+- `sarcna.org.za` points to **Firebase** (`199.36.158.100`) — that is the live
+  2026 site. Leave its A record alone.
+- The account's own `public_html` holds a **separate WordPress install** plus
+  `sarcnadev`, `sarcnadev26` and `test.sarcna.org.za`.
+- **Two folders will be called `public_html`.** The account's, and this
+  project's. Always use full paths. Confusing them nearly destroyed the live
+  WordPress site.
 
 ---
 
-## 4. Run the installer
+## Step 0 — Before you start
 
-Visit `https://yourdomain/install`.
-
-The page first shows a set of server checks. Anything red should be fixed
-before continuing — usually a missing PHP extension or a folder that is not
-writable.
-
-Then fill in:
-
-| Section | What to enter |
-|---|---|
-| **Database** | The full database name, user and password from step 2. Host is normally `localhost`. |
-| **Website** | The full `https://` address, the public contact email, and the WhatsApp number in international format (e.g. `27821234567`). |
-| **Administrator** | Your name, email and a strong password. This becomes the first super admin. |
-| **PayFast** | Start in **sandbox**. Merchant ID, key and passphrase. |
-| **Email** | Choose **SMTP** and use a cPanel mailbox — see `docs/smtp-setup.md`. |
-| **Analytics** | GA4 measurement ID and the Search Console verification code, if you have them. Both can be added later. |
-
-Leave **Load the demo content** ticked for the committee preview. It creates
-the room types, 87 units, 262 beds, products, transport routes, programme, FAQs
-and gallery.
-
-Press **Install the website**. When it finishes it will have:
-
-- created every table,
-- seeded the settings, email templates and policy pages,
-- loaded the demo content and generated the accommodation inventory,
-- created your admin account,
-- written `.env` in the application root,
-- locked itself so it cannot be run again.
+- [ ] **Check disk usage is under quota.** cPanel home page, right-hand column.
+      An over-quota account fails uploads *silently*.
+- [ ] **Back up** the existing site and databases (cPanel → Backup).
+- [ ] Confirm PHP is 8.1+ (cPanel → MultiPHP Manager).
+- [ ] Note the server IP (cPanel → right sidebar → Shared IP Address).
+- [ ] **Never paste a password into a chat window.** Use cPanel's generator and
+      a password manager.
 
 ---
 
-## 5. Straight after installing
+## Step 1 — Get the code up, with hidden files intact
 
-1. Sign in at `https://yourdomain/login` and open
-   **Admin → Settings → Diagnostics**. Everything should be green apart from
-   the sandbox notice.
-2. Send yourself a test email from that page.
-3. Run one full sandbox checkout, including the PayFast notification — see
-   `docs/payfast-setup.md` and `docs/testing-checklist.md`.
-4. Check that `https://yourdomain/.env` returns **403 or 404**, never the file
-   contents. If it shows the file, `.env` is in the wrong place: it belongs one
-   level above `public_html`.
+**Windows Explorer's "Send to → Compressed folder" silently drops every file
+whose name starts with a dot.** That deletes all eight `.htaccess` files and
+`.env.example`. It caused the first 404 of the failed attempt. Use one of these
+instead:
 
----
+**Best — cPanel → Git™ Version Control**
+Clone `https://github.com/logiagenesis/sarcna.git`. Preserves everything, and
+updating later is one click.
 
-## 6. SSL
+**Or — the project's own packager**
+On any machine with PHP: `php tools/package.php`. It writes a zip to `dist/`
+containing exactly what belongs on a server and nothing that does not — no
+`.git`, no `.env`, no demo uploads — **with all hidden files included**. Upload
+that zip and extract it in File Manager.
 
-cPanel → **SSL/TLS Status** → **Run AutoSSL**. Let's Encrypt certificates are
-issued and renewed automatically. The site forces HTTPS in `.htaccess` once a
-certificate is present.
+**Or — 7-Zip**, with hidden files explicitly included. **Never Windows
+Explorer.**
 
----
+### Verify before continuing
 
-## 7. Going live
+In File Manager: **Settings → Show Hidden Files (dotfiles) → Save.** Leave it
+on permanently. Then confirm these exist:
 
-Work through `docs/testing-checklist.md` first. Then:
+- [ ] `.env.example` in the application root
+- [ ] `.htaccess` in the application root
+- [ ] `public_html/.htaccess`
 
-1. **Admin → Settings**: switch off *Show the committee preview banner*.
-2. Replace placeholder imagery with licensed venue photography
-   (`docs/image-source-log.md`).
-3. Have the policy pages reviewed and update them in **Admin → Content → Pages**.
-4. Confirm the dates, venue, prices and room inventory with the committee.
-5. Edit `.env` and set `PAYFAST_MODE=live` with the live merchant credentials.
-6. Delete the demo customer accounts in **Admin → Customers** (they are marked
-   *Demo*).
-7. Submit the sitemap in Search Console (`docs/search-console-setup.md`).
-8. Take a full backup (`docs/backup-restore-guide.md`).
+**If any are missing, the upload was incomplete. Redo it — do not carry on.**
 
 ---
 
-## 8. Updating the site later
+## Step 2 — Create the subdomain with the right document root
 
-The application has no build step, so an update is a file copy:
+cPanel → **Domains → Create A New Domain**
 
-1. Take a backup first.
-2. Upload the changed files over the old ones. **Do not overwrite `.env`,
-   `public_html/uploads` or `app/Config/installed.lock`.**
-3. If the release notes mention a schema change, follow
-   `database/migrations.md`.
-4. Reload the site and check **Admin → Settings → Diagnostics**.
+- Domain: `2027.sarcna.org.za`
+- **Untick "Share document root"**
+- Document root: `public_html/sarcna2027/public_html`
+
+Giving the full target for clarity:
+
+```
+/home/sarcnaor/public_html/sarcna2027/public_html
+```
+
+**Verify:** the Domains list must show that exact path. cPanel sometimes
+relocates it silently. **If it is wrong, fix it now.** A wrong document root
+costs one minute to correct here and several hours to correct later.
 
 ---
 
-## 9. Troubleshooting
+## Step 3 — Put the files in the right place
 
-| Symptom | Cause and fix |
-|---|---|
-| Blank white page | PHP error with display off. Open `storage/logs/php-*.log` or **Admin → Logs**. |
-| "This application requires PHP 8.1" | Change the version in cPanel → Select PHP Version. |
-| Redirected to `/install` on every page | `app/Config/installed.lock` is missing. Re-run the installer or restore the file. |
-| "The installer has already been run and is locked" | Expected. Delete `app/Config/installed.lock` only if you really want to reinstall — it will not drop existing tables, but it will re-seed. |
-| Styles missing, plain text page | `.htaccess` is not being read, or `mod_rewrite` is off. Ask the host to enable `AllowOverride All`. |
-| 500 on every page | Usually a database credential problem. Check `.env` against cPanel → MySQL Databases. |
-| Images upload but do not appear | `public_html/uploads` is not writable. Set it to `755`. |
-| Orders stay "awaiting payment" | PayFast cannot reach the notify URL, or outbound HTTPS is blocked. See `docs/payfast-setup.md`. |
-| Emails never arrive | Wrong SMTP details, or the mailbox needs SPF. See `docs/smtp-setup.md`. |
+Everything from the repository goes into
+`/home/sarcnaor/public_html/sarcna2027/`, keeping the two-level structure
+shown at the top of this file.
+
+**Verify — this is the check that matters most:**
+
+- [ ] `/home/sarcnaor/public_html/sarcna2027/app/` exists
+- [ ] `/home/sarcnaor/public_html/sarcna2027/public_html/index.php` exists
+- [ ] **`app/` and `index.php` are NOT in the same folder**
+
+---
+
+## Step 4 — Database
+
+cPanel → **MySQL® Databases**
+
+1. Create database: `sarcnaor_2027`
+2. Create user: `sarcnaor_2027u` — use cPanel's **password generator**, and
+   save it to a password manager
+3. **Add user to database → tick ALL PRIVILEGES → Make Changes**
+
+**Verify:** the "Current Databases" table lists the user under the database.
+If it does not, the grant did not happen — do it again.
+
+---
+
+## Step 5 — `.env`
+
+Copy `.env.example` to `.env` in the **application root** (not in
+`public_html`), then fill in the values.
+
+**Only edit keys that already exist in `.env.example`. Never invent key
+names** — inventing them wasted a full diagnostic cycle on the first attempt.
+
+At minimum: `APP_URL`, `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASS`.
+The installer writes the rest.
+
+---
+
+## Step 6 — DNS
+
+There is a wildcard record `*.sarcna.org.za` pointing at Firebase, so a new
+subdomain resolves to Firebase unless an explicit record overrides it.
+
+At domains.co.za, add:
+
+| Host | TTL | Type | Value |
+|---|---|---|---|
+| `2027.sarcna.org.za` | 300 | A | *(your cPanel server IP)* |
+
+**Leave the `sarcna.org.za` A record alone.** That is the live 2026 site.
+
+**Verify** (PowerShell on your own PC):
+
+```powershell
+curl.exe -k -I https://2027.sarcna.org.za
+```
+
+The `Server:` header must say **LiteSpeed**. If it says anything else, or you
+get a Firebase 404, DNS has not propagated yet or the record is wrong.
+
+---
+
+## Step 7 — Run the preflight ⭐
+
+**In your browser:** `https://2027.sarcna.org.za/preflight.php`
+
+This is the step that would have prevented the first failure. It checks, with
+evidence rather than assumption:
+
+- PHP version and every required extension
+- **the folder layout** — including specifically detecting the flat layout
+  that returns HTTP 500
+- whether the hidden `.htaccess` files survived the upload
+- whether `.env` exists and has the required keys filled in
+- whether **the database actually connects** with those credentials
+- whether `.env`, `app/`, `database/`, `tools/` and `storage/` **refuse HTTP
+  requests** — asked over real HTTP against your live site, because "the
+  `.htaccess` is there" is not the same claim as "the request is refused"
+- whether `storage/` and `uploads/` are writable
+
+Every failure tells you exactly what to do. **Do not proceed to Step 8 until
+this page says "Ready."**
+
+---
+
+## Step 8 — Install
+
+Open `https://2027.sarcna.org.za/install` and complete the form.
+
+Expected:
+
+```
+✓ Database tables created (47 statements)
+✓ Settings and email templates seeded
+✓ Demo content loaded (22 statements)
+✓ Accommodation inventory generated (56 units, 112 beds)
+✓ Administrator account created
+✓ Site settings saved
+✓ .env written to the application root
+✓ Installer locked (app/Config/installed.lock)
+```
+
+**Verify:** revisit `/install`. It must return **HTTP 410**. If it does not,
+the installer did not lock itself and anyone could re-run it.
+
+---
+
+## Step 9 — SSL
+
+cPanel → **SSL/TLS Status** → tick `2027.sarcna.org.za` → **Run AutoSSL**.
+
+**Verify:** `curl.exe -I https://2027.sarcna.org.za` succeeds **without** `-k`.
+
+---
+
+## Step 10 — Delete the preflight
+
+`preflight.php` reports server paths, so it must not stay on a live site.
+There is a **Delete preflight.php now** button at the bottom of the page. Use
+it, then confirm:
+
+```powershell
+curl.exe -I https://2027.sarcna.org.za/preflight.php
+```
+
+Must return **404**.
+
+---
+
+## Step 11 — Run the full audit
+
+From **any machine with PHP** that can reach the site — your own PC is fine,
+it does not have to be the server:
+
+```powershell
+php tools/audit.php https://2027.sarcna.org.za --password=YOUR_ADMIN_PASSWORD
+```
+
+**169 checks. All 169 must pass.** It exits non-zero on failure, so it can gate
+a go-live decision. It creates test records and removes them again.
+
+---
+
+## Step 12 — Before you announce the URL
+
+Work through the launch checklist in **`HANDOVER.md` §8**. The essentials:
+
+- [ ] Import the venue photographs — `php tools/import-venue-images.php`
+- [ ] Enter the real WhatsApp number, GA4 ID and Search Console token
+- [ ] Configure SMTP, and send yourself one of every email
+- [ ] Check **Admin → Settings → Diagnostics** — *PayFast reachable* must be green
+- [ ] Purge the demo data — `php tools/seed-demo-orders.php --purge`
+- [ ] Delete the two demo accounts
+- [ ] Create a **second** super admin
+- [ ] Take a backup and prove it restores
+
+---
+
+## Troubleshooting
+
+These are the real symptoms from the failed attempt, with their real causes.
+
+### HTTP 500, and nothing in any log
+
+**Almost certainly the flat layout.** Run `preflight.php` — it names the
+problem outright. To see the actual error, create `public_html/debug.php`
+containing:
+
+```php
+<?php
+ini_set('display_errors', '1');
+error_reporting(E_ALL);
+require __DIR__ . '/index.php';
+```
+
+Then request it, read the fatal, **and delete `debug.php` immediately.** Do not
+leave it on a live server.
+
+### HTTP 404 on `/install` when the file structure looks fine
+
+`public_html/.htaccess` is missing, so LiteSpeed is looking for a real folder
+called `install` instead of routing through `index.php`. Your upload dropped
+hidden files. Re-upload properly (Step 1).
+
+### A directory looks empty in File Manager but should not be
+
+**Click Reload.** File Manager caches aggressively and repeatedly reported
+populated folders as empty during the failed attempt. Never trust a single
+observation.
+
+### The subdomain shows the Firebase 404 page
+
+DNS. The wildcard record is winning. Add the explicit A record (Step 6) and
+allow up to 30 minutes.
+
+### "Access denied for user" during install
+
+The database user was created but not **added to the database with ALL
+PRIVILEGES**. Redo Step 4. `preflight.php` catches this before you get here.
+
+### Uploads or extraction fail with no clear message
+
+Check the disk quota. An over-quota account fails silently.
+
+### `.env` is readable in a browser
+
+The application-root `.htaccess` is missing or the document root is pointing at
+the application root instead of `public_html`. **Fix immediately** — that file
+contains the database password. `preflight.php` tests this over real HTTP.
+
+---
+
+## The rule that matters more than any step here
+
+**Do not guess.** If you have not checked, say so. Every command in this file
+produces evidence — an HTTP status, a directory listing, a page that says
+Ready. A claim without one of those is not a status.

@@ -1,0 +1,39 @@
+# ------------------------------------------------------------------
+# SARCNA 2027 — application root protection
+#
+# On hosting where the document root cannot be placed outside
+# public_html (which is the case on the convention's cPanel account),
+# this folder sits INSIDE the account's web tree. Everything here
+# except public_html/ is private and must never be served.
+#
+# Deleting this file exposes .env — the database password.
+# ------------------------------------------------------------------
+
+Options -Indexes
+
+# Secrets, source, data, docs and tooling: never over HTTP.
+<FilesMatch "^\.env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(app|database|storage|tools|docs)(/|$) - [F,L]
+</IfModule>
+
+# Belt and braces for servers without mod_rewrite.
+<FilesMatch "\.(env|sql|md|lock|ini|yml|yaml|bak|sh|log)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

@@ -13,7 +13,7 @@ document is the one to read first and the one to hand over.
 | **Repository** | `github.com/logiagenesis/sarcna` — branch `main` |
 | **Stack** | PHP 8.1+ and MySQL/MariaDB on ordinary cPanel shared hosting |
 | **Runtime dependencies** | None. No Composer, no npm, no CDN, no build step |
-| **Status** | Feature-complete and audited. Not yet deployed to a live host. |
+| **Status** | Feature-complete and audited. One deployment attempt failed on 29 Aug 2026 for reasons since fixed — see §3. |
 
 ---
 
@@ -158,7 +158,28 @@ Optional, so the admin screens have something to show:
 php tools/seed-demo-orders.php 110
 ```
 
-To put it on a real cPanel host, follow `docs/cpanel-deployment-guide.md`.
+### Putting it on the server
+
+**Read [`docs/cpanel-deployment-guide.md`](docs/cpanel-deployment-guide.md)
+completely before touching the server.** It is four minutes. The first
+deployment attempt failed for several hours because that file was never
+opened.
+
+The three things that caused that failure, and what now prevents each:
+
+| What went wrong | What stops it now |
+|---|---|
+| The private folders were flattened next to `index.php`, so the site returned HTTP 500 with nothing in any log | `public_html/preflight.php` detects exactly this and names the fix |
+| A Windows Explorer zip silently dropped every `.htaccess`, so `/install` 404'd | The guide bans Explorer zips; `php tools/package.php` builds a zip with all hidden files, verified; preflight reports any that are missing |
+| `.env` sat inside a web-served folder because this host will not allow a document root outside `public_html` | The repository now ships an `.htaccess` in its root and in every private folder, and preflight proves over real HTTP that each one refuses requests |
+
+**This hosting has no SSH and no cPanel API**, so `php tools/audit.php` cannot
+run on the server. Open `preflight.php` in a browser instead, then run the full
+audit from any other machine that can reach the site:
+
+```bash
+php tools/audit.php https://2027.sarcna.org.za --password=YOUR_ADMIN_PASSWORD
+```
 
 ### On Windows (PowerShell)
 

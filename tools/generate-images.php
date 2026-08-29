@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit("This script is for the command line only.\n");
+}
+
+
 /**
  * Placeholder imagery generator (PHP GD).
  *
