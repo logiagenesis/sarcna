@@ -195,7 +195,8 @@ The three things that caused that failure, and what now prevents each:
 | A Windows Explorer zip silently dropped every `.htaccess`, so `/install` 404'd | The guide bans Explorer zips; `php tools/package.php` builds a zip with all hidden files, verified; preflight reports any that are missing |
 | `.env` sat inside a web-served folder because this host will not allow a document root outside `public_html` | The repository now ships an `.htaccess` in its root and in every private folder, and preflight proves over real HTTP that each one refuses requests |
 
-**This hosting has no SSH and no cPanel API**, so `php tools/audit.php` cannot
+**No SSH session has been established with this hosting, and the cPanel API is
+unavailable**, so `php tools/audit.php` cannot
 run on the server. Open `preflight.php` in a browser instead, then run the full
 audit from any other machine that can reach the site:
 
@@ -491,7 +492,11 @@ both `curl` and the fetching tool, and every other image host is blocked the
 same way. The Drive folder holds five text files and no photographs. So the
 files were never obtainable from here — which is exactly why the upload screen
 exists, rather than a script somebody would have to find a shell to run. The
-target host has no SSH, so a script would have been useless there anyway.
+target host has no working shell, so a script would have been useless there
+anyway. (cPanel does show an SSH Access page, but the ports did not answer
+when tested — see the deployment guide. Even with a shell, a command-line
+importer puts the committee's photographs behind a terminal, which is the
+wrong place for them.)
 
 `tools/import-venue-images.php` still exists for a developer working from an
 ordinary internet connection, and holds the curated manifest of 25 shots. The

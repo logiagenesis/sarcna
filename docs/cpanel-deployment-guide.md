@@ -50,7 +50,7 @@ Confirmed by direct observation on 29 August 2026, not assumed.
 | PHP | **8.4.24** — the application requires 8.1+ ✓ |
 | cPanel user | `sarcnaor`, home `/home/sarcnaor` |
 | Disk quota | 25 GB |
-| **SSH** | **Blocked.** Ports 22, 2222 and 21098 all time out. |
+| **SSH** | **Did not connect.** Ports 22, 2222 and 21098 all timed out from where this was tested. cPanel *does* show an SSH Access page with Manage SSH Keys, so the feature exists on the account — it may be firewalled, or need enabling with the host. Treat shell access as unavailable until somebody has actually opened a session. |
 | **cPanel API** | **Unavailable.** No token feature; Basic Auth rejected. |
 | **Document root outside `public_html`** | **Not permitted on this account.** cPanel silently relocates it. |
 
