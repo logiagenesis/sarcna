@@ -214,9 +214,32 @@ small { font-size: var(--step--1); }
 /* Grid items default to min-width:auto, which lets a wide table push the whole
    page sideways. Zero lets the overflow container do its job instead. */
 .grid > * { min-width: 0; }
-.grid--2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
-.grid--3 { grid-template-columns: repeat(auto-fit, minmax(255px, 1fr)); }
-.grid--4 { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+/* Fixed column counts, not auto-fit. auto-fit derived the count from a minimum
+   track width, so on a 1180px container --3 laid out four across and --4 five
+   across: the class names did not describe what you got. Every template picked
+   its item count from the name, which is why the venue's nine spaces came out
+   4 + 4 + 1 and the seven merchandise cards came out 5 + 2. Now --3 is three
+   across and --4 is four, so those fill 3 + 3 + 3 and 4 + 3. */
+.grid--2, .grid--3, .grid--4 { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 40rem) {
+  .grid--2, .grid--3, .grid--4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 62rem) {
+  .grid--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .grid--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* Every card in a grid takes the height of the tallest one, on every row, not
+   just the tallest in its own row: 1fr rows in a grid with no height of its own
+   all resolve to the tallest row. That is what puts the price and the button on
+   one line right across a section. :has() scopes it to grids that actually hold
+   cards, so the prose and sidebar grids are left alone, and a browser without
+   :has() simply keeps the old row-by-row sizing. */
+.grid--2:has(> .card), .grid--3:has(> .card), .grid--4:has(> .card),
+.grid--2:has(> .feature-card), .grid--3:has(> .feature-card), .grid--4:has(> .feature-card) {
+  grid-auto-rows: 1fr;
+}
+
 .grid--sidebar { grid-template-columns: 1fr; }
 
 @media (min-width: 62rem) {
@@ -514,6 +537,14 @@ small { font-size: var(--step--1); }
   border-top: 1px solid var(--line); flex-wrap: wrap;
 }
 .card__foot .link-arrow, .card__foot .btn { flex-shrink: 0; }
+/* In a grid, the night chips and the foot are one bottom-anchored group.
+   Pinning only the foot left the chips wherever the copy above happened to end,
+   so two room cards side by side showed their chips at different heights.
+   Anchoring the chips instead carries the foot down with them. The stacked
+   cards on /accommodation are not aligned against anything, so they keep the
+   chips directly under the copy. */
+.grid > .card > .card__body > .availability { margin-top: auto; }
+.grid > .card > .card__body > .availability ~ .card__foot { margin-top: 0; }
 .card__price { font-family: var(--font-display); font-size: var(--step-1); font-weight: 700; color: var(--vineyard); line-height: 1.2; }
 .card__price small { display: block; font-family: var(--font-body); font-size: var(--step--1); font-weight: 400; color: var(--ink-muted); }
 .card__price s { color: var(--ink-muted); font-size: var(--step--1); font-weight: 400; margin-right: 0.35rem; }
