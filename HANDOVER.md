@@ -729,6 +729,8 @@ dependency is a regression, however nice the library.
 | `php tools/package.php` | Builds the upload zip for cPanel |
 | `tools/purge.php` | Not a command — the shared routine `audit.php` and `seed-demo-orders.php` both use to remove an order **and** hand back the stock and shuttle seats fulfilment took for it |
 | `php tools/ci-install.php` | Installs through the real `/install` form, for CI. Refuses to run against anything but a local address |
+| `php tools/db-check.php` | One line: can this machine reach the configured database, and is it installed? |
+| `powershell -File tools/run-audit.ps1` | The whole audit on Windows, to a timestamped log. See `docs/DEPLOYMENT-HANDOFF.md` |
 | `php -S 127.0.0.1:8000 -t public_html tools/dev-router.php` | Local development server |
 
 ### Documentation
@@ -736,6 +738,8 @@ dependency is a regression, however nice the library.
 | Doc | For |
 |---|---|
 | **`HANDOVER.md`** | **This document. Start here.** |
+| **`docs/DEPLOYMENT-HANDBOOK.md`** | **The step-by-step deployment procedure. Verified against a replica of the target host. Read this to deploy.** |
+| `docs/DEPLOYMENT-HANDOFF.md` | The reference sheet: branch, commit, target, commands, env var names, runtimes, deployability verdict |
 | `docs/cpanel-deployment-guide.md` | Putting it on the server, step by step |
 | `docs/payfast-setup.md` | Sandbox to live, and why an order might not be paid |
 | `docs/smtp-setup.md` | Email, SPF and DKIM |

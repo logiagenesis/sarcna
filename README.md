@@ -205,6 +205,8 @@ owns it.
 | Document | What it covers |
 |---|---|
 | **[`HANDOVER.md`](HANDOVER.md)** | **The handover document. Start here.** What you have, proof it works, how it works, the launch checklist |
+| **[`docs/DEPLOYMENT-HANDBOOK.md`](docs/DEPLOYMENT-HANDBOOK.md)** | **The deployment procedure, step by step, verified against a replica of the target host** |
+| [`docs/DEPLOYMENT-HANDOFF.md`](docs/DEPLOYMENT-HANDOFF.md) | Reference sheet — branch, commit, target, commands, env var names, runtimes, verdict |
 | [`docs/audit-2026-08-29.md`](docs/audit-2026-08-29.md) | The comprehensive audit: what was checked, the six defects found behind a green suite, and what was deliberately left alone |
 | [`docs/cpanel-deployment-guide.md`](docs/cpanel-deployment-guide.md) | Uploading, installing, going live |
 | [`docs/payfast-setup.md`](docs/payfast-setup.md) | Sandbox to live, the ITN URL, troubleshooting |

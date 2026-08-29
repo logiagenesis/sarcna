@@ -3,15 +3,34 @@
 All notable changes to the SARCNA 2027 Convention website.
 Versions follow [Semantic Versioning](https://semver.org/).
 
-## [Unreleased] — Comprehensive audit, 29 August 2026
+## [Unreleased]
+
+### Fixed
+
+**Card grids line up**
+- `.grid--3` and `.grid--4` now lay out three and four across. They used
+  `auto-fit` with a minimum track width, which on a 1180px container gave four
+  and five across, so the class names did not describe what you got and the
+  item counts chosen to suit them came out ragged — the venue's nine spaces as
+  4 + 4 + 1, the seven merchandise cards as 5 + 2. They now fill 3 + 3 + 3 and
+  4 + 3.
+- Every card in a grid takes the height of the tallest card in that grid, on
+  every row rather than row by row, so the rule, the price and the button land
+  on one line right across a section.
+- The availability chips are anchored to the bottom of the card with the foot,
+  instead of floating wherever the copy above them happened to end.
+- Headings, badge rows and chip rows are given a shared height per row, so the
+  body copy in a card starts level with the copy beside it whether the heading
+  above it ran to one line or two. This is the one part done in JavaScript;
+  without it the layout is still correct, just a line out under a long heading.
+
+**Comprehensive audit, 29 August 2026**
 
 A full review of the code the existing suite does not reach. The suite was
 green before it started. Six defects were found behind that green tick, and
 each fix carries a check that was first made to fail against the old code.
 The whole review is written up in
 [`docs/audit-2026-08-29.md`](docs/audit-2026-08-29.md).
-
-### Fixed
 
 **Security and authorisation**
 - `/payment/cancelled` cancelled any pending order it was given a reference
