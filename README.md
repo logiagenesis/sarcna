@@ -167,8 +167,7 @@ repository · error pages that leak nothing.
 
 | Document | What it covers |
 |---|---|
-| [`docs/handover.md`](docs/handover.md) | What was delivered, decisions taken, what the committee must supply |
-| [`docs/DEVELOPER-HANDOVER.md`](docs/DEVELOPER-HANDOVER.md) | The technical handover for next year's developer — how the system works inside |
+| **[`HANDOVER.md`](HANDOVER.md)** | **The handover document. Start here.** What you have, proof it works, how it works, the launch checklist |
 | [`docs/cpanel-deployment-guide.md`](docs/cpanel-deployment-guide.md) | Uploading, installing, going live |
 | [`docs/payfast-setup.md`](docs/payfast-setup.md) | Sandbox to live, the ITN URL, troubleshooting |
 | [`docs/smtp-setup.md`](docs/smtp-setup.md) | cPanel mailbox email, SPF and DKIM |
@@ -191,4 +190,4 @@ repository · error pages that leak nothing.
 This is a **complete, working mockup for committee review**. The dates, venue,
 pricing, room inventory, transport routes, programme and imagery are placeholder
 content, clearly flagged in the admin and behind a preview banner on the site.
-See `docs/handover.md` for what has to be confirmed before it goes public.
+See **[HANDOVER.md](HANDOVER.md)** — the single handover document — for what has to be confirmed before it goes public.

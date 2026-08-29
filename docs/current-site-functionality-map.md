@@ -95,7 +95,7 @@ in **Admin → Settings → Contact details**.
 
 > **Committee action.** Read the addresses off the current live site and enter
 > them at install time. If they cannot be recovered, the installer's placeholder
-> stands in — this is flagged in `docs/handover.md` as an open item.
+> stands in — this is flagged in `HANDOVER.md` as an open item.
 
 ---
 

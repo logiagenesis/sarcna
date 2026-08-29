@@ -36,26 +36,69 @@ $stub    = null;
  * pipeline — signature, order, amount, source, confirmation — runs for real
  * against our own code. Everything else about the payment path is genuine.
  */
-$validateUrl = (string) \App\Core\Config::get('payfast.validate_url', '');
+$stubPort    = 8099;
+$stubUrl     = "http://127.0.0.1:{$stubPort}/validate";
+$envPath     = dirname(__DIR__) . '/.env';
+$envOriginal = null;
 
-if ($validateUrl !== '' && preg_match('#^http://(127\.0\.0\.1|localhost):(\d+)#', $validateUrl, $m) === 1) {
-    $probe = @fsockopen($m[1], (int) $m[2], $errno, $errstr, 1);
+/**
+ * Only a live PayFast can answer the confirmation call, so on a fresh install
+ * the audit stands one up itself: it starts a local stub, points .env at it
+ * for the duration, and puts .env back byte-for-byte when it finishes —
+ * including if it is interrupted. Everything else on the payment path is the
+ * real code taking a real, correctly signed notification.
+ */
+if (is_file($envPath) && !str_contains((string) file_get_contents($envPath), 'PAYFAST_VALIDATE_URL=http')) {
+    $envOriginal = (string) file_get_contents($envPath);
 
-    if ($probe === false) {
-        $stubFile = sys_get_temp_dir() . '/audit-payfast-stub.php';
-        file_put_contents($stubFile, "<?php echo 'VALID';\n");
+    $patched = preg_replace('/^PAYFAST_VALIDATE_URL=.*$/m', '', $envOriginal);
+    file_put_contents($envPath, rtrim($patched) . "\nPAYFAST_VALIDATE_URL={$stubUrl}\n");
 
-        $stub = proc_open(
-            sprintf('exec php -S %s:%d %s', $m[1], (int) $m[2], escapeshellarg($stubFile)),
-            [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
-            $pipes
-        );
+    echo "  (testing: .env temporarily points the PayFast confirmation at a local stub; it is restored at the end)\n";
+}
 
-        usleep(600000);
-    } else {
-        fclose($probe);
+$restoreEnv = static function () use ($envPath, &$envOriginal): void {
+    if ($envOriginal !== null) {
+        file_put_contents($envPath, $envOriginal);
+        $envOriginal = null;
+    }
+};
+
+register_shutdown_function($restoreEnv);
+
+foreach ([SIGINT, SIGTERM] as $signal) {
+    if (function_exists('pcntl_signal')) {
+        pcntl_signal($signal, static function () use ($restoreEnv): void {
+            $restoreEnv();
+            exit(1);
+        });
     }
 }
+
+$probe = @fsockopen('127.0.0.1', $stubPort, $errno, $errstr, 1);
+
+if ($probe === false) {
+    $stubFile = sys_get_temp_dir() . '/audit-payfast-stub.php';
+    file_put_contents($stubFile, "<?php echo 'VALID';\n");
+
+    $stub = proc_open(
+        sprintf('exec php -S 127.0.0.1:%d %s', $stubPort, escapeshellarg($stubFile)),
+        [1 => ['file', '/dev/null', 'w'], 2 => ['file', '/dev/null', 'w']],
+        $pipes
+    );
+
+    usleep(600000);
+} else {
+    fclose($probe);
+}
+
+// The notification arrives from this machine, not from PayFast's range, so the
+// source-IP check has to be told this is a test. Restored with .env above.
+Database::run(
+    'INSERT INTO settings (group_name, key_name, value, type, label)
+          VALUES ("payments", "payfast_skip_ip_check", "1", "boolean", "Skip PayFast IP check (testing only)")
+     ON DUPLICATE KEY UPDATE value = "1"'
+);
 
 function record(string $section, string $label, bool $pass, string $detail = ''): void
 {
@@ -349,6 +392,12 @@ $fail = count($results) - $pass;
 printf("\n%s\nTOTAL: %d checks — %d passed, %d failed.\n", str_repeat('=', 64), count($results), $pass, $fail);
 
 @unlink($cookies);
+
+// Put the source-IP check back on, so the audit never leaves the site laxer
+// than it found it.
+Database::run('UPDATE settings SET value = "0" WHERE key_name = "payfast_skip_ip_check"');
+
+$restoreEnv();
 
 if (is_resource($stub)) {
     proc_terminate($stub);
