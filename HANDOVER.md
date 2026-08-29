@@ -95,6 +95,10 @@ so it can gate a deployment. It covers:
 It starts and tears down its own PayFast stub, and restores `.env` and the
 security settings byte-for-byte when it finishes — including if interrupted.
 
+The transcript of the last full run is committed at
+[`docs/audit-result.txt`](docs/audit-result.txt) so you can read the result
+without running anything.
+
 ### The other two commands
 
 ```bash

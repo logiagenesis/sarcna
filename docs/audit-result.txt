@@ -1,0 +1,141 @@
+  (testing: .env temporarily points the PayFast confirmation at a local stub; it is restored at the end)
+
+SARCNA 2027 — full site audit against http://127.0.0.1:8000
+================================================================
+
+1. Every public page
+  PASS / — HTTP 200
+  PASS /convention — HTTP 200
+  PASS /programme — HTTP 200
+  PASS /venue — HTTP 200
+  PASS /venue/history — HTTP 200
+  PASS /accommodation — HTTP 200
+  PASS /transport — HTTP 200
+  PASS /shop — HTTP 200
+  PASS /shop/registration — HTTP 200
+  PASS /shop/merchandise — HTTP 200
+  PASS /donations — HTTP 200
+  PASS /gallery — HTTP 200
+  PASS /faq — HTTP 200
+  PASS /contact — HTTP 200
+  PASS /service — HTTP 200
+  PASS /login — HTTP 200
+  PASS /register — HTTP 200
+  PASS /privacy-policy — HTTP 200
+  PASS /terms — HTTP 200
+  PASS /refund-policy — HTTP 200
+  PASS /accommodation-terms — HTTP 200
+  PASS /sitemap.xml — HTTP 200
+  PASS /robots.txt — HTTP 200
+  PASS /accommodation/retreat-cottage-twin-room — HTTP 200
+  PASS /accommodation/retreat-cottage-accessible-room — HTTP 200
+  PASS /accommodation/partner-guest-house-franschhoek — HTTP 200
+  PASS /transport/airport-to-venue — HTTP 200
+  PASS /transport/venue-to-airport — HTTP 200
+  PASS /transport/airport-return-shuttle — HTTP 200
+  PASS /transport/cape-town-cbd-return — HTTP 200
+  PASS /transport/stellenbosch-return — HTTP 200
+  PASS /transport/local-winelands-shuttle — HTTP 200
+  PASS /transport/day-visitor-parking-pass — HTTP 200
+  PASS /shop/full-weekend-early-bird — HTTP 200
+  PASS /shop/full-weekend-standard — HTTP 200
+  PASS /shop/friday-day-pass — HTTP 200
+  PASS /shop/saturday-day-pass — HTTP 200
+  PASS /shop/sunday-day-pass — HTTP 200
+  PASS /shop/sarcna-2027-t-shirt — HTTP 200
+  PASS /shop/sarcna-2027-hoodie — HTTP 200
+  PASS /shop/sarcna-2027-cap — HTTP 200
+  PASS /shop/sarcna-2027-tote-bag — HTTP 200
+  PASS /shop/sarcna-2027-mug — HTTP 200
+  PASS /shop/sarcna-2027-sticker-pack — HTTP 200
+  PASS /shop/sarcna-2027-lanyard — HTTP 200
+  PASS /shop/7th-tradition-donation — HTTP 200
+  PASS /shop/sponsor-a-newcomer — HTTP 200
+  PASS /shop/sponsor-a-bed — HTTP 200
+
+2. The customer journey (a real order, through the real forms)
+  PASS Create an account — http://127.0.0.1:8000/account
+  PASS Add a registration to the cart
+  PASS Hold a bed — http://127.0.0.1:8000/cart
+  PASS The bed is actually held (15-minute hold written) — 1 live hold(s)
+  PASS Book a shuttle seat — http://127.0.0.1:8000/cart
+  PASS Checkout page renders with the order form
+  PASS Flight & car-hire buttons on checkout (and only there)
+  PASS Order placed, redirected to the payment page — SAR-45LV-J7GN
+  PASS PayFast handoff form present and signed
+
+3. Payment rules (the ones that protect the money)
+  PASS Landing on the success URL does NOT mark the order paid — status stayed pending_payment
+  PASS A forged signature is rejected
+  PASS A correctly signed notification marks the order paid — status paid
+  PASS Fulfilment allocated the bed — 1 booking(s)
+  PASS Fulfilment wrote the shuttle passenger
+
+4. The bed rules (straight from the smoke test)
+  PASS Smoke test (38 checks: bed invariant, holds, forged ITN, finance arithmetic, CSV safety) — Passed: 38   Failed: 0
+
+5. Every admin screen and every export
+  PASS Signing out works, and blocks the admin again
+  PASS Admin sign-in — http://127.0.0.1:8000/admin
+  PASS /admin — HTTP 200
+  PASS /admin/checkin — HTTP 200
+  PASS /admin/finance — HTTP 200
+  PASS /admin/finance/income — HTTP 200
+  PASS /admin/finance/expenses — HTTP 200
+  PASS /admin/finance/budget — HTTP 200
+  PASS /admin/finance/reconciliation — HTTP 200
+  PASS /admin/finance/refunds — HTTP 200
+  PASS /admin/orders — HTTP 200
+  PASS /admin/payments — HTTP 200
+  PASS /admin/payments/logs — HTTP 200
+  PASS /admin/donations — HTTP 200
+  PASS /admin/coupons — HTTP 200
+  PASS /admin/bookings/operations — HTTP 200
+  PASS /admin/bookings — HTTP 200
+  PASS /admin/bookings/board — HTTP 200
+  PASS /admin/bookings/run-sheet — HTTP 200
+  PASS /admin/bookings/holds — HTTP 200
+  PASS /admin/rooms — HTTP 200
+  PASS /admin/transport — HTTP 200
+  PASS /admin/products — HTTP 200
+  PASS /admin/customers — HTTP 200
+  PASS /admin/applications — HTTP 200
+  PASS /admin/messages — HTTP 200
+  PASS /admin/content — HTTP 200
+  PASS /admin/gallery — HTTP 200
+  PASS /admin/settings — HTTP 200
+  PASS /admin/settings/email-templates — HTTP 200
+  PASS /admin/settings/diagnostics — HTTP 200
+  PASS /admin/logs — HTTP 200
+  PASS orders.csv — HTTP 200, 349 bytes
+  PASS order-items.csv — HTTP 200, 1285 bytes
+  PASS attendees.csv — HTTP 200, 438 bytes
+  PASS bookings.csv — HTTP 200, 317 bytes
+  PASS rooming-list.csv — HTTP 200, 174 bytes
+  PASS transport.csv — HTTP 200, 346 bytes
+  PASS donations.csv — HTTP 200, 78 bytes
+  PASS applications.csv — HTTP 200, 677 bytes
+  PASS messages.csv — HTTP 200, 475 bytes
+  PASS customers.csv — HTTP 200, 514 bytes
+  PASS stock.csv — HTTP 200, 2671 bytes
+  PASS payments.csv — HTTP 200, 351 bytes
+  PASS expenses.csv — HTTP 200, 981 bytes
+  PASS refunds.csv — HTTP 200, 129 bytes
+  PASS budget.csv — HTTP 200, 1749 bytes
+  PASS finance-pack.csv — HTTP 200, 1671 bytes
+
+6. Security basics
+  PASS Signed out cleanly before the anonymous checks
+  PASS A signed-out visitor cannot reach /admin — HTTP 302 → http://127.0.0.1:8000/login
+  PASS A signed-out visitor cannot reach /admin/finance — HTTP 302 → http://127.0.0.1:8000/login
+  PASS A signed-out visitor cannot reach /admin/orders — HTTP 302 → http://127.0.0.1:8000/login
+  PASS A signed-out visitor cannot reach /admin/bookings/operations — HTTP 302 → http://127.0.0.1:8000/login
+  PASS A POST without a CSRF token is refused — HTTP 419
+  PASS /.env is not served over the web — HTTP 404
+  PASS /app/Config/config.php is not served over the web — HTTP 404
+  PASS /database/schema.sql is not served over the web — HTTP 404
+  PASS /storage/logs is not served over the web — HTTP 404
+  PASS /.git/config is not served over the web — HTTP 404
+
+================================================================
+TOTAL: 122 checks — 122 passed, 0 failed.
