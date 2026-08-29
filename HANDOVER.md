@@ -737,7 +737,8 @@ dependency is a regression, however nice the library.
 | Doc | For |
 |---|---|
 | **`HANDOVER.md`** | **This document. Start here.** |
-| **`docs/DEPLOYMENT-HANDOFF.md`** | **Every deployment fact with its evidence: branch, commit, target, commands, env var names, runtimes, deployability verdict** |
+| **`docs/DEPLOYMENT-HANDBOOK.md`** | **The step-by-step deployment procedure. Verified against a replica of the target host. Read this to deploy.** |
+| `docs/DEPLOYMENT-HANDOFF.md` | The reference sheet: branch, commit, target, commands, env var names, runtimes, deployability verdict |
 | `docs/cpanel-deployment-guide.md` | Putting it on the server, step by step |
 | `docs/payfast-setup.md` | Sandbox to live, and why an order might not be paid |
 | `docs/smtp-setup.md` | Email, SPF and DKIM |

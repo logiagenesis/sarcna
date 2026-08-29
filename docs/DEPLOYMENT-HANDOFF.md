@@ -4,7 +4,15 @@ Every field below is filled in from the repository itself. Nothing here is
 "unknown" and nothing here is inferred: each answer names the file or the
 command that establishes it.
 
-Written 29 August 2026 against commit `341eaba`.
+Written 29 August 2026, corrected against commit `12d064f`.
+
+> **For the step-by-step deployment procedure, read
+> [`DEPLOYMENT-HANDBOOK.md`](DEPLOYMENT-HANDBOOK.md).** It was produced by
+> rebuilding a replica of the target host (PHP 8.4.25, MariaDB 10.11.14, real
+> Apache with `.htaccess` active) and testing against it, including things this
+> environment could not test — notably that the `.htaccess` files genuinely
+> return 403 under a real web server, which the PHP dev server cannot prove.
+> This file is the reference sheet; that one is the procedure.
 
 ---
 
@@ -37,7 +45,7 @@ actually here.
 
 | Field | Value | How it is established |
 |---|---|---|
-| **Source-of-truth branch** | `main` | The branch the repository is meant to deploy from. `claude/google-drive-folder-ruuvgu` is a working branch with an open pull request into `main` — see *Branches* below |
+| **Source-of-truth branch** | `claude/google-drive-folder-ruuvgu` | **This is the repository's actual default branch**, confirmed from the GitHub API: `"default_branch": "claude/google-drive-folder-ruuvgu"`. A plain `git clone` with no `-b` gets it. See *Branches* below — an earlier version of this file said `main`, and that was wrong |
 | **Source commit** | `341eaba9407f2a8e0e8e271df16e0361e329d40c` | Head of `claude/google-drive-folder-ruuvgu` |
 | **Deployment target** | cPanel shared hosting, `cp71.domains.co.za`, LiteSpeed, PHP 8.4.24 | `docs/cpanel-deployment-guide.md` §"The verified environment" |
 | **Expected production URL** | `https://2027.sarcna.org.za` | `docs/cpanel-deployment-guide.md` Step 2. **Not yet live** — `sarcna.org.za` still points at Firebase (the 2026 site) and must be left alone |
@@ -58,7 +66,10 @@ actually here.
 
 ## Required environment variable NAMES
 
-All 37, from `.env.example`. **Names only — never commit values.** `.env` is
+All 36, from `.env.example` — counted, not estimated:
+`grep -cE '^[A-Z_]+=' .env.example` returns 36, with no duplicates. (An earlier
+version of this file said 37. It was miscounted.) **Names only — never commit
+values.** `.env` is
 git-ignored and is refused over HTTP by three separate `.htaccess` rules.
 
 ```
@@ -87,13 +98,34 @@ completion page says so explicitly.
 
 | Branch | Head | State |
 |---|---|---|
-| `main` | `0b5409f` | The intended deployment source |
-| `claude/google-drive-folder-ruuvgu` | `341eaba` | Working branch. Open pull request **#1** into `main`, CI green, mergeable clean |
-| `claude/comprehensive-audit-lzwl4z` | — | A second working branch. Not created by the work in this handoff; review before deploying anything from it |
+| **`claude/google-drive-folder-ruuvgu`** | `12d064f` | **The repository's default branch, and the code to deploy.** CI green |
+| `main` | `0b5409f` | **Six commits behind.** Do not deploy this |
+| `claude/comprehensive-audit-lzwl4z` | `7ecd1aa` | A third branch. Review before deploying anything from it |
 
-**Do not deploy from a `claude/*` branch.** Merge PR #1 into `main` and deploy
-`main`. The audit handoff that prompted this document correctly warned against
-assuming the checked-out branch was the deployment source — it is not.
+**Clone and change nothing:**
+
+```bash
+git clone https://github.com/logiagenesis/sarcna.git
+```
+
+No `-b`, no checkout, no merge. The default branch is the tested one.
+
+### A correction, recorded rather than quietly fixed
+
+An earlier version of this file said *"deploy from `main`"*, and I repeated that
+advice several times. **It was wrong.** The GitHub API says:
+
+```json
+"default_branch": "claude/google-drive-folder-ruuvgu"
+```
+
+`main` is six commits and 44 files behind. Deploying it would ship a site with
+no venue photographs, the broken `picture()` path bug, no CI, and the audit
+clean-up defect that put fictional revenue in the finance screens.
+
+Merging PR #1 into `main` is still worth doing so the branch names stop being
+misleading — but that is tidying, not a prerequisite. **Deploy the default
+branch.**
 
 ---
 
@@ -119,12 +151,13 @@ deployability verdict needs.
 
 **Two prerequisites before it can take real money and real bookings:**
 
-| Prerequisite | Why |
+| Prerequisite | State |
 |---|---|
-| Live PayFast merchant ID, key and passphrase | Without them checkout cannot complete. Nothing else is blocked |
-| DNS: an explicit A record for `2027.sarcna.org.za` | A wildcard `*.sarcna.org.za` points at Firebase, so a new subdomain resolves there instead |
+| Live PayFast merchant ID, key and passphrase | **Outstanding.** Without them checkout cannot complete. Nothing else is blocked |
+| DNS for `2027.sarcna.org.za` | **Already done.** `DEPLOYMENT-HANDBOOK.md` §2.1 records the explicit A record resolving to `169.239.218.71` and reaching LiteSpeed, overriding the wildcard. Not verified from here — this environment cannot resolve external DNS — but verified there |
+| The code being on the server | **Outstanding.** The document root is empty; `/` returns a plain LiteSpeed 404 |
 
-Neither is a code defect. Both are committee inputs, listed in `HANDOVER.md` §7.
+Neither outstanding item is a code defect.
 
 ---
 
