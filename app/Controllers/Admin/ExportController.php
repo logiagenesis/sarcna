@@ -5,14 +5,58 @@ namespace App\Controllers\Admin;
 
 use App\Core\Database;
 use App\Core\Response;
+use App\Services\AuthService;
 use App\Services\CsvService;
 use App\Services\FinanceService;
 
 /** CSV exports of everything the committee needs off-site. */
 final class ExportController extends AdminController
 {
+    /**
+     * Which capability each dataset belongs to.
+     *
+     * The route only asks for "exports", which every exporting role holds —
+     * so on its own it let a transport admin download the finance pack and the
+     * customer list, screens the same person is refused at the door. A CSV is
+     * the same data as the screen it comes from, so it answers to the same
+     * capability: whoever may not open /admin/finance may not export it either.
+     *
+     * A dataset that is not listed here is refused outright, so adding an
+     * export without deciding who may run it fails closed.
+     *
+     * @var array<string, string>
+     */
+    private const DATASET_CAPABILITIES = [
+        'orders'       => 'orders',
+        'order-items'  => 'orders',
+        'attendees'    => 'orders',
+        'bookings'     => 'bookings',
+        'rooming-list' => 'bookings',
+        'transport'    => 'transport',
+        'donations'    => 'donations',
+        'applications' => 'applications',
+        'messages'     => 'messages',
+        'customers'    => 'customers',
+        'stock'        => 'products',
+        'payments'     => 'payments',
+        'expenses'     => 'finance',
+        'refunds'      => 'finance',
+        'budget'       => 'finance',
+        'finance-pack' => 'finance',
+    ];
+
     public function download(string $dataset): never
     {
+        $capability = self::DATASET_CAPABILITIES[$dataset] ?? null;
+
+        if ($capability === null) {
+            $this->abort(404, 'That export does not exist.');
+        }
+
+        if (!AuthService::can($capability)) {
+            $this->abort(403, 'Your admin role does not include access to that export.');
+        }
+
         [$rows, $columns] = match ($dataset) {
             'orders'       => $this->orders(),
             'order-items'  => $this->orderItems(),

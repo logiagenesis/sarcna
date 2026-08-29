@@ -80,7 +80,7 @@ command you can run.
 php tools/audit.php --password=YOUR_ADMIN_PASSWORD
 ```
 
-**183 checks. All 183 pass** — verified on this repository's demo database and
+**200 checks. All 200 pass** — verified on this repository's demo database and
 again on a completely fresh install. Run it twice and the total must be
 identical both times; a total that climbs means it left records behind. It
 exits non-zero if anything fails, so it can gate a deployment. It covers:
@@ -91,15 +91,16 @@ exits non-zero if anything fails, so it can gate a deployment. It covers:
 | 2. Customer journey | Creates a real account, adds a registration, **holds a real bed**, books a shuttle seat, reaches checkout, places an order and gets a signed PayFast handoff — through the real forms, not fixtures |
 | 3. Payment rules | Landing on the success URL does **not** mark an order paid; a forged signature is rejected; a correctly signed notification does mark it paid and allocates the bed and the shuttle passenger |
 | 4. Bed rules | Runs the smoke test: the bed invariant, holds, the database refusing a double-booking, cancellation freeing a bed, finance arithmetic, CSV safety |
-| 5. Admin | Signs in as admin, loads all 31 admin screens, downloads all 16 CSV exports |
-| 6. Security | Signs out and proves the admin is blocked; CSRF-less POSTs refused; `.env`, application code, SQL and `.git` all unreachable over the web |
-| 7. Writes | Twenty-one committee actions performed over HTTP and then **verified in the database**: saving a setting, recording an expense (and its effect on the finance total), adding and deleting a budget line, creating a coupon, creating and editing a product, adding and deleting a programme item and an FAQ, saving an order note, moving a guest to another bed, and checking a delegate in and out |
-| 8. Cart | Line totals match the catalogue price, a 10% coupon takes off exactly 10%, removing it restores the total, clearing empties the cart |
-| 9. Public forms | The contact form and a service application actually reach the committee |
-| 10. Data integrity | Nine SQL invariants: no bed double-booked, no hold on a booked bed, every booking on a real bed in the right unit, every paid order has a payment, order totals match their line items, no refund exceeds what was paid, no shuttle oversold, no negative stock, and the finance screens agree with the orders table to the cent |
-| 11. Email | All 14 templates installed, the queue is writable, and paying an order queued its confirmations |
-| 12. Photographs | The Photographs screen loads and offers a slot for every picture on the site; a photograph below the minimum size is **refused**; a full-size one is accepted, centre-cropped, given a WebP twin, stripped of its EXIF (including GPS) and appears on the public page; replacing a gallery picture keeps its position; resetting a slot restores the illustration |
-| 13. Clean-up | Every record the audit created is removed — the delegate account, its paid order, its bed, its shuttle seat — and the stock and seats it consumed are handed back. It then counts what is left by joining back through the schema, not by looking only where it just deleted |
+| 5. Admin | Signs in as admin, loads all 30 admin screens, downloads all 16 CSV exports |
+| 6. Security | Signs out and proves the admin is blocked; CSRF-less POSTs refused; `.env`, application code, SQL and `.git` all unreachable over the web; and a stranger's GET cannot cancel somebody else's pending order |
+| 7. Role boundaries | Creates a real limited admin and signs in as them. A transport admin still reaches the transport screen and the passenger CSV, and is refused the finance screen, the customer list, and the finance, customer, payment, refund, message and application CSVs. A check-in volunteer still reaches the check-in desk and is refused service applications and contact messages. The temporary account is then removed |
+| 8. Writes | Twenty-one committee actions performed over HTTP and then **verified in the database**: saving a setting, recording an expense (and its effect on the finance total), adding and deleting a budget line, creating a coupon, creating and editing a product, adding and deleting a programme item and an FAQ, saving an order note, moving a guest to another bed, and checking a delegate in and out |
+| 9. Cart | Line totals match the catalogue price, a 10% coupon takes off exactly 10%, removing it restores the total, clearing empties the cart |
+| 10. Public forms | The contact form and a service application actually reach the committee |
+| 11. Data integrity | Nine SQL invariants: no bed double-booked, no hold on a booked bed, every booking on a real bed in the right unit, every paid order has a payment, order totals match their line items, no refund exceeds what was paid, no shuttle oversold, no negative stock, and the finance screens agree with the orders table to the cent |
+| 12. Email | All 14 templates installed, the queue is writable, and paying an order queued its confirmations |
+| 13. Photographs | The Photographs screen loads and offers a slot for every picture on the site; a photograph below the minimum size is **refused**; a full-size one is accepted, centre-cropped, given a WebP twin, stripped of its EXIF (including GPS) and appears on the public page; replacing a gallery picture keeps its position; resetting a slot restores the illustration |
+| 14. Clean-up | Every record the audit created is removed — the delegate account, its paid order, its bed, its shuttle seat — and the stock and seats it consumed are handed back. It then counts what is left by joining back through the schema, not by looking only where it just deleted |
 
 It starts and tears down its own PayFast stub, clears this machine's
 rate-limit counters (the audit is a legitimate high-volume client; the limiter
@@ -155,7 +156,7 @@ web form exactly as it will be on cPanel. Result:
 
 44 tables, 3 room types, 56 units, 112 beds, 15 products, 7 routes, 16
 departures, 14 email templates, 40 settings, 1 admin, **0 orders**. Visiting
-`/install` again returns HTTP 410. The full 183-check audit then passed
+`/install` again returns HTTP 410. The full 200-check audit then passed
 against that fresh install.
 
 ---
@@ -718,8 +719,8 @@ dependency is a regression, however nice the library.
 
 | Command | What it does |
 |---|---|
-| `php tools/audit.php` | **The whole checklist.** 183 checks, exits non-zero on failure |
-| `php tools/smoke-test.php` | Invariant checks: beds, holds, payments, finance, CSV safety |
+| `php tools/audit.php` | **The whole checklist.** 200 checks, exits non-zero on failure |
+| `php tools/smoke-test.php` | 43 invariant checks: beds, holds, payments, donations, cart ceilings, finance, CSV safety |
 | `php tools/race-test.php` | 8 checks: twelve simultaneous buyers, one bed, exactly one winner |
 | `php tools/seed-demo-orders.php [n]` | Realistic demo orders through the real cart and fulfilment |
 | `php tools/seed-demo-orders.php --purge` | Removes every demo order, restoring stock and seats exactly |
@@ -774,13 +775,38 @@ which had been sitting behind a green tick:
 | What was claimed | What was actually true |
 |---|---|
 | "Every record the audit created has been removed — 0 left behind" | 230 records were left behind: 14 delegate accounts, 12 paid orders, their beds, their shuttle seats and their payments. The clean-up only looked at eight small tables and never at the order it had just paid for. Fictional revenue was accumulating in the finance screens on every run. |
-| "122 checks" in three places, "169 checks" in two others | Neither. Nobody had run it and read the total. It is 183, and every number quoted in this document now comes from a run whose output is committed. |
+| "122 checks" in three places, "169 checks" in two others | Neither. Nobody had run it and read the total. Every number quoted in this document now comes from a run whose output is committed — it is 200 today, and `docs/audit-result.txt` is that run. |
 
 Both are fixed — `tools/purge.php` now does the clean-up for both tools, and
 the clean-up check counts what is left by joining back through the schema
 rather than by looking only where it just deleted. The lesson is the general
 one: **a passing test that was never made to fail is not evidence.** If you
 change the audit, break something on purpose first and confirm it goes red.
+
+### The second audit, and what a green suite was not covering
+
+A later full audit ran the whole suite green — 183 checks, twice, with matching
+totals — and then went looking for what the suite did not ask. It found six
+defects, every one of them behind that green tick. They are listed with their
+consequences in **[`docs/audit-2026-08-29.md`](docs/audit-2026-08-29.md)**; the
+short version is that four were authorisation or ownership questions the suite
+never posed, and two were arithmetic the suite checked from the wrong side.
+
+The two worth carrying in your head:
+
+* **A CSV is the same data as the screen it comes from.** The export route
+  asked only for the broad "exports" capability, so a transport admin who was
+  refused `/admin/finance` could still download the finance pack and the whole
+  customer list. Role separation is only real if it holds at every door, not
+  just the ones with a link on them.
+* **An order reference is not a password.** It travels in email and in the
+  address bar, and `/payment/cancelled` acted on one alone — so any GET
+  carrying a reference, an `<img>` tag on another site included, cancelled a
+  stranger's order and released the beds they were paying for.
+
+All six are fixed, and each one now has a check that was **first made to
+fail against the old code** and then watched go green. That is the same rule as
+above, applied to the fixes themselves.
 
 ---
 

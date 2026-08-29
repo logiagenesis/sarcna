@@ -19,6 +19,7 @@ require_once dirname(__DIR__) . '/app/bootstrap.php';
 
 use App\Core\Database;
 use App\Services\AccommodationService;
+use App\Services\CartService;
 use App\Services\CsvService;
 use App\Services\FinanceService;
 use App\Services\OrderService;
@@ -184,6 +185,129 @@ check('The unique index refuses a second booking of the same bed-night', $refuse
 // Cancelling frees the bed again.
 Database::update('bookings', ['status' => 'cancelled'], 'id = :id', ['id' => $created[0]]);
 check('Cancelling a booking puts the bed back on sale', in_array($bedA, AccommodationService::freeBedIds((int) $roomType['id'], $night), true));
+
+/* -------------------------------------------------------------- donations */
+
+section('Donations');
+
+// An order can carry more than one donation — a Seventh Tradition contribution
+// and a sponsored newcomer registration, say. Fulfilment used to ask whether
+// the ORDER already had a donation before writing each one, so the first
+// insert silenced every donation after it: the money was taken and counted as
+// income, but the ledger, the donations screen, the CSV and the public
+// "raised so far" total never saw it.
+$donationProducts = Database::select(
+    'SELECT id, name FROM products WHERE type = "donation" AND is_active = 1 LIMIT 2'
+);
+
+if (count($donationProducts) < 2) {
+    $notes[] = 'Fewer than two donation products are on sale, so the multi-donation check was skipped.';
+} else {
+    $donationOrderId = Database::insert('orders', [
+        'reference'    => 'SMOKE-' . strtoupper(bin2hex(random_bytes(3))),
+        'email'        => 'smoke-donation@example.invalid',
+        'first_name'   => 'Smoke',
+        'last_name'    => 'Donor',
+        'status'       => 'pending_payment',
+        'total_cents'  => 30000,
+        'checkin_code' => 'SMOKE-DON',
+    ]);
+
+    foreach ([[$donationProducts[0], 10000], [$donationProducts[1], 20000]] as [$donationProduct, $cents]) {
+        Database::insert('order_items', [
+            'order_id'         => $donationOrderId,
+            'item_type'        => 'donation',
+            'product_id'       => (int) $donationProduct['id'],
+            'description'      => $donationProduct['name'],
+            'unit_price_cents' => $cents,
+            'quantity'         => 1,
+            'total_cents'      => $cents,
+            'meta'             => json_encode(['donation_type' => $donationProduct['name']]),
+        ]);
+    }
+
+    OrderService::markPaid(OrderService::find($donationOrderId));
+
+    $recorded = Database::select('SELECT amount_cents FROM donations WHERE order_id = ?', [$donationOrderId]);
+    $recordedTotal = array_sum(array_map('intval', array_column($recorded, 'amount_cents')));
+
+    check('Every donation in an order is recorded, not just the first', count($recorded) === 2, count($recorded) . ' of 2');
+    check('THE DONATIONS LEDGER ADDS UP TO WHAT THE DELEGATE PAID', $recordedTotal === 30000, money($recordedTotal) . ' of ' . money(30000));
+
+    // A repeated notification must not double the ledger. markPaid() returns
+    // early on an already-paid order, so call the fulfilment path again the
+    // way a retry would reach it.
+    Database::update('orders', ['status' => 'pending_payment'], 'id = :id', ['id' => $donationOrderId]);
+    OrderService::markPaid(OrderService::find($donationOrderId));
+
+    $afterRetry = (int) Database::scalar('SELECT COUNT(*) FROM donations WHERE order_id = ?', [$donationOrderId]);
+    check('A repeated payment notification does not double the donations', $afterRetry === 2, $afterRetry . ' row(s)');
+
+    Database::delete('donations', 'order_id = ?', [$donationOrderId]);
+    Database::delete('payment_logs', 'order_id = ?', [$donationOrderId]);
+    Database::delete('order_items', 'order_id = ?', [$donationOrderId]);
+    Database::delete('orders', 'id = ?', [$donationOrderId]);
+}
+
+/* ------------------------------------------------------------------- cart */
+
+section('Cart ceilings');
+
+// The product page refuses more than the stock on hand and more than
+// max_per_order. Changing the quantity in the cart has to apply the same two
+// ceilings, or a visitor walks past both and pays for goods that do not exist.
+$stocked = Database::first(
+    'SELECT * FROM products
+      WHERE type = "merchandise" AND track_stock = 1 AND is_active = 1
+        AND id NOT IN (SELECT product_id FROM product_variants) LIMIT 1'
+);
+
+if ($stocked === null) {
+    $notes[] = 'No stock-tracked merchandise without variants, so the cart-ceiling check was skipped.';
+} else {
+    $stockWas = (int) $stocked['stock'];
+    Database::update('products', ['stock' => 3, 'max_per_order' => 10], 'id = :id', ['id' => (int) $stocked['id']]);
+
+    // A 64-character token, because CartService::token() discards anything
+    // shorter and issues a fresh one — which would quietly make this check
+    // pass without ever reaching the cart.
+    $cartToken = hash('sha256', 'smoke-cart-ceiling');
+    $cartId    = Database::insert('carts', ['token' => $cartToken, 'user_id' => null]);
+    $lineId = Database::insert('cart_items', [
+        'cart_id'          => $cartId,
+        'item_type'        => 'merchandise',
+        'product_id'       => (int) $stocked['id'],
+        'description'      => $stocked['name'],
+        'unit_price_cents' => (int) $stocked['price_cents'],
+        'quantity'         => 1,
+    ]);
+
+    App\Core\Session::put('cart_token', $cartToken);
+
+    // Prove the cart is actually reachable, so the two checks below cannot
+    // pass by silently doing nothing.
+    check('The test cart is reachable', CartService::findItem($lineId) !== null);
+
+    CartService::updateQuantity($lineId, 40);
+
+    $held = (int) Database::scalar('SELECT quantity FROM cart_items WHERE id = ?', [$lineId]);
+    check('The cart cannot hold more of a product than there is stock', $held <= 3, $held . ' of 3 in stock');
+
+    Database::update('products', ['stock' => 100, 'max_per_order' => 5], 'id = :id', ['id' => (int) $stocked['id']]);
+    CartService::updateQuantity($lineId, 40);
+    $held = (int) Database::scalar('SELECT quantity FROM cart_items WHERE id = ?', [$lineId]);
+    check('The cart honours max_per_order as well', $held <= 5, $held . ' of 5 allowed per order');
+
+    Database::delete('cart_items', 'cart_id = ?', [$cartId]);
+    Database::delete('carts', 'id = ?', [$cartId]);
+    Database::update(
+        'products',
+        ['stock' => $stockWas, 'max_per_order' => (int) $stocked['max_per_order']],
+        'id = :id',
+        ['id' => (int) $stocked['id']]
+    );
+    App\Core\Session::forget('cart_token');
+}
 
 /* ---------------------------------------------------------------- payfast */
 

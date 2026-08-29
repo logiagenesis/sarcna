@@ -107,7 +107,7 @@ data invariants:
 php tools/audit.php --password=YOUR_ADMIN_PASSWORD
 ```
 
-183 checks. It exits non-zero if anything fails, so it can gate a deploy, and
+200 checks. It exits non-zero if anything fails, so it can gate a deploy, and
 it removes everything it creates. On Windows use the same command in
 PowerShell — see **[HANDOVER.md](HANDOVER.md)** for the Windows notes.
 
@@ -180,10 +180,23 @@ in **Admin → Payments → Notification log**.
 Prepared statements everywhere · CSRF tokens on every state-changing form ·
 server-side validation on every input · output escaping by default ·
 HttpOnly + SameSite session cookies (never localStorage) · modern password
-hashing · role-based admin capabilities · admin audit log · rate limiting on
-login, password reset and public forms · honeypots on public forms · uploads
-validated by their own bytes and served inert · no credentials in the
-repository · error pages that leak nothing.
+hashing · admin audit log · rate limiting on login, password reset and public
+forms · honeypots on public forms · uploads validated by their own bytes and
+served inert · no credentials in the repository · error pages that leak
+nothing.
+
+**Role-based admin capabilities**, checked at every door rather than only on
+the ones with a link. A CSV export answers to the same capability as the screen
+it comes from, so a transport admin who is refused `/admin/finance` is refused
+the finance pack too; and nothing carrying personal detail is gated on
+`dashboard`, the one capability every role holds. Section 7 of the audit signs
+in as a real limited admin and tries the doors, including the ones that must
+still open.
+
+**Changing an order requires proof that it is yours.** An order reference
+travels in email and in the address bar, so it is never treated as a password:
+cancelling a pending order needs the session that placed it or the account that
+owns it.
 
 ---
 
@@ -192,6 +205,7 @@ repository · error pages that leak nothing.
 | Document | What it covers |
 |---|---|
 | **[`HANDOVER.md`](HANDOVER.md)** | **The handover document. Start here.** What you have, proof it works, how it works, the launch checklist |
+| [`docs/audit-2026-08-29.md`](docs/audit-2026-08-29.md) | The comprehensive audit: what was checked, the six defects found behind a green suite, and what was deliberately left alone |
 | [`docs/cpanel-deployment-guide.md`](docs/cpanel-deployment-guide.md) | Uploading, installing, going live |
 | [`docs/payfast-setup.md`](docs/payfast-setup.md) | Sandbox to live, the ITN URL, troubleshooting |
 | [`docs/smtp-setup.md`](docs/smtp-setup.md) | cPanel mailbox email, SPF and DKIM |

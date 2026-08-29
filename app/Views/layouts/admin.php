@@ -39,8 +39,8 @@ $navigation = [
     ],
     'People' => [
         ['/admin/customers', 'Customers & admins', 'customers'],
-        ['/admin/applications', 'Service applications', 'dashboard'],
-        ['/admin/messages', 'Contact messages', 'dashboard'],
+        ['/admin/applications', 'Service applications', 'applications'],
+        ['/admin/messages', 'Contact messages', 'messages'],
     ],
     'Content' => [
         ['/admin/content', 'Banners, pages, programme', 'content'],

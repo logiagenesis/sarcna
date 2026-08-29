@@ -3,6 +3,65 @@
 All notable changes to the SARCNA 2027 Convention website.
 Versions follow [Semantic Versioning](https://semver.org/).
 
+## [Unreleased] — Comprehensive audit, 29 August 2026
+
+A full review of the code the existing suite does not reach. The suite was
+green before it started. Six defects were found behind that green tick, and
+each fix carries a check that was first made to fail against the old code.
+The whole review is written up in
+[`docs/audit-2026-08-29.md`](docs/audit-2026-08-29.md).
+
+### Fixed
+
+**Security and authorisation**
+- `/payment/cancelled` cancelled any pending order it was given a reference
+  for — no login, no CSRF, and on a GET, so an `<img>` tag on another site
+  could fire it. Cancelling now requires the session that placed the order or
+  the account that owns it.
+- CSV exports asked only for the broad `exports` capability, so a transport
+  admin refused `/admin/finance` could still download the finance pack and the
+  full customer list. Each dataset now answers to the capability that governs
+  its own screen, and an unlisted dataset is refused outright.
+- Service applications and contact messages were gated on `dashboard`, the one
+  capability every role holds — a check-in volunteer could read every
+  applicant's clean time, phone number and email address. Both now have
+  capabilities of their own, held only by a super admin, which is what the
+  documented role table always described.
+
+**Money and inventory**
+- Only the first donation in an order was recorded. An order carrying two
+  donations took the money for both and wrote one to the ledger, so the
+  donations screen, the CSV and the public "raised so far" total all lost it.
+  Recording is now per line item, made idempotent by a unique index.
+- Changing a quantity in the cart ignored both the stock on hand and
+  `max_per_order`, which the product page enforces — forty of something with
+  three in stock could reach checkout and be paid for. The cart now applies the
+  same two ceilings.
+- A refund could be recorded against an order that was never paid, which would
+  have understated the reported surplus by its full amount. Refunds now require
+  a paid or already-refunded order.
+
+### Added
+
+- `database/migrations/2026-08-29-add-order-item-id-to-donations.sql` —
+  `donations.order_item_id` with a unique index. Safe on a live site: it adds a
+  nullable column and an index.
+- Audit section 7, "Role boundaries": creates a real limited admin, signs in as
+  them, and tries the doors — including the ones that must still open, so a fix
+  that over-blocks fails as loudly as one that under-blocks. Audit is now
+  **200 checks**, up from 183.
+- Smoke-test coverage for multi-donation orders, repeated payment
+  notifications, and the cart's stock and `max_per_order` ceilings. Smoke test
+  is now **43 checks**, up from 37.
+
+### Changed
+
+- `README.md`, `HANDOVER.md`, `docs/admin-user-guide.md` and
+  `docs/cpanel-deployment-guide.md` updated to match: the new check totals, the
+  role table, and what each role's exports actually cover.
+- `docs/audit-result.txt` and `docs/race-test-result.txt` regenerated from the
+  runs this release reports.
+
 ## [1.0.0] — Committee preview build
 
 The first complete build: a new website, database, installer, shop, bed-level

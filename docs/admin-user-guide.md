@@ -34,17 +34,28 @@ Every admin has one or more roles:
 
 | Role | Can reach |
 |---|---|
-| **Super Admin** | Everything, including settings and other people's roles |
-| **Finance Admin** | Orders, payments, donations, coupons, customers, exports |
-| **Accommodation Admin** | Room types, beds, bookings, the bed board, exports |
-| **Transport Admin** | Routes, departures, manifests, check-in, exports |
-| **Merch Admin** | Products, stock, orders, exports |
+| **Super Admin** | Everything, including settings, service applications, contact messages and other people's roles |
+| **Finance Admin** | Orders, payments, donations, coupons, customers, and the exports for those |
+| **Accommodation Admin** | Room types, beds, bookings, the bed board, and the exports for those |
+| **Transport Admin** | Routes, departures, manifests, check-in, and the exports for those |
+| **Merch Admin** | Products, stock, orders, and the exports for those |
 | **Content Editor** | Banners, pages, programme, FAQs, events, gallery |
 | **Check-in Volunteer** | The check-in desk only |
 
 A super admin sets these in **Customers & admins → open a person → Admin roles**.
 Give volunteers the narrowest role that lets them do their job — the check-in
 desk role, for instance, cannot see anyone's payment details.
+
+**A role's exports are its own.** A CSV holds exactly the same information as
+the screen it comes from, so it needs the same permission. A transport admin
+downloads the passenger list; they cannot download the finance pack or the
+customer list, the same way they cannot open those screens.
+
+**Service applications and contact messages are super-admin only.** They carry
+clean time, phone numbers and email addresses, so they are not part of any
+narrower role. If someone on the committee needs to work through them, a super
+admin gives them the super admin role — deliberately, rather than their picking
+it up as a side effect of a smaller job.
 
 ---
 
@@ -186,10 +197,15 @@ Everything can leave as a CSV, from the button on each screen or from
 
 orders · order items · attendees · bookings · **rooming list** · transport
 passengers · donations · service applications · contact messages · customers ·
-stock · payments
+stock · payments · expenses · refunds · budget · **finance pack**
 
 They open in Excel and Google Sheets, and are UTF-8 so South African names come
 out correctly.
+
+You see the exports your role covers, and only those — see **Who can see what**
+above. Asking for one your role does not cover returns "Your admin role does not
+include access to that export"; ask a super admin either to run it for you or to
+widen your role.
 
 ---
 

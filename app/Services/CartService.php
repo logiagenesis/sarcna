@@ -154,8 +154,50 @@ final class CartService
             return;
         }
 
-        Database::update('cart_items', ['quantity' => min(50, $quantity)], 'id = :id', ['id' => $itemId]);
+        Database::update('cart_items', ['quantity' => self::allowedQuantity($item, $quantity)], 'id = :id', ['id' => $itemId]);
         self::touch();
+    }
+
+    /**
+     * The most of this line a visitor may hold.
+     *
+     * The product page already refuses more than the stock on hand and more
+     * than max_per_order. This applies the same two ceilings when the quantity
+     * is changed in the cart instead, which otherwise let a visitor walk past
+     * both: forty of something with three in stock reached checkout, was paid
+     * for, and only failed at fulfilment — after the money had been taken.
+     */
+    private static function allowedQuantity(array $item, int $quantity): int
+    {
+        $quantity = min(50, $quantity);
+
+        if ($item['product_id'] === null) {
+            return $quantity;
+        }
+
+        $product = ProductService::find((int) $item['product_id']);
+
+        if ($product === null) {
+            return $quantity;
+        }
+
+        $variant = null;
+
+        if ($item['variant_id'] !== null) {
+            foreach (ProductService::variants((int) $product['id']) as $candidate) {
+                if ((int) $candidate['id'] === (int) $item['variant_id']) {
+                    $variant = $candidate;
+                    break;
+                }
+            }
+        }
+
+        $ceiling = min(
+            max(1, (int) $product['max_per_order']),
+            ProductService::stockFor($product, $variant)
+        );
+
+        return max(1, min($quantity, $ceiling));
     }
 
     public static function remove(int $itemId): void
