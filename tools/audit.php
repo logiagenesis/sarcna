@@ -945,7 +945,7 @@ if ($photoRoomId > 0) {
     ], ['photo' => $tmpDir . '/audit-photo.jpg']);
 
     $stored = (string) Database::scalar('SELECT hero_image FROM room_types WHERE id = ?', [$photoRoomId]);
-    record('Photos', 'A full-size photograph is accepted and assigned', str_starts_with($stored, 'photos/'), $stored);
+    record('Photos', 'A full-size photograph is accepted and assigned', str_starts_with($stored, '/photos/'), $stored);
 
     $onDisk = dirname(__DIR__) . '/public_html/uploads/' . $stored;
     $webp   = preg_replace('/\.jpg$/', '.webp', $onDisk);
@@ -953,9 +953,23 @@ if ($photoRoomId > 0) {
     record('Photos', 'The file and its WebP twin are written to disk', is_file($onDisk) && is_file($webp));
 
     if (is_file($onDisk)) {
+        // Read the expected shape from the slot itself rather than writing a
+        // number in here. A hardcoded size in a test only records what the
+        // code did on the day the test was written.
+        $expected = [0, 0];
+
+        foreach (\App\Services\PhotoService::slots() as $group) {
+            foreach ($group as $slot) {
+                if ($slot['key'] === $photoSlot) {
+                    $expected = [$slot['width'], $slot['height']];
+                }
+            }
+        }
+
         $size = getimagesize($onDisk);
         record('Photos', 'It is resized and centre-cropped to the slot shape',
-            $size[0] === 1600 && $size[1] === 1000, "{$size[0]}x{$size[1]}");
+            $size[0] === $expected[0] && $size[1] === $expected[1],
+            "{$size[0]}x{$size[1]}, slot wants {$expected[0]}x{$expected[1]}");
         record('Photos', 'EXIF metadata (including GPS) is stripped',
             !str_contains((string) file_get_contents($onDisk), 'Exif'));
     }
@@ -995,7 +1009,7 @@ if ($photoRoomId > 0) {
         $galleryNow = Database::first('SELECT file_path, sort_order FROM gallery_images WHERE id = ?', [$galleryId]);
 
         record('Photos', 'Replacing a gallery picture swaps the file in place',
-            str_starts_with((string) $galleryNow['file_path'], 'photos/'), (string) $galleryNow['file_path']);
+            str_starts_with((string) $galleryNow['file_path'], '/photos/'), (string) $galleryNow['file_path']);
 
         record('Photos', 'It keeps its position in the running order',
             (int) $galleryNow['sort_order'] === (int) $galleryWas['sort_order']);

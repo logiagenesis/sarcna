@@ -6,7 +6,9 @@ View::start('content');
 <?php View::include('partials.page-hero', [
   'eyebrow' => 'Gallery',
   'title'   => 'The estate and its spaces',
-  'lede'    => 'Every image below is original illustration created for this preview build. They will be replaced with licensed venue photography before launch.',
+  'lede'    => \App\Services\PhotoService::stillShowingIllustrations()
+      ? 'Some images below are original illustration created for this preview build, and will be replaced with licensed venue photography before launch.'
+      : 'Photographs of Boschendal Retreat Cottages & Conference Venue, supplied by the estate.',
   'image'   => 'img/venue/fynbos-gardens.jpg',
   'crumbs'  => ['Gallery' => null],
 ]); ?>

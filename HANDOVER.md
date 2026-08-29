@@ -486,21 +486,26 @@ What it does with each upload, so nobody has to think about it:
 Section 12 of the audit exercises all of it, including that an undersized
 photograph is genuinely refused.
 
-**Why the pictures are not already in.** The machine this was built on has no
-route to `boschendal.com`: the egress proxy answers `403` to the CONNECT, on
-both `curl` and the fetching tool, and every other image host is blocked the
-same way. The Drive folder holds five text files and no photographs. So the
-files were never obtainable from here — which is exactly why the upload screen
-exists, rather than a script somebody would have to find a shell to run. The
-target host has no working shell, so a script would have been useless there
-anyway. (cPanel does show an SSH Access page, but the ports did not answer
-when tested — see the deployment guide. Even with a shell, a command-line
-importer puts the committee's photographs behind a terminal, which is the
-wrong place for them.)
+**Eight real photographs are already in.** The committee supplied a folder of
+Boschendal photography, and `tools/import-drive-images.php` processed it
+through exactly the same code the upload screen uses. The files are committed
+at `public_html/uploads/photos/` and seeded in `database/demo-data.sql`, so a
+fresh install comes up showing photographs rather than drawings — which
+matters, because the target host has no shell to run an importer on.
 
-`tools/import-venue-images.php` still exists for a developer working from an
-ordinary internet connection, and holds the curated manifest of 25 shots. The
-admin screen is the route that works for everyone else.
+**Five of the supplied photographs were deliberately left out**, and the
+reasons are recorded in `tools/import-drive-images.php` so the committee can
+overrule any of them:
+
+| Reason | Files |
+|---|---|
+| **Alcohol** — Boschendal is a wine estate, and this is a Narcotics Anonymous convention | wine tasting, wine retail, a restaurant with wine on every table, two night-market shots not verified free of it |
+| **Identifiable children** — anonymity is a founding principle of the fellowship | three close portraits |
+| **Below the quality bar** | one portrait crop, two letterbox panoramas too short for any 3:2 slot |
+
+The remaining slots — the shop products, the page headers — are still
+illustrations. Use **Admin → Photographs** for those; it is the route that
+needs no developer and no command line.
 
 ### From the outgoing vendors
 
@@ -537,8 +542,8 @@ refuses to remove the last super admin, but it cannot create one for you.
 Work top to bottom. Each step is verifiable.
 
 - [ ] **1. Deploy** — follow `docs/cpanel-deployment-guide.md`, run `/install`
-- [ ] **2. Put the real photographs in** — sign in and go to
-      **Admin → Photographs**. Every picture the site shows has a slot with an
+- [ ] **2. Check the photographs** — eight are already in (see §7). Sign in and go to
+      **Admin → Photographs** for the rest. Every picture the site shows has a slot with an
       upload button; the page counts how many are still illustrations. Get the
       venue's written permission first, and record it in the "where it came
       from" box on each upload. See §7 — *The photographs* for the detail.

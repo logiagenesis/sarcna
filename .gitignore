@@ -15,6 +15,12 @@ storage/email-queue/*
 public_html/uploads/*
 !public_html/uploads/.htaccess
 !public_html/uploads/.gitkeep
+# …except the venue photographs. These are project assets the site needs on
+# day one, not user content: the target host has no shell, so they have to
+# arrive with the code. tools/import-drive-images.php regenerates them.
+!public_html/uploads/photos/
+!public_html/uploads/photos/*.jpg
+!public_html/uploads/photos/*.webp
 
 # OS / editor noise
 .DS_Store

@@ -28,7 +28,21 @@ use App\Core\Database;
  */
 final class PhotoService
 {
-    /** Anything smaller than this in either dimension is refused outright. */
+    /**
+     * Slot sizes are derived from how the site actually renders, not picked.
+     *
+     * `--container` in app.css is 1180px, and `.card__media` is 3:2 — so a
+     * room or gallery picture is never displayed wider than about 1180px, and
+     * 1200x800 covers it with headroom. Only the full-bleed `.hero` spans the
+     * viewport, which is why banners alone ask for 1920.
+     *
+     * These numbers were lowered from an arbitrary 1600x1000 once the venue's
+     * own photographs turned out to be 1138x757 — the press-kit size
+     * Boschendal publishes. That is a deliberate, stated change: the earlier
+     * figure was invented rather than measured, and refusing the venue's own
+     * photography over a number nobody derived would have been the wrong call.
+     * The bar is still real — it refuses anything that would render soft.
+     */
     private const ABSOLUTE_MIN_WIDTH  = 800;
     private const ABSOLUTE_MIN_HEIGHT = 500;
 
@@ -74,8 +88,8 @@ final class PhotoService
                 (string) $row['name'],
                 'Main photograph',
                 $row['hero_image'] === null ? null : (string) $row['hero_image'],
-                1600,
-                1000
+                1200,
+                800
             );
 
             $extra = Database::select(
@@ -88,8 +102,8 @@ final class PhotoService
                 (string) $row['name'] . ' — more photographs',
                 count($extra) . ' in the room gallery. Guests want to see inside before they book.',
                 $extra[0]['file_path'] ?? null,
-                1600,
-                1000,
+                1200,
+                800,
                 true
             );
         }
@@ -107,8 +121,8 @@ final class PhotoService
                 (string) ($row['title'] !== '' ? $row['title'] : $row['alt_text']),
                 'Shown on the venue page · ' . $row['category'],
                 (string) $row['file_path'],
-                1600,
-                1000
+                1200,
+                800
             );
         }
 
@@ -118,8 +132,8 @@ final class PhotoService
             'Add another venue photograph',
             'Goes straight onto the venue page.',
             null,
-            1600,
-            1000,
+            1200,
+            800,
             true
         );
 
@@ -169,6 +183,23 @@ final class PhotoService
     public static function isPlaceholder(?string $path): bool
     {
         return $path === null || trim($path) === '' || !str_starts_with(ltrim($path, '/'), 'photos/');
+    }
+
+    /**
+     * Is the public site still showing the shipped illustrations?
+     *
+     * Three places on the site tell visitors that the imagery is illustration
+     * rather than photography. That notice has to disappear by itself the
+     * moment real photographs go in, or it becomes a lie printed on every
+     * page. One cheap query, because it runs on every request.
+     */
+    public static function stillShowingIllustrations(): bool
+    {
+        return (int) Database::scalar(
+            "SELECT COUNT(*) FROM gallery_images
+              WHERE is_active = 1 AND category IN ('venue','conference')
+                AND file_path NOT LIKE '/photos/%'"
+        ) > 0;
     }
 
     /** How many slots are still illustrations, and how many there are in total. */
@@ -284,7 +315,12 @@ final class PhotoService
 
         imagedestroy($resized);
 
-        return ['ok' => true, 'message' => 'Photograph saved.', 'path' => 'photos/' . $name . '.jpg'];
+        // The leading slash matters. picture() sends a path that starts with
+        // "/" to uploaded(), and anything else to asset() — so a stored path
+        // of "photos/x.jpg" is looked for under /assets/ and 404s. Storing
+        // "/photos/x.jpg" resolves to /uploads/photos/x.jpg, which is where
+        // the file actually is.
+        return ['ok' => true, 'message' => 'Photograph saved.', 'path' => '/photos/' . $name . '.jpg'];
     }
 
     /**
