@@ -11,7 +11,7 @@ on:
 
 jobs:
   suite:
-    name: Lint, install, smoke, race, audit
+    name: Lint, install, smoke, race, security, audit
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
