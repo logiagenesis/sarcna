@@ -90,6 +90,7 @@ final class SettingsController extends AdminController
             ['Installer is locked', is_file((string) Config::get('paths.lock')), 'app/Config/installed.lock'],
             ['HTTPS', \App\Core\Session::isHttps(), 'Required for secure cookies and PayFast'],
             ['PayFast configured', PayFastService::isConfigured(), PayFastService::isSandbox() ? 'Sandbox mode' : 'Live mode'],
+            ['PayFast passphrase set', trim((string) Config::get('payfast.passphrase', '')) !== '', 'Without it a payment notification\'s signature proves nothing'],
             ['PayFast reachable', $this->canReachPayFast(), 'Outbound HTTPS to ' . PayFastService::host()],
             ['GA4 measurement ID', (string) SettingsService::get('ga_measurement_id', '') !== '', (string) SettingsService::get('ga_measurement_id', 'not set')],
             ['Search Console tag', (string) SettingsService::get('google_site_verification', '') !== '', 'Verification meta tag'],

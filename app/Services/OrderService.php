@@ -14,6 +14,29 @@ use App\Core\Logger;
  */
 final class OrderService
 {
+    /**
+     * Is this request coming from the person who placed the order?
+     *
+     * Two things count as proof, and neither can be read off a reference:
+     * being signed in as the account that owns it, or holding the session
+     * whose cart became it. A guest who has just been sent back from PayFast
+     * still has that session cookie, so the honest payment path is unaffected.
+     *
+     * A reference is not a secret. It travels in confirmation emails, browser
+     * history and PayFast's own screens, so every route that takes one from
+     * the address bar has to ask this before it shows or writes anything.
+     */
+    public static function belongsToCurrentVisitor(array $order): bool
+    {
+        if ($order['user_id'] !== null && AuthService::id() !== null && (int) $order['user_id'] === AuthService::id()) {
+            return true;
+        }
+
+        $cartToken = (string) ($order['cart_token'] ?? '');
+
+        return $cartToken !== '' && hash_equals($cartToken, CartService::token());
+    }
+
     public static function createFromCart(array $customer, array $totals, array $itemDetails = []): array
     {
         $cart = CartService::cart();

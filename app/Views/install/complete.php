@@ -26,6 +26,25 @@ View::include('install._head', ['pageTitle' => 'Installation complete']);
   </div>
 <?php endif; ?>
 
+<?php if (\App\Services\PayFastService::isConfigured() && trim((string) config('payfast.passphrase', '')) === ''): ?>
+  <div class="alert alert--warning">
+    <div>
+      <div class="alert__title">Set a PayFast passphrase before you take real money</div>
+      <p style="margin:.4rem 0 0">
+        PayFast allows a blank passphrase, but the signature on a payment notification is only
+        as strong as that passphrase. With none set, the signature is computed from values that
+        are not secret, so it stops proving that a notification really came from PayFast. Two
+        further checks still stand between a forgery and a paid order — the source address and
+        PayFast's own confirmation — but the first line of defence is missing.
+      </p>
+      <p style="margin:.4rem 0 0">
+        Set one in the PayFast dashboard under <strong>Settings &rarr; Security</strong>, then
+        enter the same value in <strong>Admin &rarr; Settings &rarr; Payments</strong>.
+      </p>
+    </div>
+  </div>
+<?php endif; ?>
+
 <div class="alert alert--info">
   <div>
     <div class="alert__title">Do these three things next</div>

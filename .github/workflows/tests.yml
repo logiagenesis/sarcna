@@ -11,7 +11,7 @@ on:
 
 jobs:
   suite:
-    name: Lint, install, smoke, race, audit
+    name: Lint, install, smoke, race, security, audit
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -74,6 +74,14 @@ jobs:
 
       - name: Race test — twelve buyers, one bed
         run: php tools/race-test.php http://127.0.0.1:8000
+
+      - name: Security test — authorization, money, forged payments, roles
+        # The audit proves the site works. This proves it cannot be made to
+        # misbehave: one delegate reading another's order, a customer setting
+        # their own price, a forged notification marking an order paid or
+        # destroying someone else's booking, an admin role reaching a route it
+        # has no business on. All 343 route/role combinations are walked.
+        run: php tools/security-test.php http://127.0.0.1:8000
 
       - name: Full audit
         run: php tools/audit.php http://127.0.0.1:8000 --password=Convention2027

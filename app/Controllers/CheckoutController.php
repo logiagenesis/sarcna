@@ -53,6 +53,16 @@ final class CheckoutController extends Controller
             $this->redirect(url('/shop'));
         }
 
+        // The same rule the page enforces. Without it the setting only hides the
+        // form: a guest posting straight at this route still placed an order,
+        // and it landed with user_id NULL — invisible under /account/orders and
+        // an orphan on the booking chair's list, with no account to chase.
+        if (!AuthService::check() && !SettingsService::bool('allow_guest_checkout', false)) {
+            \App\Core\Session::put('intended_url', '/checkout');
+            $this->flashError('Please sign in or create an account so we can keep your bookings together.');
+            $this->redirect(url('/login'));
+        }
+
         $validator = Validator::make($this->request->all(), [
             'first_name' => 'required|max:80',
             'last_name'  => 'required|max:80',
@@ -121,7 +131,12 @@ final class CheckoutController extends Controller
             $this->abort(404);
         }
 
-        if (AuthService::check() && $order['user_id'] !== null && (int) $order['user_id'] !== AuthService::id()) {
+        // This has to run before anything else touches the order. The page
+        // embeds the buyer's name and email address in the PayFast fields, and
+        // recordRedirect() below writes to the payment log — so a stranger
+        // holding a reference could read who booked and pollute the treasurer's
+        // log. Anonymity is not a nicety at an NA convention.
+        if (!OrderService::belongsToCurrentVisitor($order)) {
             $this->abort(403, 'That order belongs to a different account.');
         }
 

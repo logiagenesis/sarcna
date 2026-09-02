@@ -108,14 +108,22 @@ if (!function_exists('purge_users')) {
     /**
      * Remove user accounts and every order attached to them.
      *
-     * @param string $emailPattern a SQL LIKE pattern, e.g. 'audit-%@example.invalid'
+     * Admin accounts are skipped by default, so a careless pattern can never
+     * delete a real committee member. A test that creates its own admin
+     * accounts — tools/security-test.php makes one per role — has to say so.
+     *
+     * @param string $emailPattern  a SQL LIKE pattern, e.g. 'audit-%@example.invalid'
+     * @param bool   $includeAdmins opt in to removing admin accounts too
      * @return array{users:int,orders:int} what was removed
      */
-    function purge_users(string $emailPattern): array
+    function purge_users(string $emailPattern, bool $includeAdmins = false): array
     {
         $userIds = array_map(
             static fn (array $r): int => (int) $r['id'],
-            Database::select('SELECT id FROM users WHERE email LIKE ? AND is_admin = 0', [$emailPattern])
+            Database::select(
+                'SELECT id FROM users WHERE email LIKE ?' . ($includeAdmins ? '' : ' AND is_admin = 0'),
+                [$emailPattern]
+            )
         );
 
         if ($userIds === []) {
